@@ -1,0 +1,76 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Dashboard" %} · Project Manager{% endblock %}
+
+{% block content %}
+    <div class="flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl font-semibold tracking-tight">{% trans "Dashboard" %}</h1>
+        <p class="mt-2 text-sm text-zinc-300">{% trans "A clean overview — fast actions, no noise." %}</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'web:projects' %}" class="rounded-lg border border-zinc-800 bg-zinc-950/40 px-4 py-2 text-sm hover:bg-zinc-900">{% trans "Projects" %}</a>
+        <a href="{% url 'web:tasks' %}" class="rounded-lg border border-zinc-800 bg-zinc-950/40 px-4 py-2 text-sm hover:bg-zinc-900">{% trans "Tasks" %}</a>
+      </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <div class="text-sm text-zinc-400">{% trans "Projects" %}</div>
+        <div class="mt-2 text-3xl font-semibold">{{ project_count }}</div>
+        <div class="mt-4 text-xs text-zinc-400">{% trans "Plan, track, ship." %}</div>
+      </div>
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <div class="text-sm text-zinc-400">{% trans "Tasks" %}</div>
+        <div class="mt-2 text-3xl font-semibold">{{ task_count }}</div>
+        <div class="mt-4 text-xs text-zinc-400">{% trans "Turn chaos into momentum." %}</div>
+      </div>
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <div class="text-sm text-zinc-400">{% trans "Marketing tasks" %}</div>
+        <div class="mt-2 text-3xl font-semibold">{{ marketing_task_count }}</div>
+        <div class="mt-4 text-xs text-zinc-400">{% trans "Consistent output wins." %}</div>
+      </div>
+    </div>
+
+    <div class="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <div class="text-sm text-zinc-400">{% trans "Next" %}</div>
+          <div class="mt-1 text-lg font-semibold">{% trans "Set up your first project" %}</div>
+          <div class="mt-2 text-sm text-zinc-300">{% trans "We can turn this into a guided onboarding with templates and streaks." %}</div>
+        </div>
+        <a href="{% url 'web:projects' %}" class="rounded-lg border border-zinc-800 bg-zinc-950/40 px-4 py-2 text-sm hover:bg-zinc-900">{% trans "Create project" %}</a>
+      </div>
+    </div>
+
+    {% if pending_invitations %}
+      <div class="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6">
+        <div class="flex items-start justify-between gap-6">
+          <div>
+            <div class="text-sm text-zinc-400">{% trans "Invitations" %}</div>
+            <div class="mt-1 text-lg font-semibold">{% trans "Pending workspace invitations" %}</div>
+            <div class="mt-2 text-sm text-zinc-300">{% trans "Accept an invitation to join a workspace." %}</div>
+          </div>
+          <a href="{% url 'web:team' %}" class="rounded-lg border border-zinc-800 bg-zinc-950/40 px-4 py-2 text-sm hover:bg-zinc-900">{% trans "View team" %}</a>
+        </div>
+
+        <div class="mt-5 space-y-2">
+          {% for inv in pending_invitations %}
+            <div class="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-4 text-sm">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="font-medium truncate">{{ inv.organization.name }}</div>
+                  <div class="mt-1 text-xs text-zinc-500">{{ inv.role }} · {{ inv.created_at|date:"Y-m-d" }}</div>
+                </div>
+                <a class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-1.5 text-xs font-medium"
+                   href="{% url 'web:invite_accept' inv.token %}">
+                  {% trans "Open" %}
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+{% endblock %}

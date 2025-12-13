@@ -1,0 +1,7 @@
+{% load i18n %}
+<div id="task-title-{{ task.id }}" class="font-medium leading-snug truncate"
+     hx-get="{% url 'web:tasks_title' task.id %}?mode=edit"
+     hx-trigger="click"
+     hx-swap="outerHTML">
+  {{ task.title }}
+</div>

@@ -1,0 +1,11 @@
+{% load i18n %}
+<div id="task-title-{{ task.id }}">
+  <input name="title"
+         value="{{ task.title }}"
+         autofocus
+         class="w-full rounded-md bg-zinc-950 border border-zinc-800 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+         hx-post="{% url 'web:tasks_title' task.id %}"
+         hx-trigger="blur, keyup[key=='Enter']"
+         hx-target="#task-title-{{ task.id }}"
+         hx-swap="outerHTML" />
+</div>

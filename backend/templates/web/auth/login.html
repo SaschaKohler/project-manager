@@ -1,0 +1,45 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block title %}Login · Project Manager{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center px-6">
+  <div class="w-full max-w-md">
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+      <div class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">{% trans "Welcome back" %}</h1>
+        <p class="mt-2 text-sm text-zinc-300">{% trans "Sign in to continue." %}</p>
+      </div>
+
+      {% if form.errors %}
+        <div class="mb-4 rounded-lg border border-red-800 bg-red-950/40 p-3 text-sm text-red-200">
+          {% trans "Invalid credentials." %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block text-sm text-zinc-200 mb-2">{% trans "Email" %}</label>
+          <input name="username" type="email" autocomplete="email" required
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-sm text-zinc-200 mb-2">{% trans "Password" %}</label>
+          <input name="password" type="password" autocomplete="current-password" required
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button type="submit"
+                class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+          {% trans "Sign in" %}
+        </button>
+      </form>
+
+      <div class="mt-6 text-xs text-zinc-400">
+        {% trans "Admin is available at" %} <span class="font-mono">/admin</span>.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<div class="mt-3 rounded-lg border border-zinc-800/70 bg-zinc-950/25 p-3 text-xs text-zinc-300">
+  <div class="flex items-center justify-between">
+    <div class="text-zinc-200">{% trans "Time entries" %}</div>
+    <div class="text-zinc-500">{{ total_human }}</div>
+  </div>
+
+  <div class="mt-3 space-y-2">
+    {% for e in entries %}
+      <div class="rounded-md border border-zinc-800/70 bg-zinc-950/35 p-2">
+        <div class="flex items-center justify-between">
+          <div class="text-zinc-400">{{ e.user_email }}</div>
+          <div class="font-mono text-zinc-300">{{ e.duration_human }}</div>
+        </div>
+        <div class="mt-1 text-zinc-500">
+          {% if e.started_at %}{{ e.started_at|date:"Y-m-d H:i" }}{% endif %}
+          {% if e.stopped_at %} → {{ e.stopped_at|date:"Y-m-d H:i" }}{% else %} → {% trans "running" %}{% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-zinc-500">{% trans "No time entries yet." %}</div>
+    {% endfor %}
+  </div>
+</div>

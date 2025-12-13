@@ -1,0 +1,30 @@
+{% load i18n %}
+<div id="task-{{ task.id }}" class="p-5 flex items-center justify-between gap-4">
+  <div class="flex items-center gap-3 min-w-0">
+    <button
+      class="h-6 w-6 rounded-md border border-zinc-700 flex items-center justify-center hover:bg-zinc-900"
+      hx-post="{% url 'web:tasks_toggle' task.id %}"
+      hx-target="#task-{{ task.id }}"
+      hx-swap="outerHTML">
+      {% if task.status == 'DONE' %}
+        <span class="text-xs">✓</span>
+      {% endif %}
+    </button>
+    <div class="min-w-0">
+      <div class="font-medium truncate {% if task.status == 'DONE' %}line-through text-zinc-400{% endif %}">
+        {{ task.title }}
+      </div>
+      <div class="mt-1 text-xs text-zinc-500 truncate">
+        {{ task.project.title }} · {% trans "Assigned to" %} {{ task.assigned_to.email }}
+      </div>
+    </div>
+  </div>
+
+  <div class="shrink-0">
+    {% if task.status == 'DONE' %}
+      <span class="rounded-full border border-emerald-800 bg-emerald-950/40 px-2 py-1 text-xs text-emerald-200">{% trans "Done" %}</span>
+    {% else %}
+      <span class="rounded-full border border-zinc-800 bg-zinc-950/40 px-2 py-1 text-xs text-zinc-300">{% trans "Todo" %}</span>
+    {% endif %}
+  </div>
+</div>

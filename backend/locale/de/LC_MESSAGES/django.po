@@ -1,0 +1,337 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: project-manager\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Workspace"
+msgstr "Workspace"
+
+msgid "Dashboard"
+msgstr "Dashboard"
+
+msgid "Projects"
+msgstr "Projekte"
+
+msgid "Tasks"
+msgstr "Aufgaben"
+
+msgid "Switch"
+msgstr "Wechseln"
+
+msgid "Logout"
+msgstr "Abmelden"
+
+msgid "Workspaces"
+msgstr "Workspaces"
+
+msgid "Welcome back"
+msgstr "Willkommen zurück"
+
+msgid "Sign in to continue."
+msgstr "Melde dich an, um fortzufahren."
+
+msgid "Invalid credentials."
+msgstr "Ungültige Zugangsdaten."
+
+msgid "Email"
+msgstr "E-Mail"
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Sign in"
+msgstr "Anmelden"
+
+msgid "Admin is available at"
+msgstr "Admin ist verfügbar unter"
+
+msgid "Create your workspace"
+msgstr "Workspace erstellen"
+
+msgid "A workspace keeps projects, tasks and marketing in one place."
+msgstr "Ein Workspace bündelt Projekte, Aufgaben und Marketing an einem Ort."
+
+msgid "Workspace name"
+msgstr "Workspace-Name"
+
+msgid "Acme Studio"
+msgstr "Acme Studio"
+
+msgid "Create workspace"
+msgstr "Workspace erstellen"
+
+msgid "Tip: you can create multiple workspaces later and switch anytime."
+msgstr "Tipp: Du kannst später mehrere Workspaces erstellen und jederzeit wechseln."
+
+msgid "Please provide a workspace name"
+msgstr "Bitte gib einen Workspace-Namen ein"
+
+msgid "A clean overview — fast actions, no noise."
+msgstr "Klarer Überblick — schnelle Aktionen, kein Lärm."
+
+msgid "Plan, track, ship."
+msgstr "Planen, verfolgen, liefern."
+
+msgid "Turn chaos into momentum."
+msgstr "Aus Chaos wird Momentum."
+
+msgid "Marketing tasks"
+msgstr "Marketing-Aufgaben"
+
+msgid "Consistent output wins."
+msgstr "Konstanz gewinnt."
+
+msgid "Next"
+msgstr "Nächster Schritt"
+
+msgid "Set up your first project"
+msgstr "Erstelle dein erstes Projekt"
+
+msgid "We can turn this into a guided onboarding with templates and streaks."
+msgstr "Daraus können wir ein geführtes Onboarding mit Templates und Streaks machen."
+
+msgid "Create project"
+msgstr "Projekt erstellen"
+
+msgid "Create momentum. Keep scope tight."
+msgstr "Momentum aufbauen. Fokus halten."
+
+msgid "New project"
+msgstr "Neues Projekt"
+
+msgid "Create"
+msgstr "Erstellen"
+
+msgid "All projects"
+msgstr "Alle Projekte"
+
+msgid "total"
+msgstr "gesamt"
+
+msgid "No projects yet. Create the first one on the left."
+msgstr "Noch keine Projekte. Erstelle links dein erstes."
+
+msgid "Small wins, compounding daily."
+msgstr "Kleine Siege, jeden Tag."
+
+msgid "Quick add"
+msgstr "Schnell hinzufügen"
+
+msgid "Create a project first."
+msgstr "Erstelle zuerst ein Projekt."
+
+msgid "Go to projects"
+msgstr "Zu den Projekten"
+
+msgid "Project"
+msgstr "Projekt"
+
+msgid "Title"
+msgstr "Titel"
+
+msgid "Description"
+msgstr "Beschreibung"
+
+msgid "Priority"
+msgstr "Priorität"
+
+msgid "Category"
+msgstr "Kategorie"
+
+msgid "Start date"
+msgstr "Startdatum"
+
+msgid "End date"
+msgstr "Enddatum"
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Me"
+msgstr "Ich"
+
+msgid "Team"
+msgstr "Team"
+
+msgid "Manage members and invites for this workspace."
+msgstr "Verwalte Mitglieder und Einladungen für diesen Workspace."
+
+msgid "Invite member"
+msgstr "Mitglied einladen"
+
+msgid "Role"
+msgstr "Rolle"
+
+msgid "Create invite link"
+msgstr "Einladungslink erstellen"
+
+msgid "Invite link"
+msgstr "Einladungslink"
+
+msgid "Members"
+msgstr "Mitglieder"
+
+msgid "Pending invitations"
+msgstr "Offene Einladungen"
+
+msgid "Open"
+msgstr "Öffnen"
+
+msgid "No pending invites."
+msgstr "Keine offenen Einladungen."
+
+msgid "Accept invitation"
+msgstr "Einladung annehmen"
+
+msgid "You have been invited to join"
+msgstr "Du wurdest eingeladen, beizutreten zu"
+
+msgid "Invited email"
+msgstr "Eingeladene E-Mail"
+
+msgid "Join workspace"
+msgstr "Workspace beitreten"
+
+msgid "New workspace"
+msgstr "Neuer Workspace"
+
+msgid "Create a new workspace to separate projects and tasks."
+msgstr "Erstelle einen neuen Workspace, um Projekte und Aufgaben zu trennen."
+
+msgid "Filters"
+msgstr "Filter"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "All statuses"
+msgstr "Alle Status"
+
+msgid "Show done"
+msgstr "Erledigte anzeigen"
+
+msgid "Add task"
+msgstr "Aufgabe hinzufügen"
+
+msgid "Recent tasks"
+msgstr "Letzte Aufgaben"
+
+msgid "shown"
+msgstr "angezeigt"
+
+msgid "No tasks yet. Add one on the left."
+msgstr "Noch keine Aufgaben. Füge links die erste hinzu."
+
+msgid "Assigned to"
+msgstr "Zuständig:"
+
+msgid "Done"
+msgstr "Erledigt"
+
+msgid "Todo"
+msgstr "Offen"
+
+msgid "Undo"
+msgstr "Rückgängig"
+
+msgid "In progress"
+msgstr "In Arbeit"
+
+msgid "In progress (unscheduled)"
+msgstr "In Arbeit (ohne Termin)"
+
+msgid "Backlog"
+msgstr "Backlog"
+
+msgid "Drop tasks here"
+msgstr "Aufgaben hier ablegen"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "Inbox"
+msgstr "Eingang"
+
+msgid "Today"
+msgstr "Heute"
+
+msgid "Month"
+msgstr "Monat"
+
+msgid "Week"
+msgstr "Woche"
+
+msgid "Day"
+msgstr "Tag"
+
+msgid "All day"
+msgstr "Ganztägig"
+
+msgid "Your schedule across all projects."
+msgstr "Dein Zeitplan über alle Projekte hinweg."
+
+msgid "Could not refresh calendar."
+msgstr "Kalender konnte nicht aktualisiert werden."
+
+msgid "Could not move task. Please try again."
+msgstr "Aufgabe konnte nicht verschoben werden. Bitte versuche es erneut."
+
+msgid "Calendar"
+msgstr "Kalender"
+
+msgid "Kanban"
+msgstr "Kanban"
+
+msgid "Unscheduled tasks"
+msgstr "Nicht eingeplante Aufgaben"
+
+msgid "No unscheduled tasks."
+msgstr "Keine nicht eingeplanten Aufgaben."
+
+msgid "Schedule"
+msgstr "Planung"
+
+msgid "Could not schedule task. Please try again."
+msgstr "Aufgabe konnte nicht eingeplant werden. Bitte versuche es erneut."
+
+msgid "Unschedule this task?"
+msgstr "Diesen Task aus dem Kalender entfernen?"
+
+msgid "Could not unschedule task. Please try again."
+msgstr "Task konnte nicht aus dem Kalender entfernt werden. Bitte versuche es erneut."
+
+msgid "Start"
+msgstr "Start"
+
+msgid "Stop"
+msgstr "Stopp"
+
+msgid "Time overview"
+msgstr "Zeitübersicht"
+
+msgid "Total tracked"
+msgstr "Gesamt erfasst"
+
+msgid "Top tasks"
+msgstr "Top Aufgaben"
+
+msgid "No tracked time yet."
+msgstr "Noch keine erfasste Zeit."
+
+msgid "Time entries"
+msgstr "Zeiteinträge"
+
+msgid "running"
+msgstr "läuft"
+
+msgid "No time entries yet."
+msgstr "Noch keine Zeiteinträge."

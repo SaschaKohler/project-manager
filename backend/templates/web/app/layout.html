@@ -1,0 +1,73 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block body %}
+<div class="min-h-screen">
+  <div class="border-b border-zinc-800/70 bg-zinc-950/40 backdrop-blur">
+    <div class="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="{% url 'web:home' %}" class="h-9 w-9 rounded-xl bg-indigo-600/15 border border-indigo-500/35 flex items-center justify-center font-semibold">PM</a>
+        <div>
+          <div class="text-sm text-zinc-400">{% trans "Workspace" %}</div>
+          <div class="font-semibold">{{ org.name }}</div>
+        </div>
+        <div class="ml-6 hidden md:flex items-center gap-2">
+          <a href="{% url 'web:home' %}" class="rounded-lg px-3 py-2 text-sm hover:bg-zinc-900/40">{% trans "Dashboard" %}</a>
+          <a href="{% url 'web:projects' %}" class="rounded-lg px-3 py-2 text-sm hover:bg-zinc-900/40">{% trans "Projects" %}</a>
+          <a href="{% url 'web:tasks' %}" class="rounded-lg px-3 py-2 text-sm hover:bg-zinc-900/40">{% trans "Tasks" %}</a>
+          <a href="{% url 'web:calendar' %}" class="rounded-lg px-3 py-2 text-sm hover:bg-zinc-900/40">{% trans "Calendar" %}</a>
+          <a href="{% url 'web:team' %}" class="rounded-lg px-3 py-2 text-sm hover:bg-zinc-900/40">{% trans "Team" %}</a>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2" x-data="{open:false}">
+        <div class="hidden md:block text-sm text-zinc-400 mr-2">
+          {% if request.user.name %}
+            {{ request.user.name }} · {{ request.user.email }}
+          {% else %}
+            {{ request.user.email }}
+          {% endif %}
+        </div>
+        <form action="{% url 'set_language' %}" method="post" class="hidden md:block">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.path }}" />
+          <select name="language" onchange="this.form.submit()" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            <option value="de" {% if CURRENT_LANGUAGE == 'de' %}selected{% endif %}>DE</option>
+            <option value="en" {% if CURRENT_LANGUAGE == 'en' %}selected{% endif %}>EN</option>
+          </select>
+        </form>
+        <button @click="open = !open" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+          {% trans "Switch" %}
+        </button>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+            {% trans "Logout" %}
+          </button>
+        </form>
+
+        <div x-show="open" @click.outside="open=false" class="absolute mt-12 right-6 w-64 rounded-xl border border-zinc-800/70 bg-zinc-950/70 backdrop-blur shadow-xl overflow-hidden">
+          <div class="px-4 py-3 text-xs uppercase tracking-wider text-zinc-400 border-b border-zinc-800/70">{% trans "Workspaces" %}</div>
+          <div class="max-h-72 overflow-auto">
+            {% for o in orgs %}
+              <a href="{% url 'web:switch_org' o.id %}" class="block px-4 py-3 text-sm hover:bg-zinc-900/50 {% if o.id == org.id %}bg-zinc-900/40{% endif %}">
+                <div class="font-medium">{{ o.name }}</div>
+                <div class="text-xs text-zinc-400">{{ o.slug }}</div>
+              </a>
+            {% endfor %}
+            <a href="{% url 'web:workspaces_new' %}" class="block px-4 py-3 text-sm hover:bg-zinc-900/50">
+              <div class="font-medium">{% trans "New workspace" %}</div>
+              <div class="text-xs text-zinc-400">{% trans "Create workspace" %}</div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-6xl px-6 py-8">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

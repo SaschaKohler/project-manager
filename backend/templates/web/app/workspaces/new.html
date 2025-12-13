@@ -1,0 +1,23 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "New workspace" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-xl rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-6 backdrop-blur">
+  <h1 class="text-2xl font-semibold tracking-tight">{% trans "New workspace" %}</h1>
+  <p class="mt-2 text-sm text-zinc-300">{% trans "Create a new workspace to separate projects and tasks." %}</p>
+
+  <form method="post" class="mt-6 space-y-3">
+    {% csrf_token %}
+    <div>
+      <label class="block text-xs text-zinc-400 mb-2">{% trans "Workspace name" %}</label>
+      <input name="name" required placeholder="Acme Studio"
+             class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+      {% trans "Create workspace" %}
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,338 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Tasks" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Tasks" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Small wins, compounding daily." %}</p>
+  </div>
+</div>
+
+<div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+  <div class="flex flex-wrap items-center gap-2">
+  <a href="?view=all{% if active_project %}&project={{ active_project.id }}{% endif %}"
+     class="rounded-lg px-3 py-1.5 text-sm border transition {% if active_view == 'all' %}border-indigo-500 bg-indigo-600/20 text-zinc-100{% else %}border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900{% endif %}">
+    {% trans "All" %}
+  </a>
+  <a href="?view=inbox{% if active_project %}&project={{ active_project.id }}{% endif %}"
+     class="rounded-lg px-3 py-1.5 text-sm border transition {% if active_view == 'inbox' %}border-indigo-500 bg-indigo-600/20 text-zinc-100{% else %}border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900{% endif %}">
+    {% trans "Inbox" %}
+  </a>
+  <a href="?view=today{% if active_project %}&project={{ active_project.id }}{% endif %}"
+     class="rounded-lg px-3 py-1.5 text-sm border transition {% if active_view == 'today' %}border-indigo-500 bg-indigo-600/20 text-zinc-100{% else %}border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900{% endif %}">
+    {% trans "Today" %}
+  </a>
+  {% if active_project %}
+    <a href="{% url 'web:project_calendar' active_project.id %}"
+       class="rounded-lg px-3 py-1.5 text-sm border transition border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+      {% trans "Calendar" %}
+    </a>
+  {% endif %}
+  </div>
+
+  <form method="get" class="flex items-center gap-2">
+    <input type="hidden" name="view" value="{{ active_view }}" />
+    <label class="text-sm text-zinc-400">{% trans "Project" %}</label>
+    <select name="project"
+            onchange="this.form.submit()"
+            class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+      <option value="">{% trans "All projects" %}</option>
+      {% for p in projects %}
+        <option value="{{ p.id }}" {% if active_project and active_project.id == p.id %}selected{% endif %}>{{ p.title }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-4">
+  <div class="lg:col-span-1 rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-5 backdrop-blur">
+    <div class="text-sm text-zinc-400">{% trans "Quick add" %}</div>
+
+    {% if not projects %}
+      <div class="mt-4 text-sm text-zinc-300">{% trans "Create a project first." %}</div>
+      <a href="{% url 'web:projects' %}" class="mt-4 inline-flex rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">{% trans "Go to projects" %}</a>
+    {% else %}
+      <form class="mt-4 space-y-3"
+            hx-post="{% url 'web:tasks_create' %}"
+            hx-target="#col-todo"
+            hx-swap="afterbegin"
+            hx-on::after-request="this.reset()">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Project" %}</label>
+          <select name="project_id" required class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            {% for p in projects %}
+              <option value="{{ p.id }}">{{ p.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Title" %}</label>
+          <input name="title" required placeholder="e.g. Write landing copy"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Assigned to" %}</label>
+          <select name="assigned_to" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Me" %}</option>
+            {% for m in members %}
+              <option value="{{ m.user.id }}">{{ m.user.email }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+          {% trans "Add task" %}
+        </button>
+      </form>
+    {% endif %}
+
+    <div class="mt-8 border-t border-zinc-800/70 pt-5">
+      <div class="text-sm text-zinc-400">{% trans "Time overview" %}</div>
+
+      {% if active_project %}
+        <div class="mt-3 flex items-center justify-between text-sm">
+          <div class="text-zinc-300">{% trans "Total tracked" %}</div>
+          <div class="text-zinc-200 font-medium">{{ active_project_total_human }}</div>
+        </div>
+
+        <div class="mt-4 text-xs text-zinc-400">{% trans "Top tasks" %}</div>
+        <div class="mt-2 space-y-2">
+          {% for t in active_project_top_tasks %}
+            <div class="rounded-lg border border-zinc-800/70 bg-zinc-950/20 px-3 py-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-sm text-zinc-200 truncate">{{ t.title }}</div>
+                <div class="text-xs text-zinc-400 font-mono">{{ t.tracked_human }}</div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="mt-2 text-sm text-zinc-500">{% trans "No tracked time yet." %}</div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="mt-3 space-y-2">
+          {% for row in project_time_overview %}
+            <a class="block rounded-lg border border-zinc-800/70 bg-zinc-950/20 px-3 py-2 hover:bg-zinc-950/35 transition"
+               href="?view={{ active_view }}&project={{ row.project_id }}">
+              <div class="flex items-center justify-between gap-2">
+                <div class="text-sm text-zinc-200 truncate">{{ row.project_title }}</div>
+                <div class="text-xs text-zinc-400 font-mono">{{ row.total_human }}</div>
+              </div>
+            </a>
+          {% empty %}
+            <div class="mt-2 text-sm text-zinc-500">{% trans "No tracked time yet." %}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="rounded-2xl border border-zinc-800/70 bg-zinc-900/20 overflow-hidden">
+      <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+        <div class="text-sm text-zinc-200 font-medium">{% trans "Todo" %}</div>
+        <div class="text-xs text-zinc-500">{{ todo_tasks|length }}</div>
+      </div>
+      <div id="col-todo" class="p-4 space-y-3 min-h-[200px]" data-kanban-column="1" data-status="TODO">
+        {% for task in todo_tasks %}
+          {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
+        {% empty %}
+          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-zinc-800/70 bg-zinc-900/20 overflow-hidden">
+      <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+        <div class="text-sm text-zinc-200 font-medium">{% trans "In progress" %}</div>
+        <div class="text-xs text-zinc-500">{{ in_progress_tasks|length }}</div>
+      </div>
+      <div id="col-inprogress" class="p-4 space-y-3 min-h-[200px]" data-kanban-column="1" data-status="IN_PROGRESS">
+        {% for task in in_progress_tasks %}
+          {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
+        {% empty %}
+          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-zinc-800/70 bg-zinc-900/20 overflow-hidden">
+      <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+        <div class="text-sm text-zinc-200 font-medium">{% trans "Done" %}</div>
+        <div class="text-xs text-zinc-500">{{ done_total_human }} · {{ done_tasks|length }}</div>
+      </div>
+      <div id="col-done" class="p-4 space-y-3 min-h-[200px]" data-kanban-column="1" data-status="DONE">
+        {% for task in done_tasks %}
+          {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
+        {% empty %}
+          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+  function formatDuration(totalSeconds) {
+    const s = Math.max(0, Math.floor(totalSeconds));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+    return `${m}:${String(sec).padStart(2, '0')}`;
+  }
+
+  function initLiveTimers(root) {
+    const scope = root || document;
+    scope.querySelectorAll('[data-task-id]')?.forEach((card) => {
+      const startedAt = card.dataset.runningStartedAt;
+      const liveEl = card.querySelector('[data-live-timer]');
+      if (!liveEl) return;
+
+      if (!startedAt) {
+        liveEl.textContent = '';
+        liveEl.classList.add('hidden');
+        return;
+      }
+
+      const startMs = Date.parse(startedAt);
+      if (!Number.isFinite(startMs)) {
+        liveEl.textContent = '';
+        liveEl.classList.add('hidden');
+        return;
+      }
+
+      liveEl.classList.remove('hidden');
+
+      const tick = () => {
+        const seconds = (Date.now() - startMs) / 1000;
+        liveEl.textContent = formatDuration(seconds);
+      };
+
+      tick();
+      clearInterval(card._timerInterval);
+      card._timerInterval = setInterval(tick, 1000);
+    });
+  }
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  function showToast(message) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove('opacity-0', 'pointer-events-none');
+    el.classList.add('opacity-100');
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => {
+      el.classList.add('opacity-0', 'pointer-events-none');
+      el.classList.remove('opacity-100');
+    }, 2200);
+  }
+
+  function getTaskIndexInColumn(columnEl, cardEl) {
+    const cards = Array.from(columnEl.querySelectorAll('[data-task-id]'));
+    return cards.indexOf(cardEl);
+  }
+
+  function insertTaskAtIndex(columnEl, cardEl, index) {
+    const cards = Array.from(columnEl.querySelectorAll('[data-task-id]')).filter((el) => el !== cardEl);
+    const clamped = Math.max(0, Math.min(index, cards.length));
+    const before = cards[clamped] || null;
+    columnEl.insertBefore(cardEl, before);
+  }
+
+  function postMove(cardEl, columnEl, position) {
+    const status = columnEl.dataset.status;
+    const url = cardEl.dataset.moveUrl;
+
+    const body = new URLSearchParams();
+    body.set('status', status);
+    body.set('position', String(position));
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body,
+    });
+  }
+
+  function initKanban() {
+    document.querySelectorAll('[data-kanban-column]')?.forEach((col) => {
+      if (col._sortableInitialized) return;
+      col._sortableInitialized = true;
+
+      new Sortable(col, {
+        group: 'tasks',
+        draggable: '[data-task-id]',
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'opacity-50',
+        onStart: (evt) => {
+          const cardEl = evt.item;
+          cardEl._fromCol = evt.from;
+          cardEl._fromIndex = getTaskIndexInColumn(evt.from, cardEl);
+        },
+        onEnd: async (evt) => {
+          const cardEl = evt.item;
+          const columnEl = evt.to;
+          const position = getTaskIndexInColumn(columnEl, cardEl);
+          try {
+            const res = await postMove(cardEl, columnEl, position);
+            if (!res.ok) throw new Error('move_failed');
+          } catch (e) {
+            if (cardEl._fromCol) {
+              insertTaskAtIndex(cardEl._fromCol, cardEl, cardEl._fromIndex ?? 0);
+            }
+            showToast('{% trans "Could not move task. Please try again." %}');
+          }
+        }
+      });
+    });
+  }
+
+  function initTasksUi(root) {
+    initKanban();
+    initLiveTimers(root || document);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => initTasksUi(document));
+  document.body.addEventListener('htmx:load', (evt) => initTasksUi(evt.target));
+  document.body.addEventListener('htmx:afterSwap', (evt) => initTasksUi(evt.target));
+
+  document.body.addEventListener('taskStatusChanged', async (evt) => {
+    const detail = evt.detail || {};
+    const taskId = detail.task_id;
+    const newStatus = detail.new_status;
+    if (!taskId || !newStatus) return;
+
+    const card = document.querySelector(`[data-task-id="${taskId}"]`);
+    const targetCol = document.querySelector(`[data-status="${newStatus}"]`);
+    if (card && targetCol) {
+      const sourceCol = card.parentElement;
+      targetCol.prepend(card);
+      try {
+        const res = await postMove(card, targetCol, 0);
+        if (!res.ok) throw new Error('move_failed');
+      } catch (e) {
+        if (sourceCol) sourceCol.prepend(card);
+        showToast('{% trans "Could not move task. Please try again." %}');
+      }
+    }
+  });
+</script>
+
+<div id="toast"
+     class="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950/90 px-4 py-2 text-sm text-zinc-200 shadow-lg opacity-0 pointer-events-none transition-opacity">
+</div>
+{% endblock %}

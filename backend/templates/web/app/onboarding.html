@@ -1,0 +1,40 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+
+{% block title %}Onboarding · Project Manager{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center px-6">
+  <div class="w-full max-w-lg">
+    <div class="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8 shadow-lg">
+      <h1 class="text-2xl font-semibold tracking-tight">{% trans "Create your workspace" %}</h1>
+      <p class="mt-2 text-sm text-zinc-300">{% trans "A workspace keeps projects, tasks and marketing in one place." %}</p>
+
+      {% if messages %}
+        <div class="mt-4 space-y-2">
+          {% for message in messages %}
+            <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-sm text-zinc-200">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="mt-6 space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="block text-sm text-zinc-200 mb-2">{% trans "Workspace name" %}</label>
+          <input name="name" required placeholder="{% trans 'Acme Studio' %}"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <button type="submit"
+                class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+          {% trans "Create workspace" %}
+        </button>
+      </form>
+
+      <div class="mt-6 text-xs text-zinc-400">
+        {% trans "Tip: you can create multiple workspaces later and switch anytime." %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

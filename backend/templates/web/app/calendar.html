@@ -1,0 +1,236 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+{% block title %}{% trans "Calendar" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Calendar" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Your schedule across all projects." %}</p>
+  </div>
+</div>
+
+{% if in_progress_unscheduled %}
+<div class="mt-6 rounded-2xl border border-zinc-800/70 bg-zinc-900/20 overflow-hidden">
+  <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+    <div class="text-sm text-zinc-200 font-medium">{% trans "In progress (unscheduled)" %}</div>
+    <div class="text-xs text-zinc-500">{{ in_progress_unscheduled|length }}</div>
+  </div>
+  <div class="divide-y divide-zinc-800/70">
+    {% for t in in_progress_unscheduled %}
+      <div class="p-4 flex items-center justify-between gap-4">
+        <div class="min-w-0">
+          <div class="font-medium truncate">{{ t.project.title }}: {{ t.title }}</div>
+          <div class="mt-1 text-xs text-zinc-400 truncate">{% trans "Assigned to" %} {{ t.assigned_to.email }}</div>
+        </div>
+        <a class="rounded-lg border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55"
+           href="{% url 'web:tasks' %}?project={{ t.project.id }}&view=all">
+          {% trans "Open" %}
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
+  <div class="px-5 py-4 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
+    <div class="text-xs uppercase tracking-wider text-zinc-500">{% trans "Filters" %}</div>
+    <form id="global-calendar-filters" class="flex flex-wrap items-center gap-3">
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-zinc-400" for="filter-project">{% trans "Project" %}</label>
+        <select id="filter-project" class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">{% trans "All projects" %}</option>
+          {% for p in projects %}
+            <option value="{{ p.id }}">{{ p.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-zinc-400" for="filter-status">{% trans "Status" %}</label>
+        <select id="filter-status" class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">{% trans "All statuses" %}</option>
+          <option value="TODO">{% trans "Todo" %}</option>
+          <option value="IN_PROGRESS">{% trans "In progress" %}</option>
+          <option value="DONE">{% trans "Done" %}</option>
+        </select>
+      </div>
+
+      <label class="flex items-center gap-2 text-sm text-zinc-400 select-none">
+        <input id="filter-show-done" type="checkbox" checked class="rounded border-zinc-700 bg-zinc-950" />
+        {% trans "Show done" %}
+      </label>
+    </form>
+  </div>
+
+  <div class="p-4">
+    <div id="calendar"></div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
+<style>
+  #calendar {
+    --fc-border-color: rgba(63, 63, 70, 0.7);
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: rgba(24, 24, 27, 0.55);
+    --fc-neutral-text-color: rgb(161, 161, 170);
+    --fc-today-bg-color: rgba(99, 102, 241, 0.10);
+    --fc-event-text-color: rgb(244, 244, 245);
+  }
+
+  #calendar .fc-theme-standard td,
+  #calendar .fc-theme-standard th,
+  #calendar .fc-scrollgrid {
+    border-color: rgba(63, 63, 70, 0.7);
+  }
+
+  #calendar .fc-col-header-cell-cushion,
+  #calendar .fc-timegrid-axis-cushion,
+  #calendar .fc-timegrid-slot-label-cushion,
+  #calendar .fc-daygrid-day-number {
+    color: rgb(212, 212, 216);
+  }
+
+  #calendar .fc-timegrid-slot {
+    background: rgba(9, 9, 11, 0.18);
+  }
+
+  #calendar .fc-timegrid-slot-minor {
+    border-top-style: dotted;
+    border-top-color: rgba(63, 63, 70, 0.45);
+  }
+
+  #calendar .fc-toolbar-title {
+    color: rgb(244, 244, 245);
+    font-weight: 600;
+  }
+
+  #calendar .fc-button {
+    background: rgba(39, 39, 42, 0.55);
+    border: 1px solid rgba(63, 63, 70, 0.9);
+    color: rgb(228, 228, 231);
+    box-shadow: none;
+    text-transform: none;
+  }
+
+  #calendar .fc-button:hover {
+    background: rgba(39, 39, 42, 0.75);
+  }
+
+  #calendar .fc-button-primary:not(:disabled).fc-button-active,
+  #calendar .fc-button-primary:not(:disabled):active {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.65);
+    color: rgb(244, 244, 245);
+  }
+
+  #calendar .fc-event {
+    border-radius: 10px;
+    padding: 2px 6px;
+  }
+
+  #calendar .fc-day-today {
+    background: rgba(99, 102, 241, 0.10) !important;
+  }
+
+  #calendar .fc-highlight {
+    background: rgba(99, 102, 241, 0.12);
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+<script>
+  function showToast(message) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove('opacity-0', 'pointer-events-none');
+    el.classList.add('opacity-100');
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => {
+      el.classList.add('opacity-0', 'pointer-events-none');
+      el.classList.remove('opacity-100');
+    }, 2200);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const projectEl = document.getElementById('filter-project');
+    const statusEl = document.getElementById('filter-status');
+    const showDoneEl = document.getElementById('filter-show-done');
+
+    const rawLocale = '{{ CURRENT_LANGUAGE }}' || 'en';
+    const locale = rawLocale.toLowerCase().startsWith('de') ? 'de' : 'en';
+
+    const calEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calEl, {
+      initialView: 'timeGridWeek',
+      height: 'auto',
+      editable: false,
+      nowIndicator: true,
+      timeZone: 'local',
+      locale: locale,
+      buttonText: {
+        today: '{% trans "Today" %}',
+        month: '{% trans "Month" %}',
+        week: '{% trans "Week" %}',
+        day: '{% trans "Day" %}',
+      },
+      allDayText: '{% trans "All day" %}',
+      firstDay: 1,
+      weekNumbers: true,
+      slotMinTime: '06:00:00',
+      slotMaxTime: '22:00:00',
+      scrollTime: '08:00:00',
+      slotDuration: '00:30:00',
+      eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+      slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+      dayHeaderFormat: { weekday: 'short', day: '2-digit', month: '2-digit' },
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      eventSources: [
+        {
+          url: '{% url "web:calendar_events" %}',
+          method: 'GET',
+          extraParams: () => {
+            const params = {};
+            const project = (projectEl && projectEl.value) ? projectEl.value : '';
+            if (project) params.project = project;
+            const status = (statusEl && statusEl.value) ? statusEl.value : '';
+            if (status) params.status = status;
+            const showDone = showDoneEl ? showDoneEl.checked : true;
+            if (!showDone) params.hide_done = '1';
+            return params;
+          }
+        }
+      ],
+      eventClick: (info) => {
+        const projectId = info.event.extendedProps && info.event.extendedProps.project_id;
+        if (projectId) {
+          window.location.href = `{% url 'web:project_calendar' '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', projectId);
+        }
+      }
+    });
+
+    calendar.render();
+
+    function refetch() {
+      try { calendar.refetchEvents(); } catch (e) { showToast('{% trans "Could not refresh calendar." %}'); }
+    }
+
+    if (projectEl) projectEl.addEventListener('change', refetch);
+    if (statusEl) statusEl.addEventListener('change', refetch);
+    if (showDoneEl) showDoneEl.addEventListener('change', refetch);
+  });
+</script>
+
+<div id="toast"
+     class="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950/90 px-4 py-2 text-sm text-zinc-200 shadow-lg opacity-0 pointer-events-none transition-opacity">
+</div>
+{% endblock %}

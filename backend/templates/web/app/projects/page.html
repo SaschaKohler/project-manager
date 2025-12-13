@@ -1,0 +1,99 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Projects" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Projects" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Create momentum. Keep scope tight." %}</p>
+  </div>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-1 rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-5 backdrop-blur">
+    <div class="text-sm text-zinc-400">{% trans "New project" %}</div>
+    <form class="mt-4 space-y-3"
+          hx-post="{% url 'web:projects_create' %}"
+          hx-target="#project-list"
+          hx-swap="afterbegin"
+          hx-on::after-request="this.reset()">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Title" %}</label>
+        <input name="title" required placeholder="e.g. Launch Q1 Campaign"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Description" %}</label>
+        <textarea name="description" rows="3" placeholder="..."
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Status" %}</label>
+          <select name="status" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="PLANNED">Planned</option>
+            <option value="ACTIVE">Active</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Priority" %}</label>
+          <select name="priority" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="LOW">Low</option>
+            <option value="MEDIUM" selected>Medium</option>
+            <option value="HIGH">High</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Category" %}</label>
+        <select name="category" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="WORKSHOP">Workshop</option>
+          <option value="RETREAT">Retreat</option>
+          <option value="CONSULTATION">Consultation</option>
+          <option value="IT_SERVICE">IT Service</option>
+          <option value="MARKETING">Marketing</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Start date" %}</label>
+          <input type="date" name="start_date"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "End date" %}</label>
+          <input type="date" name="end_date"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Budget" %}</label>
+        <input name="budget" placeholder="0.00"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+        {% trans "Create" %}
+      </button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 rounded-2xl border border-zinc-800/70 bg-zinc-900/20">
+    <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+      <div class="text-sm text-zinc-400">{% trans "All projects" %}</div>
+      <div class="text-xs text-zinc-500">{{ projects|length }} {% trans "total" %}</div>
+    </div>
+    <div id="project-list" class="divide-y divide-zinc-800/70">
+      {% for project in projects %}
+        {% include "web/app/projects/_project_row.html" with project=project %}
+      {% empty %}
+        <div class="p-6 text-sm text-zinc-400">{% trans "No projects yet. Create the first one on the left." %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

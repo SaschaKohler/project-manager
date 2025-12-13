@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: project-manager
+        app.kubernetes.io/component: web
     spec:
       initContainers:
         - name: migrate

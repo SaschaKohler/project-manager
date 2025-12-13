@@ -5,8 +5,10 @@ metadata:
   labels:
     app.kubernetes.io/name: project-manager
 spec:
+  type: ClusterIP
   selector:
     app.kubernetes.io/name: project-manager
+    app.kubernetes.io/component: web
   ports:
     - name: http
       port: 80

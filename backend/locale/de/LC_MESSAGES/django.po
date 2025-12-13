@@ -192,9 +192,6 @@ msgstr "Neues Projekt"
 msgid "Create"
 msgstr "Erstellen"
 
-msgid "Idea pools and link collections for your workspace."
-msgstr "Ideenpools und Link-Sammlungen für deinen Workspace."
-
 msgid "Create board"
 msgstr "Board erstellen"
 
@@ -266,9 +263,6 @@ msgstr "In Prüfung"
 
 msgid "Planned"
 msgstr "Geplant"
-
-msgid "Done"
-msgstr "Erledigt"
 
 msgid "All projects"
 msgstr "Alle Projekte"
@@ -440,9 +434,6 @@ msgstr "Noch keine Aufgaben. Füge links die erste hinzu."
 
 msgid "Assigned to"
 msgstr "Zuständig:"
-
-msgid "Done"
-msgstr "Erledigt"
 
 msgid "Todo"
 msgstr "Offen"

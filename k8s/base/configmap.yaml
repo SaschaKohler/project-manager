@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  DEBUG: "False"
+  ALLOWED_HOSTS: "[\"*\"]"
+  DEFAULT_FROM_EMAIL: "no-reply@localhost"
+  EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"

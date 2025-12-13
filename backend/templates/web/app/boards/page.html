@@ -1,0 +1,43 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Boards" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Boards" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Idea pools and link collections for your workspace." %}</p>
+  </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+    <div class="text-sm font-medium text-zinc-200">{% trans "Create board" %}</div>
+    <form method="post" action="{% url 'web:boards_create' %}" class="mt-3 flex items-center gap-2">
+      {% csrf_token %}
+      <input name="title" required placeholder="{% trans 'e.g. Marketing Ideas' %}"
+             class="flex-1 rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+      <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+        {% trans "Create" %}
+      </button>
+    </form>
+  </div>
+
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5">
+    <div class="text-sm font-medium text-zinc-200">{% trans "Existing boards" %}</div>
+    <div class="mt-3 space-y-2">
+      {% if boards %}
+        {% for b in boards %}
+          <a href="{% url 'web:board_detail' b.id %}" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+            <div class="font-medium">{{ b.title }}</div>
+            <div class="mt-1 text-xs text-zinc-400">{% trans "Open board" %}</div>
+          </a>
+        {% endfor %}
+      {% else %}
+        <div class="text-sm text-zinc-400">{% trans "No boards yet." %}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

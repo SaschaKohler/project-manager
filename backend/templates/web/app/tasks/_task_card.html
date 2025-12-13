@@ -8,6 +8,23 @@
     <div class="min-w-0 flex-1">
       {% include "web/app/tasks/_task_title.html" with task=task %}
       <div class="mt-1 text-xs text-zinc-500 truncate">{{ task.project.title }}</div>
+
+      {% if task.idea_card or task.links.all %}
+        <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+          {% if task.idea_card %}
+            <a href="{% url 'web:board_card_detail' task.idea_card.id %}" class="underline hover:text-zinc-200">
+              {% trans "Idea" %}: {{ task.idea_card.title }}
+            </a>
+          {% endif %}
+          {% if task.links.all %}
+            {% with l=task.links.all.0 %}
+              <a href="{{ l.url }}" target="_blank" rel="noopener" class="underline hover:text-zinc-200 truncate max-w-[220px]">
+                {% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}
+              </a>
+            {% endwith %}
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
   </div>
   <div class="mt-3 flex items-center justify-between text-xs text-zinc-500">

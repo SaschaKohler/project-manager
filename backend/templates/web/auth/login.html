@@ -36,6 +36,13 @@
         </button>
       </form>
 
+      <div class="mt-4 text-sm text-zinc-300">
+        {% trans "New here?" %}
+        <a href="{% url 'web_register' %}" class="text-indigo-300 hover:text-indigo-200 underline">
+          {% trans "Create an account" %}
+        </a>
+      </div>
+
       <div class="mt-6 text-xs text-zinc-400">
         {% trans "Admin is available at" %} <span class="font-mono">/admin</span>.
       </div>

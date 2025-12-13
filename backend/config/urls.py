@@ -11,6 +11,7 @@ from apps.accounts.views import RegisterView
 from apps.marketing.views import MarketingCampaignViewSet, MarketingTaskViewSet
 from apps.projects.views import EventViewSet, ProjectViewSet, TaskViewSet
 from apps.tenants.views import OrganizationViewSet
+from apps.web import views as web_views
 
 router = routers.DefaultRouter()
 router.register(r"orgs", OrganizationViewSet, basename="org")
@@ -29,9 +30,10 @@ urlpatterns = [
         auth_views.LoginView.as_view(template_name="web/auth/login.html"),
         name="login",
     ),
+    path("register/", web_views.register, name="web_register"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("app/", include("apps.web.urls")),
-    path("api/auth/register/", RegisterView.as_view(), name="register"),
+    path("api/auth/register/", RegisterView.as_view(), name="api_register"),
     path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/", include(router.urls)),
@@ -39,3 +41,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

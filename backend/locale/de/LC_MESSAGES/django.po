@@ -24,6 +24,9 @@ msgstr "Projekte"
 msgid "Tasks"
 msgstr "Aufgaben"
 
+msgid "Boards"
+msgstr "Boards"
+
 msgid "Switch"
 msgstr "Wechseln"
 
@@ -111,6 +114,84 @@ msgstr "Neues Projekt"
 msgid "Create"
 msgstr "Erstellen"
 
+msgid "Idea pools and link collections for your workspace."
+msgstr "Ideenpools und Link-Sammlungen für deinen Workspace."
+
+msgid "Create board"
+msgstr "Board erstellen"
+
+msgid "e.g. Marketing Ideas"
+msgstr "z.B. Marketing-Ideen"
+
+msgid "Existing boards"
+msgstr "Vorhandene Boards"
+
+msgid "Open board"
+msgstr "Board öffnen"
+
+msgid "No boards yet."
+msgstr "Noch keine Boards."
+
+msgid "Board"
+msgstr "Board"
+
+msgid "Back"
+msgstr "Zurück"
+
+msgid "Add idea…"
+msgstr "Idee hinzufügen…"
+
+msgid "links"
+msgstr "Links"
+
+msgid "No links"
+msgstr "Keine Links"
+
+msgid "No cards yet."
+msgstr "Noch keine Karten."
+
+msgid "Card"
+msgstr "Karte"
+
+msgid "Details"
+msgstr "Details"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Links"
+msgstr "Links"
+
+msgid "No links yet."
+msgstr "Noch keine Links."
+
+msgid "Link title (optional)"
+msgstr "Link-Titel (optional)"
+
+msgid "Add link"
+msgstr "Link hinzufügen"
+
+msgid "Screenshots"
+msgstr "Screenshots"
+
+msgid "No uploads yet."
+msgstr "Noch keine Uploads."
+
+msgid "Upload"
+msgstr "Hochladen"
+
+msgid "Ideas"
+msgstr "Ideen"
+
+msgid "In review"
+msgstr "In Prüfung"
+
+msgid "Planned"
+msgstr "Geplant"
+
+msgid "Done"
+msgstr "Erledigt"
+
 msgid "All projects"
 msgstr "Alle Projekte"
 
@@ -155,6 +236,54 @@ msgstr "Enddatum"
 
 msgid "Budget"
 msgstr "Budget"
+
+msgid "Development"
+msgstr "Entwicklung"
+
+msgid "Design"
+msgstr "Design"
+
+msgid "Research"
+msgstr "Recherche"
+
+msgid "Content"
+msgstr "Content"
+
+msgid "Sales"
+msgstr "Vertrieb"
+
+msgid "Finance"
+msgstr "Finanzen"
+
+msgid "Legal"
+msgstr "Recht"
+
+msgid "HR"
+msgstr "HR"
+
+msgid "Operations"
+msgstr "Operations"
+
+msgid "Event"
+msgstr "Event"
+
+msgid "Training"
+msgstr "Training"
+
+msgid "Due date"
+msgstr "Endtermin"
+
+msgid "Link"
+msgstr "Link"
+
+msgid "Link title"
+msgstr "Link-Titel"
+
+msgid "optional"
+msgstr "optional"
+
+msgid "No idea"
+msgstr "Keine Idee"
 
 msgid "Me"
 msgstr "Ich"
@@ -335,3 +464,18 @@ msgstr "läuft"
 
 msgid "No time entries yet."
 msgstr "Noch keine Zeiteinträge."
+
+msgid "Complete"
+msgstr "Beenden"
+
+msgid "Ends today"
+msgstr "Endet heute"
+
+msgid "Ends in %(days)sd"
+msgstr "Endet in %(days)sd"
+
+msgid "Overdue %(days)sd"
+msgstr "Überfällig %(days)sd"
+
+msgid "Are you sure you want to complete this project?"
+msgstr "Möchtest du dieses Projekt wirklich beenden?"

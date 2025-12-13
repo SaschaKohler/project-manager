@@ -83,6 +83,35 @@
             {% endfor %}
           </select>
         </div>
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Idea" %}</label>
+          <select name="idea_card_id" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "No idea" %}</option>
+            {% for c in idea_cards %}
+              <option value="{{ c.id }}">{{ c.column.board.title }} · {{ c.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Link" %}</label>
+            <input name="link_url" type="url" placeholder="https://..."
+                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Link title" %}</label>
+            <input name="link_title" placeholder="{% trans 'optional' %}"
+                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Due date" %}</label>
+          <input name="due_date" type="date"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
         <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
           {% trans "Add task" %}
         </button>

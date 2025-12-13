@@ -1,0 +1,91 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{{ card.title }} · {{ board.title }} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-start justify-between gap-6">
+  <div>
+    <div class="text-xs uppercase tracking-wider text-zinc-500">{% trans "Card" %}</div>
+    <h1 class="mt-1 text-3xl font-semibold tracking-tight">{{ card.title }}</h1>
+    <div class="mt-2 text-sm text-zinc-400">{% trans "Board" %}: <a class="underline" href="{% url 'web:board_detail' board.id %}">{{ board.title }}</a></div>
+  </div>
+  <div>
+    <a href="{% url 'web:board_detail' board.id %}" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+      {% trans "Back" %}
+    </a>
+  </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+    <div class="text-sm font-medium text-zinc-200">{% trans "Details" %}</div>
+    <form method="post" class="mt-4 space-y-3">
+      {% csrf_token %}
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2" for="title">{% trans "Title" %}</label>
+        <input id="title" name="title" required value="{{ card.title }}"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2" for="description">{% trans "Description" %}</label>
+        <textarea id="description" name="description" rows="6"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">{{ card.description }}</textarea>
+      </div>
+      <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+        {% trans "Save" %}
+      </button>
+    </form>
+  </div>
+
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5 space-y-6">
+    <div>
+      <div class="text-sm font-medium text-zinc-200">{% trans "Links" %}</div>
+      <div class="mt-3 space-y-2">
+        {% for l in card.links.all %}
+          <a href="{{ l.url }}" target="_blank" rel="noopener" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+            <div class="text-sm font-medium truncate">{% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}</div>
+            <div class="mt-1 text-xs text-zinc-400 truncate">{{ l.url }}</div>
+          </a>
+        {% empty %}
+          <div class="text-sm text-zinc-500">{% trans "No links yet." %}</div>
+        {% endfor %}
+      </div>
+
+      <form method="post" action="{% url 'web:board_card_link_create' card.id %}" class="mt-3 space-y-2">
+        {% csrf_token %}
+        <input name="title" placeholder="{% trans 'Link title (optional)' %}"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        <input name="url" required placeholder="https://..."
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        <button type="submit" class="w-full rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+          {% trans "Add link" %}
+        </button>
+      </form>
+    </div>
+
+    <div>
+      <div class="text-sm font-medium text-zinc-200">{% trans "Screenshots" %}</div>
+      <div class="mt-3 space-y-2">
+        {% for a in card.attachments.all %}
+          <a href="{{ a.file.url }}" target="_blank" rel="noopener" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+            <div class="text-sm font-medium truncate">{{ a.file.name }}</div>
+            <div class="mt-1 text-xs text-zinc-400">{% trans "Open" %}</div>
+          </a>
+        {% empty %}
+          <div class="text-sm text-zinc-500">{% trans "No uploads yet." %}</div>
+        {% endfor %}
+      </div>
+
+      <form method="post" enctype="multipart/form-data" action="{% url 'web:board_card_attachment_create' card.id %}" class="mt-3 space-y-2">
+        {% csrf_token %}
+        <input type="file" name="file" required
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm" />
+        <button type="submit" class="w-full rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+          {% trans "Upload" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

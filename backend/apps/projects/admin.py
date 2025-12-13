@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Event, Project, Task, TaskTimeEntry
+from .models import Event, Project, Task, TaskLink, TaskTimeEntry
 
 
 @admin.register(Project)
@@ -12,9 +12,15 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("id", "project", "title", "status", "priority", "due_date", "assigned_to", "tracked_seconds")
+    list_display = ("id", "project", "title", "status", "priority", "due_date", "assigned_to", "idea_card", "tracked_seconds")
     list_filter = ("status", "priority")
     search_fields = ("title", "project__title")
+
+
+@admin.register(TaskLink)
+class TaskLinkAdmin(admin.ModelAdmin):
+    list_display = ("url", "task", "created_at")
+    search_fields = ("url", "title", "task__title")
 
 
 @admin.register(TaskTimeEntry)

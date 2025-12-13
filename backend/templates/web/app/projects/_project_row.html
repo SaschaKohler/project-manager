@@ -5,6 +5,18 @@
     <div class="mt-1 text-xs text-zinc-500">{{ project.status }} · {{ project.category }} · {{ project.priority }}</div>
   </div>
   <div class="flex items-center gap-2">
+    {% if is_owner and project.status != "COMPLETED" and project.status != "CANCELLED" %}
+      <form method="post"
+            hx-post="{% url 'web:projects_complete' project.id %}"
+            hx-target="closest div"
+            hx-swap="outerHTML"
+            hx-confirm="{% trans 'Are you sure you want to complete this project?' %}">
+        {% csrf_token %}
+        <button type="submit" class="rounded-lg border border-emerald-800/60 bg-emerald-950/20 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-950/35">
+          {% trans "Complete" %}
+        </button>
+      </form>
+    {% endif %}
     <a href="{% url 'web:tasks' %}?project={{ project.id }}"
        class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 text-xs hover:bg-zinc-900">
       {% trans "Kanban" %}
@@ -13,6 +25,27 @@
        class="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-1.5 text-xs hover:bg-zinc-900">
       {% trans "Calendar" %}
     </a>
-    <div class="text-xs text-zinc-500">{{ project.created_at|date:"Y-m-d" }}</div>
+    {% if project.end_days_left < 0 %}
+      <div class="text-xs rounded-md px-2 py-1 border bg-red-950/30 border-red-800/60 text-red-200">
+        {% blocktrans with days=project.end_days_left|add:"0"|slice:"1:" %}Overdue {{ days }}d{% endblocktrans %}
+      </div>
+    {% elif project.end_days_left == 0 %}
+      <div class="text-xs rounded-md px-2 py-1 border bg-red-950/20 border-red-800/50 text-red-200">
+        {% trans "Ends today" %}
+      </div>
+    {% elif project.end_days_left <= 3 %}
+      <div class="text-xs rounded-md px-2 py-1 border bg-orange-950/25 border-orange-800/50 text-orange-200">
+        {% blocktrans with days=project.end_days_left %}Ends in {{ days }}d{% endblocktrans %}
+      </div>
+    {% elif project.end_days_left <= 7 %}
+      <div class="text-xs rounded-md px-2 py-1 border bg-yellow-950/25 border-yellow-800/50 text-yellow-200">
+        {% blocktrans with days=project.end_days_left %}Ends in {{ days }}d{% endblocktrans %}
+      </div>
+    {% else %}
+      <div class="text-xs rounded-md px-2 py-1 border bg-emerald-950/20 border-emerald-800/50 text-emerald-200">
+        {% blocktrans with days=project.end_days_left %}Ends in {{ days }}d{% endblocktrans %}
+      </div>
+    {% endif %}
+    <div class="text-xs text-zinc-600">{{ project.end_date|date:"Y-m-d" }}</div>
   </div>
 </div>

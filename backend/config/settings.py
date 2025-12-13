@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "apps.tenants",
     "apps.projects",
     "apps.marketing",
+    "apps.boards",
     "apps.web",
 ]
 
@@ -107,6 +108,9 @@ LOCALE_PATHS = [
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True

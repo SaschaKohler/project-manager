@@ -1,12 +1,12 @@
 from django.contrib import messages
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.db.models import F
-from django.db.models import OuterRef, Subquery
+from django.db.models import OuterRef, Prefetch, Subquery
 from django.db.models import Q
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.http import Http404
 from django.http import HttpResponse, HttpResponseForbidden
 from django.http import JsonResponse
@@ -20,8 +20,10 @@ from django.db import transaction
 from decimal import Decimal
 import json
 
+from apps.accounts.forms import CustomUserCreationForm
+from apps.boards.models import Board, BoardCard, BoardCardAttachment, BoardCardLink, BoardColumn
 from apps.tenants.models import Membership, Organization, OrganizationInvitation
-from apps.projects.models import Project, Task, TaskTimeEntry
+from apps.projects.models import Project, Task, TaskLink, TaskTimeEntry
 
 
 def _can_edit_task(request, task: Task) -> bool:
@@ -79,6 +81,22 @@ def healthz(request):
     return HttpResponse("ok")
 
 
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("web:onboarding")
+
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("web:onboarding")
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, "web/auth/register.html", {"form": form})
+
+
 @login_required
 def app_home(request):
     if request.active_org is None:
@@ -107,9 +125,16 @@ def app_home(request):
 
 
 def _web_shell_context(request):
+    membership = None
+    if request.active_org is not None:
+        membership = Membership.objects.filter(organization=request.active_org, user=request.user).only("role").first()
+
+    is_owner = bool(membership and membership.role == Membership.Role.OWNER)
+
     return {
         "org": request.active_org,
         "orgs": Organization.objects.filter(memberships__user=request.user).distinct(),
+        "is_owner": is_owner,
     }
 
 
@@ -190,7 +215,222 @@ def calendar_events(request):
         }
         events.append(payload)
 
+    project_qs = Project.objects.filter(organization=org)
+    if project_id:
+        project_qs = project_qs.filter(id=project_id)
+    if start is not None:
+        project_qs = project_qs.filter(end_date__gte=start)
+    if end is not None:
+        project_qs = project_qs.filter(end_date__lt=end)
+    project_qs = project_qs.only("id", "title", "end_date")
+
+    for project in project_qs:
+        end_dt = project.end_date
+        if end_dt is None:
+            continue
+        end_local = timezone.localtime(end_dt)
+        end_date = end_local.date()
+        payload = {
+            "id": f"project-deadline-{project.id}",
+            "title": f"{project.title} · Deadline",
+            "start": end_date.isoformat(),
+            "end": (end_date + timedelta(days=1)).isoformat(),
+            "allDay": True,
+            "editable": False,
+            "durationEditable": False,
+            "extendedProps": {
+                "project_id": str(project.id),
+                "project_title": project.title,
+                "kind": "project_deadline",
+            },
+            "backgroundColor": "rgba(239, 68, 68, 0.30)",
+            "borderColor": "rgba(239, 68, 68, 0.85)",
+            "textColor": "rgb(254, 226, 226)",
+        }
+        events.append(payload)
+
     return JsonResponse(events, safe=False)
+
+
+@login_required
+def boards_page(request):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    boards = Board.objects.filter(organization=request.active_org).order_by("title")
+    context = {
+        **_web_shell_context(request),
+        "boards": boards,
+    }
+    return render(request, "web/app/boards/page.html", context)
+
+
+@login_required
+def boards_create(request):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    title = (request.POST.get("title") or "").strip()
+    if not title:
+        return HttpResponse("", status=400)
+
+    board = Board.objects.create(
+        organization=request.active_org,
+        title=title,
+        created_by=request.user,
+    )
+
+    BoardColumn.objects.bulk_create(
+        [
+            BoardColumn(board=board, title=_("Ideas"), sort_order=0),
+            BoardColumn(board=board, title=_("In review"), sort_order=1),
+            BoardColumn(board=board, title=_("Planned"), sort_order=2),
+            BoardColumn(board=board, title=_("Done"), sort_order=3),
+        ]
+    )
+
+    return redirect("web:board_detail", board_id=board.id)
+
+
+@login_required
+def board_detail_page(request, board_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    columns = (
+        BoardColumn.objects.filter(board=board)
+        .prefetch_related(
+            Prefetch(
+                "cards",
+                queryset=BoardCard.objects.all().prefetch_related("links", "attachments"),
+            )
+        )
+        .order_by("sort_order", "title")
+    )
+
+    context = {
+        **_web_shell_context(request),
+        "board": board,
+        "columns": columns,
+    }
+    return render(request, "web/app/boards/detail.html", context)
+
+
+@login_required
+def board_card_create(request, board_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    column_id = (request.POST.get("column_id") or "").strip()
+    title = (request.POST.get("title") or "").strip()
+    if not column_id or not title:
+        return HttpResponse("", status=400)
+
+    column = BoardColumn.objects.filter(id=column_id, board=board).first()
+    if column is None:
+        return HttpResponse("", status=400)
+
+    max_sort = BoardCard.objects.filter(column=column).aggregate(max=Max("sort_order")).get("max")
+    sort_order = int(max_sort or 0) + 1
+
+    BoardCard.objects.create(
+        column=column,
+        title=title,
+        sort_order=sort_order,
+        created_by=request.user,
+    )
+
+    return redirect("web:board_detail", board_id=board.id)
+
+
+@login_required
+def board_card_detail(request, card_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    try:
+        card = (
+            BoardCard.objects.select_related("column__board")
+            .prefetch_related("links", "attachments")
+            .get(id=card_id, column__board__organization=request.active_org)
+        )
+    except BoardCard.DoesNotExist as exc:
+        raise Http404() from exc
+
+    if request.method == "POST":
+        title = (request.POST.get("title") or "").strip()
+        description = (request.POST.get("description") or "").strip()
+        if not title:
+            return HttpResponse("", status=400)
+
+        BoardCard.objects.filter(id=card.id).update(title=title, description=description)
+        return redirect("web:board_card_detail", card_id=card.id)
+
+    context = {
+        **_web_shell_context(request),
+        "card": card,
+        "board": card.column.board,
+    }
+    return render(request, "web/app/boards/card_detail.html", context)
+
+
+@login_required
+def board_card_link_create(request, card_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    card = BoardCard.objects.select_related("column__board").filter(
+        id=card_id,
+        column__board__organization=request.active_org,
+    ).first()
+    if card is None:
+        raise Http404()
+
+    url = (request.POST.get("url") or "").strip()
+    title = (request.POST.get("title") or "").strip()
+    if not url:
+        return HttpResponse("", status=400)
+
+    BoardCardLink.objects.create(card=card, url=url, title=title)
+    return redirect("web:board_card_detail", card_id=card.id)
+
+
+@login_required
+def board_card_attachment_create(request, card_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    card = BoardCard.objects.select_related("column__board").filter(
+        id=card_id,
+        column__board__organization=request.active_org,
+    ).first()
+    if card is None:
+        raise Http404()
+
+    f = request.FILES.get("file")
+    if f is None:
+        return HttpResponse("", status=400)
+
+    BoardCardAttachment.objects.create(card=card, file=f, uploaded_by=request.user)
+    return redirect("web:board_card_detail", card_id=card.id)
 
 
 @login_required
@@ -408,6 +648,31 @@ def projects_create(request):
 
 
 @login_required
+def projects_complete(request, project_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    membership = Membership.objects.filter(organization=request.active_org, user=request.user).only("role").first()
+    if membership is None or membership.role != Membership.Role.OWNER:
+        return HttpResponseForbidden("")
+
+    project = Project.objects.filter(id=project_id, organization=request.active_org).first()
+    if project is None:
+        raise Http404()
+
+    if project.status != Project.Status.COMPLETED:
+        Project.objects.filter(id=project.id).update(status=Project.Status.COMPLETED)
+        project.status = Project.Status.COMPLETED
+
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "web/app/projects/_project_row.html", {"project": project})
+
+    return redirect("web:projects")
+
+
+@login_required
 def project_calendar_page(request, project_id):
     if request.active_org is None:
         return redirect("web:onboarding")
@@ -515,7 +780,8 @@ def tasks_page(request):
 
     tasks = (
         Task.objects.filter(project__organization=org)
-        .select_related("project", "assigned_to")
+        .select_related("project", "assigned_to", "idea_card")
+        .prefetch_related("links")
         .annotate(running_started_at=open_started_at_subquery)
     )
 
@@ -581,6 +847,9 @@ def tasks_page(request):
     context = {
         **_web_shell_context(request),
         "projects": projects,
+        "idea_cards": BoardCard.objects.filter(column__board__organization=org).select_related("column__board").order_by(
+            "column__board__title", "title"
+        ),
         "members": members,
         "todo_tasks": todo_tasks,
         "in_progress_tasks": in_progress_tasks,
@@ -633,6 +902,10 @@ def tasks_create(request):
     title = (request.POST.get("title") or "").strip()
     project_id = (request.POST.get("project_id") or "").strip()
     assigned_to_id = (request.POST.get("assigned_to") or "").strip()
+    due_date_raw = (request.POST.get("due_date") or "").strip()
+    idea_card_id = (request.POST.get("idea_card_id") or "").strip()
+    link_url = (request.POST.get("link_url") or "").strip()
+    link_title = (request.POST.get("link_title") or "").strip()
     if not title or not project_id:
         return HttpResponse("", status=400)
 
@@ -647,12 +920,39 @@ def tasks_create(request):
             return HttpResponse("", status=400)
         assigned_to = Membership.objects.get(organization=org, user_id=assigned_to_id).user
 
+    due_date = None
+    if due_date_raw:
+        due_d = parse_date(due_date_raw)
+        if due_d is None:
+            return HttpResponse("", status=400)
+
+        due_date = datetime.combine(due_d, time(17, 0))
+        if timezone.is_naive(due_date):
+            due_date = timezone.make_aware(due_date)
+
+        if due_date < project.start_date or due_date > project.end_date:
+            return HttpResponse("", status=400)
+
+    idea_card = None
+    if idea_card_id:
+        idea_card = BoardCard.objects.filter(
+            id=idea_card_id,
+            column__board__organization=org,
+        ).first()
+        if idea_card is None:
+            return HttpResponse("", status=400)
+
     task = Task.objects.create(
         project=project,
         title=title,
         assigned_to=assigned_to,
         status=Task.Status.TODO,
+        due_date=due_date,
+        idea_card=idea_card,
     )
+
+    if link_url:
+        TaskLink.objects.create(task=task, url=link_url, title=link_title)
 
     if task.assigned_to_id != request.user.id:
         Task.objects.filter(id=task.id).update(sort_order=0)
@@ -661,6 +961,7 @@ def tasks_create(request):
 
     if request.headers.get("HX-Request") == "true":
         members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
+        task = Task.objects.select_related("project", "assigned_to", "idea_card").prefetch_related("links").get(id=task.id)
         return render(
             request,
             "web/app/tasks/_task_card.html",

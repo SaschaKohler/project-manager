@@ -1,0 +1,259 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-manager-staging
+---
+apiVersion: v1
+data:
+  ALLOWED_HOSTS: '["*"]'
+  DEBUG: "False"
+  DEFAULT_FROM_EMAIL: no-reply@localhost
+  EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: project-manager-staging
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: project-manager
+  name: app
+  namespace: project-manager-staging
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+  selector:
+    app.kubernetes.io/name: project-manager
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: project-manager
+  name: postgres
+  namespace: project-manager-staging
+spec:
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  selector:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: project-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: project-manager
+  name: app
+  namespace: project-manager-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: project-manager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: project-manager
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        image: ghcr.io/saschakohler/project-manager:staging
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /login/
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 20
+        name: web
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /login/
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+      imagePullSecrets:
+      - name: ghcr-pull-secret
+      initContainers:
+      - command:
+        - sh
+        - -c
+        - |
+          python - <<'PY'
+          import os
+          import time
+          import psycopg
+
+          dsn = os.environ.get("DATABASE_URL")
+          if not dsn:
+              raise SystemExit("DATABASE_URL not set")
+
+          for i in range(60):
+              try:
+                  with psycopg.connect(dsn, connect_timeout=3):
+                      break
+              except Exception:
+                  time.sleep(2)
+          else:
+              raise SystemExit("Postgres not reachable")
+          PY
+          python /app/backend/manage.py migrate --noinput
+          python /app/backend/manage.py collectstatic --noinput
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        image: ghcr.io/saschakohler/project-manager:staging
+        imagePullPolicy: IfNotPresent
+        name: migrate
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/name: project-manager
+  name: postgres
+  namespace: project-manager-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: postgres
+      app.kubernetes.io/name: project-manager
+  serviceName: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: postgres
+        app.kubernetes.io/name: project-manager
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_DB
+              name: postgres-secrets
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: postgres-secrets
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: postgres-secrets
+        image: postgres:16-alpine
+        name: postgres
+        ports:
+        - containerPort: 5432
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: app-secrets
+  namespace: project-manager-staging
+spec:
+  encryptedData:
+    DATABASE_URL: AgCr8TeYjGAq147sQ6iqGySStyVTwnUrI0xosj6EKC9mYcq7GMf0IAEQeqjoc4k3it/0POUsY2z1k3wt0cLL9z6mE2YhFQEBtq5drZoqthK5nA5kLLjNE/zWW/dt7Q5s+Y3DAEhz4F8JIt/yGxT2uua4lWkB+RuVpae/ELnuY7uEq176yTgmfS7WbE9j7t0wr2WN/xWUOllfC8v4MJg264jOKealuIiMUqN4Q3mulInfZ2M0bkvlCoU9nX5hD3aSLuP4WHjfVahQphPtLg4W1ufNpnDNu9Ahzs5mzPR01genRuzXsFgbOmma2aTxqZeVmA0sMRgqoMklUCEMafrEa9ruz2G5FN2AGf/U12I4e9OQnnhQzOovmx0l8mUhIeQ6z/UvsWlk6ry4JHdZm3Rrc2oMrXVO5Ev871B2DqlaLcj2FHS15chPPNgTnr+FXzGb2SgJjavFbnmY9aoO4RqWciWQELBGdfjIo6xDTM7afg5My6cWaG4rV47+7mlRPiVx4ttz6cxVdnPUiLmALCsW6tqTgipFm+tcYc1i4jBMQw4JJ7Aa6L/6yJX6QIinpUd56kuAdiSfftqBnPm7DZMAhLjOGI9uRl2THwFSnq/eynYWX2X4fJv3XAllZhugfQpZH6lJpTXHPzGTnJzUnmveM6RYC/O7sht4C3Tq4tLjqLZcYQODK9PVbtAlOv5j8hLYmKvwMZ2P08iQvL6EYVrknIpYWrLOOF2cc0jqNVihez/uBHjirD4d3wvF5h1hmg9EY8uew5340dVTJ04WqvqXz2J24uaDo2sLPkHA231vvv4W9o+PdU+5RWAsf4tIP/KlSNujtUWYquB3MlKyU4emJHePHqcgUKEIZFVn
+    SECRET_KEY: AgBx92rq8UgT/9p8ypuujnfOnBinOJ73Dk4Do2KyeOLS/DBdXJYWWyhn4FNlZ6rbvO5JGV0uKqdPXBDAcfO0iQKp7k/jIWDOxWKS1UvDpPgiNT48XsrGPi+t15uUDG2RPnrBdYG9RJ97SfEQB0ytgqHj0w09cKjJJnEnGcllmCh2+LQc+f1HNbBfRbBPFANpRkXFGaCxcVSf7T9V1ezHpr4e2wyPGlpJ0Ec6No1Xb29Zeu9I9RADw6HZ767P1X45vohFpUyUXHcV+p474vfsuaV6jVo6Mp8DrbWQlovQkLBNSjiPZW/LgXcYaf6GpwpIbVJr23AJNYBY52QitfqjX6SAQR6oiWiauo2+qTieH5LgvZGVLqykSHTjQN/XchYlGL20tLRmNmCkeZPPx+NQSLVscobjv8IBIza7Pt1mmI23VB8SCSKYDx3bIs6CUaTt0roU6UxstWVwErNglWUmJgICtytHmwQ/PJd0H7Y6l37f71QDizMHe57cu62VQH9FJVxSrj5sdSZYlLkUZDSbzGHcqEJH3VJoUu5NWc9F03S264dj1XRZrVK4xsw+rIHNoomt1XTvWH7f+DZg3J4Z0Q+7pk4nkgzvooJIiilom894oBH3kxMTNaYVn5ryf2pCyiYzORqRuvmZnQq0O5V06IHLW1NpYCwm288dyQ/1nIs34BtntBm2bHenApZ7rtNYVU3YA0nRdHrCo2Qfx6hxEXFhzYGI0A86yqMTM0Yk9qmsEw==
+  template:
+    metadata:
+      name: app-secrets
+      namespace: project-manager-staging
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: ghcr-pull-secret
+  namespace: project-manager-staging
+spec:
+  encryptedData:
+    .dockerconfigjson: AgBaYF3JYtwvOGzhoZpW4v/BU9Oim6cfnfevhJOIZ9prNb6542Fqdtg0CCdNvdCxe5FXc9VIUp6z7MZtERh7p0SVe6S0OAtUMwX/q5Jz78ZKG+NcE2nmKiBDa7+Kff7hMgxDRO3cNaNG0tMwP4PXpLajx4bT3bHAC1VlOICj9kzVMA0KwDqv3NlS523w8bivm7qZ9ApfdmvxPkk5bdlJEjEpKPwz/erL+D+BBEukZ1Vw5i/jPB65ub14lWniU9pblXEthjnQti6Y3FlGMtOoLCtCuDQKj9taSptiR2o2LNV0Y6bklZ9Ztfp6vyOSws7SWPSya6U3+M0SiMjjzdf5zwhP63nZmRo5Dads6Yn9DOzUMMvsb/aLRnwJBvPYiEcGBM/+gjW52+OO8QOQOy0bWouhetnJo72pntMA3jQZSKkXJJlVb5etLKN+Dt62OpClufo6lg3zvx4+cnf9HZLIgdGRuwA38ttbgFTTgxGev3+ZoEymv4RRke1e5AcbLAD8iP1Bqm6HuLe8W503DwumsV0ywd3fHqdcSe6Ox4J+E8kTk+wH5d+i0WeQ7+OYkITDNK1RylujEaXsTGKkgYUo8tlmLp0OfFz9iX3phTP7YSV4CasBAUk2bM7+73EYh59tC2AYD8FC7+MJ6eDh/U53HXgiNGI1miatsV/HSH9mxfMcATs3ibbjcCY3v75az8dp3Cuhiu/qWadilZ9lc740bMGxTt/hkD9fBQNHVDoticHXH7DJlGKB4M8UEwhz/eK9BSIdxpW0fAKtYPqXoxsTiB4oCdixkvr/PX23MBLxgCkA1MZNchn9QJXOk9Kqet06lLzieldu0E3F9vFpAsprzALmaLk3nWsmc7P8LqfVsnCqMrlBQ7+vOqKdThQ9U5XqgOfDckq2SG9V2cwQL4CZUYtnYNfKT4DjkAp/PZklAaBSktJYcSTj/t9UiQ==
+  template:
+    metadata:
+      name: ghcr-pull-secret
+      namespace: project-manager-staging
+    type: kubernetes.io/dockerconfigjson
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: postgres-secrets
+  namespace: project-manager-staging
+spec:
+  encryptedData:
+    POSTGRES_DB: AgAIMQXpobau2HHLLCDcEHE75FMKPXICBjV2KHlvwpetDXjekGIVTe5vxSPAbOqshqATUhCoPtL7+wUjah78aae8F+jR2ujTg9+p2/M3mifvbiSlMz0LYCmyDQoYODYftcOOE219pR+iL/xK6Ey466asO2apBfycqFLYuQOA5DeuK2ThrfbYW7HlzjfzNpEVQK5cwlR2mzGwn1TMLQREjgKo/Q9Dfizz5rnU8+SX/aIq8L3Y8WFTLnaWf1/5JL7O59qfOg8g4FS72BCEc5pCdPsxZYeBG0kGyBpnzxLh/MYdFn25Ex5HkyxzCB14VM9qq0jwQEQw+zx4XAf6h+mWocay1HkO6h9wIQEIJxtHHYCa1REkqzX7rJCPplI8UZQbpIMEiK698WoHVdWtziJKWErfGOedL8HOo3lFhzwOtWwOFenjlnvvMEi491HwmVJikNc58L+buxT5AYBOK73BBzQsCSA0eklLjdL34WRr3elUd4zeszdl8WzlqEL4RZT/MDuSu5wKHVSa2+98tIZ9n4kidb/IGZBaieOBxTCvDHvo3n0iIZF4XzA1UYCEFRQqzN2JY0vohN5VBvuIMX/dDMzsdUxblKzrB6wK/A3Ouex08IbQG0D9lGiDDYUwklHZpBzkLfCZZXhfZ0J0COZopDtE0P1PUoX393loRnWUHbGYvQfnRjiyaJEcBrYyl02lbdsdxtdJGM9LIAh8JlD+i8c=
+    POSTGRES_PASSWORD: AgCybzy/y2AxzNX8ZZnUdZan0T3vZ/sd/LNvZ6ycS5cBpbONEiStPSaCofg0EiH23hP6ukVKtwryXNcw2Jc53Z4WZ/zvau2thp9SqnWoDY9nzb22EaR5C6G8Ywn/KN6CYvMPa9O9Qe9uSAwRl4kc7MqcUj8LWZvS/nSxj8TqciFgcdKGxmjauZSItWrZOARMfOoSMmZRqsToiOfIYHXnPmLq8X7ReEbrpI50Ym2Gsog/6Yvyk51QpFwKD+zf2aBEJAcQEPaVPSd7JaBe2eN0Iya6M2kN25eh3lmFhbq4FOpE0JpFgy37VsaG0JDIXa6QCF6+2DfOgJpDt2sBJNLi0qOgtZ/DkeLIxOma6pnuWZ1o9jCRVP3bumGSbx1VAjKNtZ7EcmZzaQ2gNdMUs3cAnRmDRFVdIrnqhXf5NM6eWeeJeL8mctVKL8zlqJZj54zyPOLQc/qgz/6Ne4gEvZLy2TJPmgzexM6jqfTdWGoeLHBFvErJ9p1VpcKdIugKibzqAv31IJuhTE1Eff6ePNx+KYTm0okWoKjMITsI5FkSUFsnMsFnO2iRK7KEXU1JxVK/Si0U1nbT8J0G/yafNo3wyLiYxNSI+LZMK7yObn27wbZ71goAqpa+Ueso2dR320uw3IBv20gK+tfIjA1BQrovQMGUZCMdtdWQSX5w3cfpgq3AU5jSNAKQjPPL+Gv3aMBlo8miFhsE0rQdXXnCqTBc4dN11pnIhN113PCGsQI2nunbk58XsA3InCCAV32GAn/xHAL9xygXTIBwUlFyUtSx3jgX
+    POSTGRES_USER: AgB/RxcUpZNMlLC7gqvi1a/eheTbDL4m7CE8xMDV8wxY8a1VghaPZSvFNz5GgWV9bXH6AExhwi9HVZ5PSAPxH2lOC6FVFWGROKyMnbC7+w1wLh/R0HpdKg6UfT+4+JhLxQ2LT0y0xZXCzqp36V18MZnlTe/6HYlNwNjXpEQzPQeBNcw3I6BQeDinbH0A0Sb36sweZbfoVF5I0EHICimQTtRlfUV2htdX89v5fcR4B48keNev7HGfxA32F73evk/vpe9sdqKt08oAwDYUFKvuT/qd6g4Glv7qO+zdd+2s6iw5riXXbMrKB531tIk4huc6qGYt6amBD7phMI8+GuTGVQ4+EGgg3IdaTKRBuc02V/F+qbmF//UcZDb7UinwKZM0OUYnZnz/nEkVgGw5slM0S51K6XA7TnDi71deGqbfLKPAxSi/+X4uxYixuSJA9tN/1hXUTK7Fw/GKgGxFkXm562QGHj81wFlMdYCVlCBM/dtT0ZvuYvZ5QJUzyyGIjtSOmNqS5y4fIxxQUymbuZ3By78DiuWn3T/K1ZjE9JGpqN2/RnwxAfre/U+hH/+jMkCG84mD5pLBstOBjMZBbQQ4fgu/gbGYCBcNhpefZaPrkm2Fam4qW2JhBG+3AxqQOuLUUIdEl6SJCrMhavvCq6iOxMsbwurQgkYH19FwIsuqpuya1yxjWYwpuScl5BgBNSORUTtdgnaorM2qmrK+QmfS80E=
+  template:
+    metadata:
+      name: postgres-secrets
+      namespace: project-manager-staging
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  name: app
+  namespace: project-manager-staging
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: pj-staging.ja-zum-leben.at
+    http:
+      paths:
+      - backend:
+          service:
+            name: app
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - pj-staging.ja-zum-leben.at
+    secretName: project-manager-tls

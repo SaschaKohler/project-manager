@@ -53,6 +53,8 @@ kubectl -n project-manager-staging create secret generic app-secrets \
   | kubeseal --format yaml --namespace project-manager-staging \
   > k8s/base/sealedsecret-app.yaml
 
+Note: If your database password contains URL special characters (e.g. `/`, `@`, `:`), it must be URL-encoded in `DATABASE_URL`. To avoid this, generate a password without special characters (e.g. `openssl rand -hex 32`).
+
 kubectl -n project-manager-staging create secret generic postgres-secrets \
   --from-literal=POSTGRES_DB='project_manager' \
   --from-literal=POSTGRES_USER='project_manager' \
@@ -60,6 +62,14 @@ kubectl -n project-manager-staging create secret generic postgres-secrets \
   --dry-run=client -o yaml \
   | kubeseal --format yaml --namespace project-manager-staging \
   > k8s/overlays/staging/postgres/sealedsecret.yaml
+
+kubectl -n project-manager-staging create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username='<github-username>' \
+  --docker-password='<github-pat-with-read:packages>' \
+  --dry-run=client -o yaml \
+  | kubeseal --format yaml --namespace project-manager-staging \
+  > k8s/overlays/staging/ghcr/sealedsecret-ghcr-pull.yaml
 ```
 
 ### Deploy

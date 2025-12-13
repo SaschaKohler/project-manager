@@ -3,11 +3,17 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - ghcr/sealedsecret-ghcr-pull.yaml
   - postgres/sealedsecret.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml
 
 namespace: project-manager-staging
+
+images:
+  - name: project-manager
+    newName: ghcr.io/saschakohler/project-manager
+    newTag: staging
 
 patches:
   - target:
@@ -17,6 +23,7 @@ patches:
       - op: replace
         path: /metadata/name
         value: project-manager-staging
+  - path: patches/deployment-imagepullsecret.yaml
 
   - target:
       kind: Ingress

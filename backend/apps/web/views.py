@@ -8,7 +8,7 @@ from django.db.models import OuterRef, Subquery
 from django.db.models import Q
 from django.db.models import Sum
 from django.http import Http404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_date, parse_datetime
@@ -73,6 +73,10 @@ def _task_event_style(status: str):
         "borderColor": "rgba(99, 102, 241, 1)",
         "textColor": "rgb(244, 244, 245)",
     }
+
+
+def healthz(request):
+    return HttpResponse("ok")
 
 
 @login_required
@@ -616,7 +620,6 @@ def _insert_task_at_position(org, task: Task, new_status: str, position: int):
 
     for idx, task_id in enumerate(ids):
         Task.objects.filter(id=task_id).update(sort_order=idx)
-
 
 
 @login_required

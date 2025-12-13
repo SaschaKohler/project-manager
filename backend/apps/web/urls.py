@@ -6,6 +6,7 @@ app_name = "web"
 
 urlpatterns = [
     path("", views.app_home, name="home"),
+    path("healthz/", views.healthz, name="healthz"),
     path("onboarding/", views.onboarding, name="onboarding"),
     path("workspaces/new/", views.workspaces_new, name="workspaces_new"),
     path("switch-org/<uuid:org_id>/", views.switch_org, name="switch_org"),

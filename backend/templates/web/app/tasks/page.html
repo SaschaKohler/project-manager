@@ -71,7 +71,7 @@
         </div>
         <div>
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Title" %}</label>
-          <input name="title" required placeholder="e.g. Write landing copy"
+          <input name="title" required placeholder="{% trans 'e.g. Write landing copy' %}"
                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
@@ -97,7 +97,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-zinc-400 mb-2">{% trans "Link" %}</label>
-            <input name="link_url" type="url" placeholder="https://..."
+            <input name="link_url" type="url" placeholder="{% trans 'https://...' %}"
                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>

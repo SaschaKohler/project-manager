@@ -16,12 +16,12 @@
   </div>
 </div>
 
-<div class="mt-6 overflow-x-auto">
-  <div class="flex gap-4 min-w-max pb-2">
+<div class="mt-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     {% for col in columns %}
-      <div class="w-[320px] shrink-0 rounded-2xl border border-zinc-800 bg-zinc-900/25 overflow-hidden">
+      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/25 overflow-hidden">
         <div class="px-4 py-3 border-b border-zinc-800/70 flex items-center justify-between">
-          <div class="text-sm font-medium text-zinc-200 truncate">{{ col.title }}</div>
+          <div class="text-sm font-medium text-zinc-200 truncate">{% trans col.title %}</div>
           <div class="text-xs text-zinc-500">{{ col.cards.all|length }}</div>
         </div>
 
@@ -37,18 +37,20 @@
             </button>
           </form>
 
-          {% for card in col.cards.all %}
-            <a href="{% url 'web:board_card_detail' card.id %}" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
-              <div class="font-medium truncate">{{ card.title }}</div>
-              {% if card.links.all %}
-                <div class="mt-1 text-xs text-zinc-400">{{ card.links.all|length }} {% trans "links" %}</div>
-              {% else %}
-                <div class="mt-1 text-xs text-zinc-500">{% trans "No links" %}</div>
-              {% endif %}
-            </a>
-          {% empty %}
-            <div class="text-sm text-zinc-500">{% trans "No cards yet." %}</div>
-          {% endfor %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {% for card in col.cards.all %}
+              <a href="{% url 'web:board_card_detail' card.id %}" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+                <div class="font-medium truncate">{{ card.title }}</div>
+                {% if card.links.all %}
+                  <div class="mt-1 text-xs text-zinc-400">{{ card.links.all|length }} {% trans "links" %}</div>
+                {% else %}
+                  <div class="mt-1 text-xs text-zinc-500">{% trans "No links" %}</div>
+                {% endif %}
+              </a>
+            {% empty %}
+              <div class="md:col-span-2 text-sm text-zinc-500">{% trans "No cards yet." %}</div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     {% endfor %}

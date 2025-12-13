@@ -27,6 +27,9 @@ msgstr "Aufgaben"
 msgid "Boards"
 msgstr "Boards"
 
+msgid "Idea pools and link collections for your workspace."
+msgstr "Ideenpools und Link-Sammlungen für deinen Workspace."
+
 msgid "Switch"
 msgstr "Wechseln"
 
@@ -35,6 +38,30 @@ msgstr "Abmelden"
 
 msgid "Workspaces"
 msgstr "Workspaces"
+
+msgid "Member"
+msgstr "Mitglied"
+
+msgid "Admin"
+msgstr "Admin"
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "Completed"
+msgstr "Abgeschlossen"
+
+msgid "Cancelled"
+msgstr "Abgebrochen"
+
+msgid "Low"
+msgstr "Niedrig"
+
+msgid "Medium"
+msgstr "Mittel"
+
+msgid "High"
+msgstr "Hoch"
 
 msgid "Welcome back"
 msgstr "Willkommen zurück"
@@ -51,11 +78,62 @@ msgstr "E-Mail"
 msgid "Password"
 msgstr "Passwort"
 
+msgid "Login"
+msgstr "Anmelden"
+
 msgid "Sign in"
 msgstr "Anmelden"
 
+msgid "New here?"
+msgstr "Neu hier?"
+
+msgid "Create an account"
+msgstr "Account erstellen"
+
+msgid "e.g. Write landing copy"
+msgstr "z.B. Landingpage-Text schreiben"
+
+msgid "https://..."
+msgstr "https://..."
+
+msgid "Register"
+msgstr "Registrieren"
+
+msgid "Create your account"
+msgstr "Account erstellen"
+
+msgid "Sign up to get started."
+msgstr "Registriere dich, um zu starten."
+
+msgid "Please correct the errors below."
+msgstr "Bitte korrigiere die Fehler unten."
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Confirm password"
+msgstr "Passwort bestätigen"
+
+msgid "Create account"
+msgstr "Account erstellen"
+
+msgid "Already have an account?"
+msgstr "Du hast schon einen Account?"
+
 msgid "Admin is available at"
 msgstr "Admin ist verfügbar unter"
+
+msgid "name@company.com"
+msgstr "name@firma.com"
+
+msgid "e.g. Launch Q1 Campaign"
+msgstr "z.B. Q1 Kampagne starten"
+
+msgid "..."
+msgstr "..."
+
+msgid "0.00"
+msgstr "0,00"
 
 msgid "Create your workspace"
 msgstr "Workspace erstellen"

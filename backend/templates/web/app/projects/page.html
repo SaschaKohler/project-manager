@@ -22,30 +22,30 @@
       {% csrf_token %}
       <div>
         <label class="block text-xs text-zinc-400 mb-2">{% trans "Title" %}</label>
-        <input name="title" required placeholder="e.g. Launch Q1 Campaign"
+        <input name="title" required placeholder="{% trans 'e.g. Launch Q1 Campaign' %}"
                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
         <label class="block text-xs text-zinc-400 mb-2">{% trans "Description" %}</label>
-        <textarea name="description" rows="3" placeholder="..."
+        <textarea name="description" rows="3" placeholder="{% trans '...' %}"
                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Status" %}</label>
           <select name="status" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="PLANNED">Planned</option>
-            <option value="ACTIVE">Active</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
+            <option value="PLANNED">{% trans "Planned" %}</option>
+            <option value="ACTIVE">{% trans "Active" %}</option>
+            <option value="COMPLETED">{% trans "Completed" %}</option>
+            <option value="CANCELLED">{% trans "Cancelled" %}</option>
           </select>
         </div>
         <div>
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Priority" %}</label>
           <select name="priority" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="LOW">Low</option>
-            <option value="MEDIUM" selected>Medium</option>
-            <option value="HIGH">High</option>
+            <option value="LOW">{% trans "Low" %}</option>
+            <option value="MEDIUM" selected>{% trans "Medium" %}</option>
+            <option value="HIGH">{% trans "High" %}</option>
           </select>
         </div>
       </div>
@@ -84,7 +84,7 @@
       </div>
       <div>
         <label class="block text-xs text-zinc-400 mb-2">{% trans "Budget" %}</label>
-        <input name="budget" placeholder="0.00"
+        <input name="budget" placeholder="{% trans '0.00' %}"
                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">

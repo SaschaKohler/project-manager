@@ -9,6 +9,10 @@ env = environ.Env(
     SECRET_KEY=(str, "dev-insecure-secret-key"),
     ALLOWED_HOSTS=(list, ["*"]),
     CORS_ALLOWED_ORIGINS=(list, ["http://localhost:3000"]),
+    CSRF_TRUSTED_ORIGINS=(list, []),
+    SECURE_PROXY_SSL_HEADER=(bool, False),
+    CSRF_COOKIE_SECURE=(bool, False),
+    SESSION_COOKIE_SECURE=(bool, False),
     DEFAULT_FROM_EMAIL=(str, "no-reply@localhost"),
     EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
 )
@@ -126,6 +130,14 @@ LOGOUT_REDIRECT_URL = "/login/"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
+
+if env("SECURE_PROXY_SSL_HEADER"):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_COOKIE_SECURE = env("CSRF_COOKIE_SECURE")
+SESSION_COOKIE_SECURE = env("SESSION_COOKIE_SECURE")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

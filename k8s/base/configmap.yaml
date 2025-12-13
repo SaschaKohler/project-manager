@@ -5,5 +5,9 @@ metadata:
 data:
   DEBUG: "False"
   ALLOWED_HOSTS: "*"
-  DEFAULT_FROM_EMAIL: "no-reply@localhost"
+  CSRF_TRUSTED_ORIGINS: "https://pj-staging.ja-zum-leben.at"
+  SECURE_PROXY_SSL_HEADER: "True"
+  CSRF_COOKIE_SECURE: "True"
+  SESSION_COOKIE_SECURE: "True"
+  DEFAULT_FROM_EMAIL: "no-reply@pj-staging.ja-zum-leben.at"
   EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"

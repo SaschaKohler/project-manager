@@ -14,10 +14,13 @@ spec:
         - name: create-superuser
           image: ghcr.io/saschakohler/project-manager:staging
           imagePullPolicy: IfNotPresent
+          workingDir: /app/backend
           command:
             - sh
             - -c
             - |
+              export DJANGO_SETTINGS_MODULE=config.settings
+              export PYTHONPATH=/app/backend
               python /app/backend/manage.py migrate --noinput
               python - <<'PY'
               import os

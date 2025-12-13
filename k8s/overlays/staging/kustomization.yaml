@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
   - ghcr/sealedsecret-ghcr-pull.yaml
+  - admin/sealedsecret-admin.yaml
   - postgres/sealedsecret.yaml
   - postgres/service.yaml
   - postgres/statefulset.yaml

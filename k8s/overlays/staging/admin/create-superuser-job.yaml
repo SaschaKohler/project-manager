@@ -1,0 +1,51 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-superuser
+  namespace: project-manager-staging
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: create-superuser
+          image: ghcr.io/saschakohler/project-manager:staging
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              python /app/backend/manage.py migrate --noinput
+              python - <<'PY'
+              import os
+              import django
+              django.setup()
+              from django.contrib.auth import get_user_model
+
+              User = get_user_model()
+
+              username = os.environ["DJANGO_SUPERUSER_USERNAME"]
+              email = os.environ.get("DJANGO_SUPERUSER_EMAIL") or ""
+              password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+
+              user, created = User.objects.get_or_create(username=username, defaults={"email": email})
+              if email and user.email != email:
+                  user.email = email
+
+              user.is_staff = True
+              user.is_superuser = True
+              user.set_password(password)
+              user.save()
+
+              print("superuser_created" if created else "superuser_updated")
+              PY
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+            - secretRef:
+                name: django-admin

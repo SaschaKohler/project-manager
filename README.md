@@ -78,6 +78,40 @@ kubectl -n project-manager-staging create secret docker-registry ghcr-pull-secre
 kubectl apply -k k8s/overlays/staging
 ```
 
+### Superuser (staging)
+
+Deploys do not reset the database. The database is only reset if you delete the Postgres PVC.
+
+Create the admin credentials secret locally (NOT committed) and seal it:
+
+```bash
+kubectl -n project-manager-staging create secret generic django-admin \
+  --from-literal=DJANGO_SUPERUSER_USERNAME='admin' \
+  --from-literal=DJANGO_SUPERUSER_EMAIL='admin@example.com' \
+  --from-literal=DJANGO_SUPERUSER_PASSWORD='replace-me' \
+  --dry-run=client -o yaml \
+  | kubeseal --format yaml --namespace project-manager-staging \
+  > k8s/overlays/staging/admin/sealedsecret-admin.yaml
+```
+
+Then run the one-off Job (idempotent: creates or updates the user):
+
+```bash
+kubectl apply -f k8s/overlays/staging/admin/create-superuser-job.yaml
+kubectl -n project-manager-staging logs -l job-name=create-superuser --tail=200
+```
+
+If you need to re-run it, delete and re-apply the Job:
+
+```bash
+kubectl -n project-manager-staging delete job create-superuser
+kubectl apply -f k8s/overlays/staging/admin/create-superuser-job.yaml
+```
+
+### Translations
+
+Translations are compiled during the Docker image build using `python /app/backend/manage.py compilemessages`.
+
 ### GitHub Actions deployment
 
 The workflow `.github/workflows/staging-deploy.yml` builds and pushes an image to GHCR and deploys it to the cluster.

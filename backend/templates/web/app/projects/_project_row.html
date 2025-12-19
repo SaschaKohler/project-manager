@@ -1,5 +1,5 @@
 {% load i18n %}
-<div class="p-5 flex items-center justify-between gap-4">
+<div class="p-5 flex items-center justify-between gap-4" data-project-id="{{ project.id }}">
   <div class="min-w-0">
     <div class="font-medium truncate">{{ project.title }}</div>
     <div class="mt-1 text-xs text-zinc-500">{{ project.status }} · {{ project.category }} · {{ project.priority }}</div>

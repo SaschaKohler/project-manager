@@ -1,0 +1,12 @@
+-r requirements.txt
+
+# Typing / stubs
+django-stubs
+djangorestframework-stubs
+
+# Tooling
+pyright
+ruff
+black
+pytest
+pytest-django

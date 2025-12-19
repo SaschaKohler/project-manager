@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils.dateparse import parse_date, parse_datetime
 from django.utils import timezone
+from django.utils.html import escape
 from django.utils.text import slugify
 from datetime import datetime, time, timedelta
 from django.utils.translation import gettext as _
@@ -21,9 +22,33 @@ from decimal import Decimal
 import json
 
 from apps.accounts.forms import CustomUserCreationForm
-from apps.boards.models import Board, BoardCard, BoardCardAttachment, BoardCardLink, BoardColumn
+from apps.boards.models import (
+    AutomationAction,
+    AutomationRule,
+    Board,
+    BoardCard,
+    BoardCardAttachment,
+    BoardCardLabel,
+    BoardCardLink,
+    BoardColumn,
+    CardButton,
+    CardButtonAction,
+)
+from apps.boards.automation import AutomationEngine, execute_card_button
 from apps.tenants.models import Membership, Organization, OrganizationInvitation
-from apps.projects.models import Project, Task, TaskLink, TaskTimeEntry
+from apps.projects.models import (
+    Project,
+    Task,
+    TaskAutomationAction,
+    TaskAutomationRule,
+    TaskButton,
+    TaskButtonAction,
+    TaskLabel,
+    TaskLabelAssignment,
+    TaskLink,
+    TaskTimeEntry,
+)
+from apps.projects.automation import TaskAutomationEngine, execute_task_button
 
 
 def _can_edit_task(request, task: Task) -> bool:
@@ -37,6 +62,13 @@ def _can_edit_task(request, task: Task) -> bool:
 
     if membership.role in {Membership.Role.OWNER, Membership.Role.ADMIN}:
         return True
+
+    if getattr(task, "idea_card_id", None):
+        try:
+            if task.idea_card and getattr(task.idea_card, "created_by_id", None) == request.user.id:
+                return True
+        except Exception:  # noqa: BLE001
+            pass
 
     return task.assigned_to_id == request.user.id
 
@@ -105,7 +137,7 @@ def app_home(request):
     org = request.active_org
 
     project_count = org.projects.count()
-    task_count = Task.objects.filter(project__organization=org).count()
+    task_count = Task.objects.filter(project__organization=org, is_archived=False).count()
     marketing_task_count = org.marketing_tasks.count()
 
     pending_invitations = OrganizationInvitation.objects.filter(
@@ -150,6 +182,7 @@ def calendar_page(request):
             project__organization=org,
             status=Task.Status.IN_PROGRESS,
             scheduled_start__isnull=True,
+            is_archived=False,
         )
         .select_related("project", "assigned_to")
         .order_by("-updated_at")
@@ -175,7 +208,7 @@ def calendar_events(request):
     status = (request.GET.get("status") or "").strip().upper()
     hide_done = (request.GET.get("hide_done") or "").strip() in {"1", "true", "yes"}
 
-    qs = Task.objects.filter(project__organization=org, scheduled_start__isnull=False)
+    qs = Task.objects.filter(project__organization=org, scheduled_start__isnull=False, is_archived=False)
     if project_id:
         qs = qs.filter(project_id=project_id)
     if status in {Task.Status.TODO, Task.Status.IN_PROGRESS, Task.Status.DONE}:
@@ -347,12 +380,16 @@ def board_card_create(request, board_id):
     max_sort = BoardCard.objects.filter(column=column).aggregate(max=Max("sort_order")).get("max")
     sort_order = int(max_sort or 0) + 1
 
-    BoardCard.objects.create(
+    card = BoardCard.objects.create(
         column=column,
         title=title,
         sort_order=sort_order,
         created_by=request.user,
     )
+
+    # Trigger automation rules for card_created
+    engine = AutomationEngine(triggered_by=request.user)
+    engine.trigger_card_created(card)
 
     return redirect("web:board_detail", board_id=board.id)
 
@@ -431,6 +468,359 @@ def board_card_attachment_create(request, card_id):
 
     BoardCardAttachment.objects.create(card=card, file=f, uploaded_by=request.user)
     return redirect("web:board_card_detail", card_id=card.id)
+
+
+@login_required
+def board_card_move(request, card_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    if not Membership.objects.filter(organization=org, user=request.user).exists():
+        raise Http404()
+
+    card = BoardCard.objects.select_related("column__board").filter(
+        id=card_id,
+        column__board__organization=org,
+    ).first()
+    if card is None:
+        raise Http404()
+
+    column_id = (request.POST.get("column_id") or "").strip()
+    if not column_id:
+        return HttpResponse("", status=400)
+
+    target_col = BoardColumn.objects.filter(id=column_id, board=card.column.board).first()
+    if target_col is None:
+        return HttpResponse("", status=400)
+
+    if target_col.id == card.column_id:
+        return redirect("web:board_detail", board_id=card.column.board_id)
+
+    from_column = card.column
+    max_sort = BoardCard.objects.filter(column=target_col).aggregate(max=Max("sort_order")).get("max")
+    sort_order = int(max_sort or 0) + 1
+    BoardCard.objects.filter(id=card.id).update(column=target_col, sort_order=sort_order)
+
+    # Trigger automation rules for card_moved
+    card.refresh_from_db()
+    engine = AutomationEngine(triggered_by=request.user)
+    engine.trigger_card_moved(card, from_column=from_column, to_column=target_col)
+
+    return redirect("web:board_detail", board_id=card.column.board_id)
+
+
+@login_required
+def board_automations_page(request, board_id):
+    """List all automation rules for a board."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    rules = AutomationRule.objects.filter(board=board).prefetch_related("actions").order_by("-created_at")
+    buttons = CardButton.objects.filter(board=board).prefetch_related("actions").order_by("name")
+    labels = BoardCardLabel.objects.filter(board=board).order_by("name")
+
+    context = {
+        **_web_shell_context(request),
+        "board": board,
+        "rules": rules,
+        "buttons": buttons,
+        "labels": labels,
+        "trigger_types": AutomationRule.TriggerType.choices,
+        "action_types": AutomationAction.ActionType.choices,
+    }
+    return render(request, "web/app/boards/automations.html", context)
+
+
+@login_required
+def board_automation_rule_create(request, board_id):
+    """Create a new automation rule."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    name = (request.POST.get("name") or "").strip()
+    trigger_type = (request.POST.get("trigger_type") or "").strip()
+    description = (request.POST.get("description") or "").strip()
+
+    if not name or trigger_type not in dict(AutomationRule.TriggerType.choices):
+        return HttpResponse("", status=400)
+
+    # Build trigger config from form
+    trigger_config = {}
+    to_column_id = (request.POST.get("to_column_id") or "").strip()
+    from_column_id = (request.POST.get("from_column_id") or "").strip()
+    label_id = (request.POST.get("trigger_label_id") or "").strip()
+
+    if to_column_id:
+        trigger_config["to_column_id"] = to_column_id
+    if from_column_id:
+        trigger_config["from_column_id"] = from_column_id
+    if label_id:
+        trigger_config["label_id"] = label_id
+
+    rule = AutomationRule.objects.create(
+        board=board,
+        name=name,
+        description=description,
+        trigger_type=trigger_type,
+        trigger_config=trigger_config,
+        is_active=True,
+        created_by=request.user,
+    )
+
+    # Create actions
+    action_types = request.POST.getlist("action_type")
+    for i, action_type in enumerate(action_types):
+        if action_type not in dict(AutomationAction.ActionType.choices):
+            continue
+
+        action_config = {}
+
+        # Parse action-specific config
+        if action_type == AutomationAction.ActionType.MOVE_CARD:
+            col_id = (request.POST.get(f"action_column_id_{i}") or "").strip()
+            if col_id:
+                action_config["column_id"] = col_id
+        elif action_type == AutomationAction.ActionType.ADD_LABEL:
+            lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
+            if lbl_id:
+                action_config["label_id"] = lbl_id
+        elif action_type == AutomationAction.ActionType.SET_DUE_DATE:
+            days = (request.POST.get(f"action_days_offset_{i}") or "3").strip()
+            try:
+                action_config["days_offset"] = int(days)
+            except ValueError:
+                action_config["days_offset"] = 3
+        elif action_type == AutomationAction.ActionType.ASSIGN_USER:
+            user_id = (request.POST.get(f"action_user_id_{i}") or "").strip()
+            assign_triggered = request.POST.get(f"action_assign_triggered_{i}") == "on"
+            if assign_triggered:
+                action_config["assign_triggered_by"] = True
+            elif user_id:
+                action_config["user_id"] = user_id
+
+        AutomationAction.objects.create(
+            rule=rule,
+            action_type=action_type,
+            action_config=action_config,
+            sort_order=i,
+        )
+
+    messages.success(request, _("Automation rule created"))
+    return redirect("web:board_automations", board_id=board.id)
+
+
+@login_required
+def board_automation_rule_toggle(request, rule_id):
+    """Toggle an automation rule on/off."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    rule = AutomationRule.objects.select_related("board").filter(
+        id=rule_id,
+        board__organization=request.active_org,
+    ).first()
+    if rule is None:
+        raise Http404()
+
+    rule.is_active = not rule.is_active
+    rule.save(update_fields=["is_active"])
+
+    return redirect("web:board_automations", board_id=rule.board_id)
+
+
+@login_required
+def board_automation_rule_delete(request, rule_id):
+    """Delete an automation rule."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    rule = AutomationRule.objects.select_related("board").filter(
+        id=rule_id,
+        board__organization=request.active_org,
+    ).first()
+    if rule is None:
+        raise Http404()
+
+    board_id = rule.board_id
+    rule.delete()
+
+    messages.success(request, _("Automation rule deleted"))
+    return redirect("web:board_automations", board_id=board_id)
+
+
+@login_required
+def board_card_button_create(request, board_id):
+    """Create a new card button."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    name = (request.POST.get("name") or "").strip()
+    icon = (request.POST.get("icon") or "play").strip()
+    color = (request.POST.get("color") or "indigo").strip()
+
+    if not name:
+        return HttpResponse("", status=400)
+
+    button = CardButton.objects.create(
+        board=board,
+        name=name,
+        icon=icon,
+        color=color,
+        is_active=True,
+        created_by=request.user,
+    )
+
+    # Create actions
+    action_types = request.POST.getlist("action_type")
+    for i, action_type in enumerate(action_types):
+        if action_type not in dict(AutomationAction.ActionType.choices):
+            continue
+
+        action_config = {}
+
+        if action_type == AutomationAction.ActionType.MOVE_CARD:
+            col_id = (request.POST.get(f"action_column_id_{i}") or "").strip()
+            if col_id:
+                action_config["column_id"] = col_id
+        elif action_type == AutomationAction.ActionType.ADD_LABEL:
+            lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
+            if lbl_id:
+                action_config["label_id"] = lbl_id
+        elif action_type == AutomationAction.ActionType.SET_DUE_DATE:
+            days = (request.POST.get(f"action_days_offset_{i}") or "3").strip()
+            try:
+                action_config["days_offset"] = int(days)
+            except ValueError:
+                action_config["days_offset"] = 3
+
+        CardButtonAction.objects.create(
+            button=button,
+            action_type=action_type,
+            action_config=action_config,
+            sort_order=i,
+        )
+
+    messages.success(request, _("Card button created"))
+    return redirect("web:board_automations", board_id=board.id)
+
+
+@login_required
+def board_card_button_delete(request, button_id):
+    """Delete a card button."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    button = CardButton.objects.select_related("board").filter(
+        id=button_id,
+        board__organization=request.active_org,
+    ).first()
+    if button is None:
+        raise Http404()
+
+    board_id = button.board_id
+    button.delete()
+
+    messages.success(request, _("Card button deleted"))
+    return redirect("web:board_automations", board_id=board_id)
+
+
+@login_required
+def board_card_button_execute(request, card_id, button_id):
+    """Execute a card button on a specific card."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    card = BoardCard.objects.select_related("column__board").filter(
+        id=card_id,
+        column__board__organization=request.active_org,
+    ).first()
+    if card is None:
+        raise Http404()
+
+    button = CardButton.objects.filter(
+        id=button_id,
+        board=card.column.board,
+        is_active=True,
+    ).first()
+    if button is None:
+        raise Http404()
+
+    success = execute_card_button(str(button.id), card, request.user)
+
+    if success:
+        messages.success(request, _("Button action executed"))
+    else:
+        messages.error(request, _("Button action failed"))
+
+    return redirect("web:board_card_detail", card_id=card.id)
+
+
+@login_required
+def board_label_create(request, board_id):
+    """Create a new label for a board."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    try:
+        board = Board.objects.get(id=board_id, organization=request.active_org)
+    except Board.DoesNotExist as exc:
+        raise Http404() from exc
+
+    name = (request.POST.get("name") or "").strip()
+    color = (request.POST.get("color") or "gray").strip()
+
+    if not name:
+        return HttpResponse("", status=400)
+
+    BoardCardLabel.objects.get_or_create(
+        board=board,
+        name=name,
+        defaults={"color": color},
+    )
+
+    return redirect("web:board_automations", board_id=board.id)
+
+
+def _get_org_member_user(org, user_id_raw: str):
+    user_id_raw = (user_id_raw or "").strip()
+    if not user_id_raw:
+        return None
+    if not Membership.objects.filter(organization=org, user_id=user_id_raw).exists():
+        return None
+    User = get_user_model()
+    return User.objects.filter(id=user_id_raw, is_active=True).first()
 
 
 @login_required
@@ -684,12 +1074,12 @@ def project_calendar_page(request, project_id):
         raise Http404() from exc
 
     unscheduled_tasks = (
-        Task.objects.filter(project=project, scheduled_start__isnull=True)
+        Task.objects.filter(project=project, scheduled_start__isnull=True, is_archived=False)
         .select_related("assigned_to")
         .order_by("status", "sort_order", "-created_at")
     )
     in_progress_unscheduled = (
-        Task.objects.filter(project=project, scheduled_start__isnull=True, status=Task.Status.IN_PROGRESS)
+        Task.objects.filter(project=project, scheduled_start__isnull=True, status=Task.Status.IN_PROGRESS, is_archived=False)
         .select_related("assigned_to")
         .order_by("-updated_at")
     )
@@ -717,7 +1107,7 @@ def project_calendar_events(request, project_id):
     start = parse_datetime((request.GET.get("start") or "").strip())
     end = parse_datetime((request.GET.get("end") or "").strip())
 
-    qs = Task.objects.filter(project=project, scheduled_start__isnull=False)
+    qs = Task.objects.filter(project=project, scheduled_start__isnull=False, is_archived=False)
 
     status = (request.GET.get("status") or "").strip().upper()
     hide_done = (request.GET.get("hide_done") or "").strip() in {"1", "true", "yes"}
@@ -779,7 +1169,7 @@ def tasks_page(request):
     )
 
     tasks = (
-        Task.objects.filter(project__organization=org)
+        Task.objects.filter(project__organization=org, is_archived=False)
         .select_related("project", "assigned_to", "idea_card")
         .prefetch_related("links")
         .annotate(running_started_at=open_started_at_subquery)
@@ -818,17 +1208,17 @@ def tasks_page(request):
 
     if active_project is not None:
         active_project_total_seconds = int(
-            Task.objects.filter(project=active_project).aggregate(total=Sum("tracked_seconds")).get("total") or 0
+            Task.objects.filter(project=active_project, is_archived=False).aggregate(total=Sum("tracked_seconds")).get("total") or 0
         )
         active_project_total_human = _humanize_seconds(active_project_total_seconds)
         active_project_top_tasks = list(
-            Task.objects.filter(project=active_project)
+            Task.objects.filter(project=active_project, is_archived=False)
             .exclude(tracked_seconds=0)
             .order_by("-tracked_seconds")[:5]
         )
     else:
         rows = (
-            Task.objects.filter(project__organization=org)
+            Task.objects.filter(project__organization=org, is_archived=False)
             .values("project_id", "project__title")
             .annotate(total_seconds=Sum("tracked_seconds"))
             .order_by("-total_seconds", "project__title")
@@ -868,7 +1258,7 @@ def tasks_page(request):
 
 
 def _normalize_column_order(org, status):
-    qs = Task.objects.filter(project__organization=org, status=status).order_by("sort_order", "-created_at")
+    qs = Task.objects.filter(project__organization=org, status=status, is_archived=False).order_by("sort_order", "-created_at")
     for idx, task in enumerate(qs):
         if task.sort_order != idx:
             Task.objects.filter(id=task.id).update(sort_order=idx)
@@ -876,7 +1266,7 @@ def _normalize_column_order(org, status):
 
 def _insert_task_at_position(org, task: Task, new_status: str, position: int):
     ids = list(
-        Task.objects.filter(project__organization=org, status=new_status)
+        Task.objects.filter(project__organization=org, status=new_status, is_archived=False)
         .order_by("sort_order", "-created_at")
         .values_list("id", flat=True)
     )
@@ -959,15 +1349,142 @@ def tasks_create(request):
 
     _normalize_column_order(org, Task.Status.TODO)
 
+    # Trigger task automation
+    engine = TaskAutomationEngine(triggered_by=request.user)
+    engine.trigger_task_created(task)
+
     if request.headers.get("HX-Request") == "true":
         members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
         task = Task.objects.select_related("project", "assigned_to", "idea_card").prefetch_related("links").get(id=task.id)
-        return render(
+        oob_target = {
+            Task.Status.TODO: "col-todo",
+            Task.Status.IN_PROGRESS: "col-inprogress",
+            Task.Status.DONE: "col-done",
+        }.get(task.status, "col-todo")
+
+        response = render(
             request,
             "web/app/tasks/_task_card.html",
-            {"task": task, "members": members, "running_task_ids": []},
+            {"task": task, "members": members, "running_task_ids": [], "hx_swap_oob_target": oob_target},
         )
+        response.headers["HX-Trigger"] = json.dumps({"taskCreated": {"task_id": str(task.id)}})
+        return response
 
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_detail(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None:
+        raise Http404()
+
+    try:
+        task = (
+            Task.objects.select_related("project", "assigned_to", "idea_card")
+            .prefetch_related("links")
+            .get(id=task_id, project__organization=org)
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    can_edit = _can_edit_task(request, task)
+
+    if request.method == "POST":
+        permission_response = _require_task_edit_permission(request, task)
+        if permission_response is not None:
+            return permission_response
+
+        title = (request.POST.get("title") or "").strip()
+        subtitle = (request.POST.get("subtitle") or "").strip()
+        description = (request.POST.get("description") or "").strip()
+        status = (request.POST.get("status") or "").strip().upper()
+        priority = (request.POST.get("priority") or "").strip().upper()
+        assigned_to_id = (request.POST.get("assigned_to") or "").strip()
+        due_date_raw = (request.POST.get("due_date") or "").strip()
+
+        if not title:
+            return HttpResponse("", status=400)
+
+        if status and status not in {Task.Status.TODO, Task.Status.IN_PROGRESS, Task.Status.DONE}:
+            return HttpResponse("", status=400)
+        if priority and priority not in {Task.Priority.LOW, Task.Priority.MEDIUM, Task.Priority.HIGH}:
+            return HttpResponse("", status=400)
+
+        assigned_to = task.assigned_to
+        if assigned_to_id:
+            if not Membership.objects.filter(organization=org, user_id=assigned_to_id).exists():
+                return HttpResponse("", status=400)
+            assigned_to = Membership.objects.get(organization=org, user_id=assigned_to_id).user
+
+        due_date = None
+        if due_date_raw:
+            due_d = parse_date(due_date_raw)
+            if due_d is None:
+                return HttpResponse("", status=400)
+
+            due_date = datetime.combine(due_d, time(17, 0))
+            if timezone.is_naive(due_date):
+                due_date = timezone.make_aware(due_date)
+
+            if due_date < task.project.start_date or due_date > task.project.end_date:
+                return HttpResponse("", status=400)
+
+        update_fields = {
+            "title": title,
+            "subtitle": subtitle,
+            "description": description or None,
+            "assigned_to": assigned_to,
+            "due_date": due_date,
+        }
+        if status:
+            update_fields["status"] = status
+        if priority:
+            update_fields["priority"] = priority
+
+        Task.objects.filter(id=task.id).update(**update_fields)
+        return redirect("web:tasks_detail", task_id=task.id)
+
+    members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
+    context = {
+        **_web_shell_context(request),
+        "task": task,
+        "members": members,
+        "can_edit": can_edit,
+    }
+    return render(request, "web/app/tasks/detail.html", context)
+
+
+@login_required
+def tasks_delete(request, task_id):
+    """Archive a task (soft delete)."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org, is_archived=False)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = _require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    # Archive instead of delete
+    Task.objects.filter(id=task.id).update(
+        is_archived=True,
+        archived_at=timezone.now(),
+        archived_by=request.user,
+    )
+    
+    messages.success(request, _("Task archived"))
     return redirect("web:tasks")
 
 
@@ -1219,6 +1736,15 @@ def tasks_move(request, task_id):
         if old_status != new_status:
             _normalize_column_order(org, old_status)
 
+    # Trigger task automation for status change
+    if old_status != new_status:
+        engine = TaskAutomationEngine(triggered_by=request.user)
+        engine.trigger_status_changed(task, old_status, new_status)
+        
+        # Trigger task completed if status is DONE
+        if new_status == Task.Status.DONE:
+            engine.trigger_task_completed(task)
+
     return HttpResponse("", status=204)
 
 
@@ -1245,6 +1771,13 @@ def tasks_toggle(request, task_id):
     with transaction.atomic():
         task.status = new_status
         task.save(update_fields=["status", "updated_at"])
+
+        # Trigger task automation for status change
+        engine = TaskAutomationEngine(triggered_by=request.user)
+        engine.trigger_status_changed(task, old_status, new_status)
+        
+        if new_status == Task.Status.DONE:
+            engine.trigger_task_completed(task)
 
         if new_status == Task.Status.DONE:
             now = timezone.now()
@@ -1420,3 +1953,416 @@ def switch_org(request, org_id):
 
     request.session["active_org_id"] = str(org.id)
     return redirect("web:home")
+
+
+# ============================================================================
+# Task Automation Management
+# ============================================================================
+
+@login_required
+def task_automations(request):
+    """Task automation management page."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None:
+        raise Http404()
+
+    # Get all automation rules for this organization
+    rules = TaskAutomationRule.objects.filter(
+        organization=org
+    ).select_related("project", "created_by").prefetch_related("actions").order_by("-created_at")
+
+    # Get all task buttons for this organization
+    buttons = TaskButton.objects.filter(
+        organization=org
+    ).select_related("project", "created_by").prefetch_related("actions").order_by("name")
+
+    # Get all labels for this organization
+    labels = TaskLabel.objects.filter(organization=org).order_by("name")
+
+    # Get all projects for dropdowns
+    projects = Project.objects.filter(organization=org).order_by("title")
+
+    # Get organization members for user assignment
+    members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
+
+    context = {
+        **_web_shell_context(request),
+        "rules": rules,
+        "buttons": buttons,
+        "labels": labels,
+        "projects": projects,
+        "members": members,
+        "trigger_choices": TaskAutomationRule.TriggerType.choices,
+        "action_choices": TaskAutomationAction.ActionType.choices,
+        "status_choices": Task.Status.choices,
+        "priority_choices": Task.Priority.choices,
+    }
+
+    return render(request, "web/app/tasks/automations.html", context)
+
+
+@login_required
+def task_automation_rule_create(request):
+    """Create a new task automation rule."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    name = (request.POST.get("name") or "").strip()
+    trigger_type = (request.POST.get("trigger_type") or "").strip()
+    action_type = (request.POST.get("action_type") or "").strip()
+    project_id = (request.POST.get("project_id") or "").strip()
+
+    if not name or not trigger_type or not action_type:
+        messages.error(request, _("Please fill all required fields"))
+        return redirect("web:task_automations")
+
+    # Build trigger config
+    trigger_config = {}
+    if trigger_type == TaskAutomationRule.TriggerType.STATUS_CHANGED:
+        to_status = request.POST.get("to_status")
+        if to_status:
+            trigger_config["to_status"] = to_status
+
+    # Build action config
+    action_config = {}
+    if action_type == TaskAutomationAction.ActionType.CHANGE_STATUS:
+        status = request.POST.get("action_status")
+        if status:
+            action_config["status"] = status
+    elif action_type == TaskAutomationAction.ActionType.SET_PRIORITY:
+        priority = request.POST.get("action_priority")
+        if priority:
+            action_config["priority"] = priority
+    elif action_type == TaskAutomationAction.ActionType.ASSIGN_USER:
+        assign_triggered_by = request.POST.get("assign_triggered_by") == "on"
+        action_config["assign_triggered_by"] = assign_triggered_by
+        if not assign_triggered_by:
+            user_id = request.POST.get("user_id")
+            if user_id:
+                action_config["user_id"] = user_id
+    elif action_type == TaskAutomationAction.ActionType.ADD_LABEL:
+        label_id = request.POST.get("label_id")
+        if label_id:
+            action_config["label_id"] = label_id
+    elif action_type == TaskAutomationAction.ActionType.SET_DUE_DATE:
+        days_offset = request.POST.get("days_offset", "3")
+        try:
+            action_config["days_offset"] = int(days_offset)
+        except ValueError:
+            action_config["days_offset"] = 3
+    elif action_type == TaskAutomationAction.ActionType.MOVE_TO_PROJECT:
+        target_project_id = request.POST.get("target_project_id")
+        if target_project_id:
+            action_config["project_id"] = target_project_id
+
+    # Create rule
+    project = None
+    if project_id:
+        project = Project.objects.filter(id=project_id, organization=org).first()
+
+    rule = TaskAutomationRule.objects.create(
+        organization=org,
+        project=project,
+        name=name,
+        trigger_type=trigger_type,
+        trigger_config=trigger_config,
+        created_by=request.user,
+    )
+
+    # Create action
+    TaskAutomationAction.objects.create(
+        rule=rule,
+        action_type=action_type,
+        action_config=action_config,
+        sort_order=0,
+    )
+
+    messages.success(request, _("Automation rule created"))
+    return redirect("web:task_automations")
+
+
+@login_required
+def task_automation_rule_toggle(request, rule_id):
+    """Toggle automation rule active status."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    try:
+        rule = TaskAutomationRule.objects.get(id=rule_id, organization=org)
+    except TaskAutomationRule.DoesNotExist as exc:
+        raise Http404() from exc
+
+    rule.is_active = not rule.is_active
+    rule.save(update_fields=["is_active"])
+
+    return redirect("web:task_automations")
+
+
+@login_required
+def task_automation_rule_delete(request, rule_id):
+    """Delete an automation rule."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    try:
+        rule = TaskAutomationRule.objects.get(id=rule_id, organization=org)
+    except TaskAutomationRule.DoesNotExist as exc:
+        raise Http404() from exc
+
+    rule.delete()
+    messages.success(request, _("Automation rule deleted"))
+    return redirect("web:task_automations")
+
+
+@login_required
+def task_button_create(request):
+    """Create a new task button."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    name = (request.POST.get("name") or "").strip()
+    icon = (request.POST.get("icon") or "play").strip()
+    color = (request.POST.get("color") or "indigo").strip()
+    action_type = (request.POST.get("action_type") or "").strip()
+    project_id = (request.POST.get("project_id") or "").strip()
+
+    if not name or not action_type:
+        messages.error(request, _("Please fill all required fields"))
+        return redirect("web:task_automations")
+
+    # Build action config (same as rule actions)
+    action_config = {}
+    if action_type == TaskAutomationAction.ActionType.CHANGE_STATUS:
+        status = request.POST.get("action_status")
+        if status:
+            action_config["status"] = status
+
+    project = None
+    if project_id:
+        project = Project.objects.filter(id=project_id, organization=org).first()
+
+    button = TaskButton.objects.create(
+        organization=org,
+        project=project,
+        name=name,
+        icon=icon,
+        color=color,
+        created_by=request.user,
+    )
+
+    TaskButtonAction.objects.create(
+        button=button,
+        action_type=action_type,
+        action_config=action_config,
+        sort_order=0,
+    )
+
+    messages.success(request, _("Task button created"))
+    return redirect("web:task_automations")
+
+
+@login_required
+def task_button_delete(request, button_id):
+    """Delete a task button."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    try:
+        button = TaskButton.objects.get(id=button_id, organization=org)
+    except TaskButton.DoesNotExist as exc:
+        raise Http404() from exc
+
+    button.delete()
+    messages.success(request, _("Task button deleted"))
+    return redirect("web:task_automations")
+
+
+@login_required
+def task_button_execute(request, task_id, button_id):
+    """Execute a task button on a specific task."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = _require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    success = execute_task_button(button_id, task, request.user)
+    
+    if success:
+        messages.success(request, _("Button action executed"))
+    else:
+        messages.error(request, _("Button action failed"))
+
+    return redirect("web:tasks_detail", task_id=task_id)
+
+
+@login_required
+def task_label_create(request):
+    """Create a new task label."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None:
+        return HttpResponseForbidden()
+
+    name = (request.POST.get("name") or "").strip()
+    color = (request.POST.get("color") or "gray").strip()
+
+    if not name:
+        messages.error(request, _("Please provide a label name"))
+        return redirect("web:task_automations")
+
+    TaskLabel.objects.get_or_create(
+        organization=org,
+        name=name,
+        defaults={"color": color},
+    )
+
+    messages.success(request, _("Label created"))
+    return redirect("web:task_automations")
+
+
+# ============================================================================
+# Task Archive
+# ============================================================================
+
+@login_required
+def tasks_archive(request):
+    """View archived tasks."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    projects = Project.objects.filter(organization=org).order_by("title")
+    
+    # Get archived tasks
+    archived_tasks = (
+        Task.objects.filter(project__organization=org, is_archived=True)
+        .select_related("project", "assigned_to", "archived_by")
+        .order_by("-archived_at")
+    )
+
+    # Filter by project if specified
+    project_id = (request.GET.get("project") or "").strip()
+    active_project = None
+    if project_id:
+        try:
+            active_project = Project.objects.get(id=project_id, organization=org)
+            archived_tasks = archived_tasks.filter(project=active_project)
+        except Project.DoesNotExist:
+            pass
+
+    context = {
+        **_web_shell_context(request),
+        "archived_tasks": archived_tasks,
+        "projects": projects,
+        "active_project": active_project,
+    }
+    return render(request, "web/app/tasks/archive.html", context)
+
+
+@login_required
+def tasks_restore(request, task_id):
+    """Restore an archived task."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org, is_archived=True)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = _require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    # Restore task
+    Task.objects.filter(id=task.id).update(
+        is_archived=False,
+        archived_at=None,
+        archived_by=None,
+    )
+    
+    messages.success(request, _("Task restored"))
+    return redirect("web:tasks_archive")
+
+
+@login_required
+def tasks_delete_permanent(request, task_id):
+    """Permanently delete an archived task."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    if membership is None or membership.role not in {Membership.Role.OWNER, Membership.Role.ADMIN}:
+        return HttpResponseForbidden()
+
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org, is_archived=True)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    task_title = task.title
+    task.delete()
+    
+    messages.success(request, _("Task permanently deleted: %(title)s") % {"title": task_title})
+    return redirect("web:tasks_archive")

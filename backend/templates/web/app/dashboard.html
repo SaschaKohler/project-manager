@@ -16,21 +16,24 @@
     </div>
 
     <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      <a href="{% url 'web:projects' %}"
+         class="block rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 hover:bg-zinc-900/60 transition focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <div class="text-sm text-zinc-400">{% trans "Projects" %}</div>
         <div class="mt-2 text-3xl font-semibold">{{ project_count }}</div>
         <div class="mt-4 text-xs text-zinc-400">{% trans "Plan, track, ship." %}</div>
-      </div>
-      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      </a>
+      <a href="{% url 'web:tasks' %}"
+         class="block rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 hover:bg-zinc-900/60 transition focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <div class="text-sm text-zinc-400">{% trans "Tasks" %}</div>
         <div class="mt-2 text-3xl font-semibold">{{ task_count }}</div>
         <div class="mt-4 text-xs text-zinc-400">{% trans "Turn chaos into momentum." %}</div>
-      </div>
-      <div class="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+      </a>
+      <a href="{% url 'web:tasks' %}"
+         class="block rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 hover:bg-zinc-900/60 transition focus:outline-none focus:ring-2 focus:ring-indigo-500">
         <div class="text-sm text-zinc-400">{% trans "Marketing tasks" %}</div>
         <div class="mt-2 text-3xl font-semibold">{{ marketing_task_count }}</div>
         <div class="mt-4 text-xs text-zinc-400">{% trans "Consistent output wins." %}</div>
-      </div>
+      </a>
     </div>
 
     <div class="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6">

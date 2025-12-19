@@ -1,0 +1,276 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Automations" %} · {{ board.title }} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-start justify-between gap-6">
+  <div>
+    <div class="text-xs uppercase tracking-wider text-zinc-500">{% trans "Board" %}</div>
+    <h1 class="mt-1 text-3xl font-semibold tracking-tight">{% trans "Automations" %}</h1>
+    <div class="mt-2 text-sm text-zinc-400">{{ board.title }}</div>
+  </div>
+  <div class="flex gap-2">
+    <a href="{% url 'web:board_detail' board.id %}" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+      {% trans "Back to Board" %}
+    </a>
+  </div>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Automation Rules -->
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-medium text-zinc-200">{% trans "Automation Rules" %}</h2>
+    </div>
+
+    <div class="space-y-3 mb-6">
+      {% for rule in rules %}
+        <div class="rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="font-medium flex items-center gap-2">
+                {{ rule.name }}
+                {% if rule.is_active %}
+                  <span class="inline-flex items-center rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">{% trans "Active" %}</span>
+                {% else %}
+                  <span class="inline-flex items-center rounded-full bg-zinc-500/20 px-2 py-0.5 text-xs text-zinc-400">{% trans "Inactive" %}</span>
+                {% endif %}
+              </div>
+              <div class="mt-1 text-xs text-zinc-400">
+                {% trans "Trigger" %}: {{ rule.get_trigger_type_display }}
+              </div>
+              {% if rule.description %}
+                <div class="mt-1 text-xs text-zinc-500">{{ rule.description }}</div>
+              {% endif %}
+              <div class="mt-2 text-xs text-zinc-500">
+                {% for action in rule.actions.all %}
+                  <span class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 mr-1 mb-1">{{ action.get_action_type_display }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="flex gap-1">
+              <form method="post" action="{% url 'web:board_automation_rule_toggle' rule.id %}">
+                {% csrf_token %}
+                <button type="submit" class="rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1 text-xs hover:bg-zinc-900/55">
+                  {% if rule.is_active %}{% trans "Disable" %}{% else %}{% trans "Enable" %}{% endif %}
+                </button>
+              </form>
+              <form method="post" action="{% url 'web:board_automation_rule_delete' rule.id %}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{% trans 'Delete this rule?' %}">
+                {% csrf_token %}
+                <button type="submit" class="rounded-md border border-red-800/70 bg-red-900/20 px-2 py-1 text-xs text-red-400 hover:bg-red-900/40">
+                  {% trans "Delete" %}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-sm text-zinc-500">{% trans "No automation rules yet." %}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Create Rule Form -->
+    <div class="border-t border-zinc-800/70 pt-4">
+      <h3 class="text-sm font-medium text-zinc-300 mb-3">{% trans "Create Rule" %}</h3>
+      <form method="post" action="{% url 'web:board_automation_rule_create' board.id %}" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="rule-name">{% trans "Name" %}</label>
+          <input id="rule-name" name="name" required placeholder="{% trans 'e.g. Auto-assign on move to In Progress' %}"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="rule-trigger">{% trans "Trigger" %}</label>
+          <select id="rule-trigger" name="trigger_type" required
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            {% for value, label in trigger_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="rule-to-column">{% trans "When moved to column (optional)" %}</label>
+          <select id="rule-to-column" name="to_column_id"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Any column" %}</option>
+            {% for col in board.columns.all %}
+              <option value="{{ col.id }}">{{ col.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">{% trans "Action" %}</label>
+          <select name="action_type" required
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            {% for value, label in action_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="action-column">{% trans "Move to column (for Move Card action)" %}</label>
+          <select id="action-column" name="action_column_id_0"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Select column" %}</option>
+            {% for col in board.columns.all %}
+              <option value="{{ col.id }}">{{ col.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="action-label">{% trans "Add label (for Add Label action)" %}</label>
+          <select id="action-label" name="action_label_id_0"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Select label" %}</option>
+            {% for label in labels %}
+              <option value="{{ label.id }}">{{ label.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="action-days">{% trans "Days offset (for Set Due Date action)" %}</label>
+          <input id="action-days" name="action_days_offset_0" type="number" value="3" min="1" max="365"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="action-assign-triggered" name="action_assign_triggered_0" class="rounded border-zinc-700 bg-zinc-900" />
+          <label class="text-xs text-zinc-400" for="action-assign-triggered">{% trans "Assign to user who triggered the action" %}</label>
+        </div>
+        <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+          {% trans "Create Rule" %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Card Buttons -->
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-medium text-zinc-200">{% trans "Card Buttons" %}</h2>
+    </div>
+
+    <div class="space-y-3 mb-6">
+      {% for button in buttons %}
+        <div class="rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="font-medium flex items-center gap-2">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded bg-{{ button.color }}-600/30 text-{{ button.color }}-400 text-xs">▶</span>
+                {{ button.name }}
+              </div>
+              <div class="mt-2 text-xs text-zinc-500">
+                {% for action in button.actions.all %}
+                  <span class="inline-flex items-center rounded bg-zinc-800 px-1.5 py-0.5 mr-1 mb-1">{{ action.get_action_type_display }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            <form method="post" action="{% url 'web:board_card_button_delete' button.id %}" onsubmit="return confirm(this.dataset.confirm)" data-confirm="{% trans 'Delete this button?' %}">
+              {% csrf_token %}
+              <button type="submit" class="rounded-md border border-red-800/70 bg-red-900/20 px-2 py-1 text-xs text-red-400 hover:bg-red-900/40">
+                {% trans "Delete" %}
+              </button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-sm text-zinc-500">{% trans "No card buttons yet." %}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Create Button Form -->
+    <div class="border-t border-zinc-800/70 pt-4">
+      <h3 class="text-sm font-medium text-zinc-300 mb-3">{% trans "Create Button" %}</h3>
+      <form method="post" action="{% url 'web:board_card_button_create' board.id %}" class="space-y-3">
+        {% csrf_token %}
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="button-name">{% trans "Name" %}</label>
+          <input id="button-name" name="name" required placeholder="{% trans 'e.g. Move Forward' %}"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1" for="button-icon">{% trans "Icon" %}</label>
+            <select id="button-icon" name="icon"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="play">▶ {% trans "Play" %}</option>
+              <option value="check">✓ {% trans "Check" %}</option>
+              <option value="arrow">→ {% trans "Arrow" %}</option>
+              <option value="star">★ {% trans "Star" %}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1" for="button-color">{% trans "Color" %}</label>
+            <select id="button-color" name="color"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="indigo">{% trans "Indigo" %}</option>
+              <option value="green">{% trans "Green" %}</option>
+              <option value="red">{% trans "Red" %}</option>
+              <option value="yellow">{% trans "Yellow" %}</option>
+              <option value="blue">{% trans "Blue" %}</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1">{% trans "Action" %}</label>
+          <select name="action_type" required
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            {% for value, label in action_types %}
+              <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="btn-action-column">{% trans "Move to column" %}</label>
+          <select id="btn-action-column" name="action_column_id_0"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Select column" %}</option>
+            {% for col in board.columns.all %}
+              <option value="{{ col.id }}">{{ col.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+          {% trans "Create Button" %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Labels Section -->
+<div class="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-lg font-medium text-zinc-200">{% trans "Labels" %}</h2>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    {% for label in labels %}
+      <span class="inline-flex items-center rounded-full bg-{{ label.color }}-500/20 px-3 py-1 text-sm text-{{ label.color }}-400">
+        {{ label.name }}
+      </span>
+    {% empty %}
+      <div class="text-sm text-zinc-500">{% trans "No labels yet." %}</div>
+    {% endfor %}
+  </div>
+
+  <form method="post" action="{% url 'web:board_label_create' board.id %}" class="flex gap-3">
+    {% csrf_token %}
+    <input name="name" required placeholder="{% trans 'Label name' %}"
+           class="flex-1 rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+    <select name="color"
+            class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+      <option value="gray">{% trans "Gray" %}</option>
+      <option value="red">{% trans "Red" %}</option>
+      <option value="yellow">{% trans "Yellow" %}</option>
+      <option value="green">{% trans "Green" %}</option>
+      <option value="blue">{% trans "Blue" %}</option>
+      <option value="indigo">{% trans "Indigo" %}</option>
+      <option value="purple">{% trans "Purple" %}</option>
+    </select>
+    <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-4 py-2 text-sm font-medium">
+      {% trans "Add" %}
+    </button>
+  </form>
+</div>
+{% endblock %}

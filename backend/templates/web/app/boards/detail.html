@@ -9,7 +9,10 @@
     <div class="text-xs uppercase tracking-wider text-zinc-500">{% trans "Board" %}</div>
     <h1 class="mt-1 text-3xl font-semibold tracking-tight">{{ board.title }}</h1>
   </div>
-  <div>
+  <div class="flex gap-2">
+    <a href="{% url 'web:board_automations' board.id %}" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+      {% trans "Automations" %}
+    </a>
     <a href="{% url 'web:boards' %}" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
       {% trans "Back" %}
     </a>
@@ -39,14 +42,30 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             {% for card in col.cards.all %}
-              <a href="{% url 'web:board_card_detail' card.id %}" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
-                <div class="font-medium truncate">{{ card.title }}</div>
-                {% if card.links.all %}
-                  <div class="mt-1 text-xs text-zinc-400">{{ card.links.all|length }} {% trans "links" %}</div>
-                {% else %}
-                  <div class="mt-1 text-xs text-zinc-500">{% trans "No links" %}</div>
-                {% endif %}
-              </a>
+              <div class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+                <div class="flex items-start justify-between gap-3">
+                  <a href="{% url 'web:board_card_detail' card.id %}" class="min-w-0 flex-1">
+                    <div class="font-medium truncate">{{ card.title }}</div>
+                    {% if card.links.all %}
+                      <div class="mt-1 text-xs text-zinc-400">{{ card.links.all|length }} {% trans "links" %}</div>
+                    {% else %}
+                      <div class="mt-1 text-xs text-zinc-500">{% trans "No links" %}</div>
+                    {% endif %}
+                  </a>
+
+                  <form method="post" action="{% url 'web:board_card_move' card.id %}">
+                    {% csrf_token %}
+                    <label class="sr-only" for="move-{{ card.id }}">{% trans "Move" %}</label>
+                    <select id="move-{{ card.id }}" name="column_id"
+                            onchange="this.form.submit()"
+                            class="rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                      {% for c2 in columns %}
+                        <option value="{{ c2.id }}" {% if c2.id == col.id %}selected{% endif %}>{{ c2.title }}</option>
+                      {% endfor %}
+                    </select>
+                  </form>
+                </div>
+              </div>
             {% empty %}
               <div class="md:col-span-2 text-sm text-zinc-500">{% trans "No cards yet." %}</div>
             {% endfor %}

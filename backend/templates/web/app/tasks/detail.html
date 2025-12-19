@@ -1,0 +1,150 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{{ task.title }} · {% trans "Tasks" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-start justify-between gap-6">
+  <div>
+    <div class="text-xs uppercase tracking-wider text-zinc-500">{% trans "Task" %}</div>
+    <h1 class="mt-1 text-3xl font-semibold tracking-tight">{{ task.title }}</h1>
+    <div class="mt-2 text-sm text-zinc-400">
+      {% trans "Project" %}: {{ task.project.title }}
+    </div>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'web:tasks' %}" class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
+      {% trans "Back" %}
+    </a>
+  </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
+    <div class="text-sm font-medium text-zinc-200">{% trans "Details" %}</div>
+
+    <form method="post" class="mt-4 space-y-3">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2" for="title">{% trans "Title" %}</label>
+        <input id="title" name="title" required value="{{ task.title }}"
+               {% if not can_edit %}disabled{% endif %}
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+      </div>
+
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2" for="subtitle">{% trans "Subtitle" %}</label>
+        <input id="subtitle" name="subtitle" value="{{ task.subtitle }}"
+               {% if not can_edit %}disabled{% endif %}
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+      </div>
+
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2" for="description">{% trans "Description" %}</label>
+        <textarea id="description" name="description" rows="8"
+                  {% if not can_edit %}disabled{% endif %}
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">{{ task.description }}</textarea>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2" for="status">{% trans "Status" %}</label>
+          <select id="status" name="status" {% if not can_edit %}disabled{% endif %}
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+            <option value="TODO" {% if task.status == 'TODO' %}selected{% endif %}>{% trans "Todo" %}</option>
+            <option value="IN_PROGRESS" {% if task.status == 'IN_PROGRESS' %}selected{% endif %}>{% trans "In progress" %}</option>
+            <option value="DONE" {% if task.status == 'DONE' %}selected{% endif %}>{% trans "Done" %}</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2" for="priority">{% trans "Priority" %}</label>
+          <select id="priority" name="priority" {% if not can_edit %}disabled{% endif %}
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+            <option value="LOW" {% if task.priority == 'LOW' %}selected{% endif %}>{% trans "Low" %}</option>
+            <option value="MEDIUM" {% if task.priority == 'MEDIUM' %}selected{% endif %}>{% trans "Medium" %}</option>
+            <option value="HIGH" {% if task.priority == 'HIGH' %}selected{% endif %}>{% trans "High" %}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2" for="assigned_to">{% trans "Assigned to" %}</label>
+          <select id="assigned_to" name="assigned_to" {% if not can_edit %}disabled{% endif %}
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+            {% for m in members %}
+              <option value="{{ m.user.id }}" {% if task.assigned_to_id == m.user.id %}selected{% endif %}>{{ m.user.email }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm text-zinc-400 mb-2" for="due_date">{% trans "Due date" %}</label>
+          <input id="due_date" name="due_date" type="date"
+                 value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}"
+                 {% if not can_edit %}disabled{% endif %}
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+        </div>
+      </div>
+
+      {% if can_edit %}
+        <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+          {% trans "Save" %}
+        </button>
+        <button type="submit"
+                formaction="{% url 'web:tasks_delete' task.id %}"
+                class="ml-2 rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-950/35 transition"
+                onclick="return confirm('Delete this task?')">
+          {% trans "Delete" %}
+        </button>
+      {% else %}
+        <div class="text-xs text-zinc-500">{% trans "You don't have permission to edit this task." %}</div>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5 space-y-6">
+    <div>
+      <div class="text-sm font-medium text-zinc-200">{% trans "Meta" %}</div>
+      <div class="mt-3 space-y-2 text-sm text-zinc-300">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-zinc-400">{% trans "Tracked" %}</div>
+          <div class="font-mono">{{ task.tracked_human }}</div>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-zinc-400">{% trans "Updated" %}</div>
+          <div class="text-zinc-300">{{ task.updated_at|date:"Y-m-d H:i" }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% if task.idea_card %}
+      <div>
+        <div class="text-sm font-medium text-zinc-200">{% trans "Idea" %}</div>
+        <div class="mt-3">
+          <a href="{% url 'web:board_card_detail' task.idea_card.id %}" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+            <div class="text-sm font-medium truncate">{{ task.idea_card.title }}</div>
+            <div class="mt-1 text-xs text-zinc-400 truncate">{% trans "Open idea card" %}</div>
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <div>
+      <div class="text-sm font-medium text-zinc-200">{% trans "Links" %}</div>
+      <div class="mt-3 space-y-2">
+        {% for l in task.links.all %}
+          <a href="{{ l.url }}" target="_blank" rel="noopener" class="block rounded-xl border border-zinc-800/70 bg-zinc-900/35 px-4 py-3 hover:bg-zinc-900/55">
+            <div class="text-sm font-medium truncate">{% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}</div>
+            <div class="mt-1 text-xs text-zinc-400 truncate">{{ l.url }}</div>
+          </a>
+        {% empty %}
+          <div class="text-sm text-zinc-500">{% trans "No links yet." %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

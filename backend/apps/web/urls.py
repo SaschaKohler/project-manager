@@ -46,6 +46,11 @@ urlpatterns = [
         name="board_card_detail",
     ),
     path(
+        "boards/cards/<uuid:card_id>/move/",
+        views.board_card_move,
+        name="board_card_move",
+    ),
+    path(
         "boards/cards/<uuid:card_id>/links/create/",
         views.board_card_link_create,
         name="board_card_link_create",
@@ -55,8 +60,51 @@ urlpatterns = [
         views.board_card_attachment_create,
         name="board_card_attachment_create",
     ),
+    # Automations
+    path(
+        "boards/<uuid:board_id>/automations/",
+        views.board_automations_page,
+        name="board_automations",
+    ),
+    path(
+        "boards/<uuid:board_id>/automations/rules/create/",
+        views.board_automation_rule_create,
+        name="board_automation_rule_create",
+    ),
+    path(
+        "boards/automations/rules/<uuid:rule_id>/toggle/",
+        views.board_automation_rule_toggle,
+        name="board_automation_rule_toggle",
+    ),
+    path(
+        "boards/automations/rules/<uuid:rule_id>/delete/",
+        views.board_automation_rule_delete,
+        name="board_automation_rule_delete",
+    ),
+    path(
+        "boards/<uuid:board_id>/buttons/create/",
+        views.board_card_button_create,
+        name="board_card_button_create",
+    ),
+    path(
+        "boards/buttons/<uuid:button_id>/delete/",
+        views.board_card_button_delete,
+        name="board_card_button_delete",
+    ),
+    path(
+        "boards/cards/<uuid:card_id>/buttons/<uuid:button_id>/execute/",
+        views.board_card_button_execute,
+        name="board_card_button_execute",
+    ),
+    path(
+        "boards/<uuid:board_id>/labels/create/",
+        views.board_label_create,
+        name="board_label_create",
+    ),
     path("tasks/", views.tasks_page, name="tasks"),
     path("tasks/create/", views.tasks_create, name="tasks_create"),
+    path("tasks/<uuid:task_id>/", views.tasks_detail, name="tasks_detail"),
+    path("tasks/<uuid:task_id>/delete/", views.tasks_delete, name="tasks_delete"),
     path("tasks/<uuid:task_id>/toggle/", views.tasks_toggle, name="tasks_toggle"),
     path("tasks/<uuid:task_id>/timer/", views.tasks_timer, name="tasks_timer"),
     path(
@@ -73,4 +121,49 @@ urlpatterns = [
         name="tasks_unschedule",
     ),
     path("tasks/<uuid:task_id>/assign/", views.tasks_assign, name="tasks_assign"),
+    # Task Archive
+    path("tasks/archive/", views.tasks_archive, name="tasks_archive"),
+    path("tasks/<uuid:task_id>/restore/", views.tasks_restore, name="tasks_restore"),
+    path(
+        "tasks/<uuid:task_id>/delete-permanent/",
+        views.tasks_delete_permanent,
+        name="tasks_delete_permanent",
+    ),
+    # Task Automations
+    path("tasks/automations/", views.task_automations, name="task_automations"),
+    path(
+        "tasks/automations/rules/create/",
+        views.task_automation_rule_create,
+        name="task_automation_rule_create",
+    ),
+    path(
+        "tasks/automations/rules/<uuid:rule_id>/toggle/",
+        views.task_automation_rule_toggle,
+        name="task_automation_rule_toggle",
+    ),
+    path(
+        "tasks/automations/rules/<uuid:rule_id>/delete/",
+        views.task_automation_rule_delete,
+        name="task_automation_rule_delete",
+    ),
+    path(
+        "tasks/automations/buttons/create/",
+        views.task_button_create,
+        name="task_button_create",
+    ),
+    path(
+        "tasks/automations/buttons/<uuid:button_id>/delete/",
+        views.task_button_delete,
+        name="task_button_delete",
+    ),
+    path(
+        "tasks/<uuid:task_id>/buttons/<uuid:button_id>/execute/",
+        views.task_button_execute,
+        name="task_button_execute",
+    ),
+    path(
+        "tasks/automations/labels/create/",
+        views.task_label_create,
+        name="task_label_create",
+    ),
 ]

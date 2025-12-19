@@ -31,6 +31,20 @@
       {% trans "Calendar" %}
     </a>
   {% endif %}
+  <a href="{% url 'web:task_automations' %}"
+     class="rounded-lg px-3 py-1.5 text-sm border transition border-purple-600 bg-purple-600/20 text-purple-300 hover:bg-purple-600/30">
+    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+    </svg>
+    {% trans "Automations" %}
+  </a>
+  <a href="{% url 'web:tasks_archive' %}"
+     class="rounded-lg px-3 py-1.5 text-sm border transition border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+    <svg class="inline-block w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+    </svg>
+    {% trans "Archive" %}
+  </a>
   </div>
 
   <form method="get" class="flex items-center gap-2">
@@ -97,7 +111,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-zinc-400 mb-2">{% trans "Link" %}</label>
-            <input name="link_url" type="url" placeholder="{% trans 'https://...' %}"
+            <input name="link_url" type="url" placeholder="https://..."
                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
@@ -168,7 +182,7 @@
         {% for task in todo_tasks %}
           {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
         {% empty %}
-          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+          <div data-empty-placeholder="true" class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
         {% endfor %}
       </div>
     </div>
@@ -182,7 +196,7 @@
         {% for task in in_progress_tasks %}
           {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
         {% empty %}
-          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+          <div data-empty-placeholder="true" class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
         {% endfor %}
       </div>
     </div>
@@ -196,7 +210,7 @@
         {% for task in done_tasks %}
           {% include "web/app/tasks/_task_card.html" with task=task members=members running_task_ids=running_task_ids %}
         {% empty %}
-          <div class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
+          <div data-empty-placeholder="true" class="rounded-xl border border-dashed border-zinc-800 bg-zinc-950/20 p-4 text-sm text-zinc-400">{% trans "Drop tasks here" %}</div>
         {% endfor %}
       </div>
     </div>
@@ -333,11 +347,42 @@
   function initTasksUi(root) {
     initKanban();
     initLiveTimers(root || document);
+
+    document.querySelectorAll('[data-kanban-column][data-status]')?.forEach((col) => {
+      const hasCards = col.querySelector('[data-task-id]');
+      if (!hasCards) return;
+      col.querySelectorAll('[data-empty-placeholder="true"]')?.forEach((el) => el.remove());
+    });
   }
+
+  document.body.addEventListener('click', (evt) => {
+    const card = evt.target.closest('[data-task-id]');
+    if (!card) return;
+
+    // Don't hijack clicks on interactive elements inside the card.
+    if (evt.target.closest('a,button,select,input,textarea,label,summary')) return;
+
+    const url = card.dataset.openUrl;
+    if (url) window.location.href = url;
+  });
 
   document.addEventListener('DOMContentLoaded', () => initTasksUi(document));
   document.body.addEventListener('htmx:load', (evt) => initTasksUi(evt.target));
   document.body.addEventListener('htmx:afterSwap', (evt) => initTasksUi(evt.target));
+
+  document.body.addEventListener('taskCreated', (evt) => {
+    const detail = evt.detail || {};
+    const taskId = detail.task_id;
+    if (!taskId) return;
+
+    // If the card wasn't inserted (for any reason), do an automatic reload once.
+    const exists = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (exists) return;
+
+    if (window.__pm_task_created_reload_done) return;
+    window.__pm_task_created_reload_done = true;
+    window.location.reload();
+  });
 
   document.body.addEventListener('taskStatusChanged', async (evt) => {
     const detail = evt.detail || {};

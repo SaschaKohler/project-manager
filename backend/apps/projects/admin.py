@@ -1,6 +1,19 @@
 from django.contrib import admin
 
-from .models import Event, Project, Task, TaskLink, TaskTimeEntry
+from .models import (
+    Event,
+    Project,
+    Task,
+    TaskAutomationAction,
+    TaskAutomationLog,
+    TaskAutomationRule,
+    TaskButton,
+    TaskButtonAction,
+    TaskLabel,
+    TaskLabelAssignment,
+    TaskLink,
+    TaskTimeEntry,
+)
 
 
 @admin.register(Project)
@@ -35,3 +48,64 @@ class EventAdmin(admin.ModelAdmin):
     list_display = ("id", "project", "title", "type", "start_time", "end_time")
     list_filter = ("type",)
     search_fields = ("title", "project__title")
+
+
+@admin.register(TaskLabel)
+class TaskLabelAdmin(admin.ModelAdmin):
+    list_display = ("name", "organization", "color", "created_at")
+    search_fields = ("name", "organization__name")
+    list_filter = ("color",)
+
+
+@admin.register(TaskLabelAssignment)
+class TaskLabelAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("task", "label", "assigned_at")
+    search_fields = ("task__title", "label__name")
+
+
+class TaskAutomationActionInline(admin.TabularInline):
+    model = TaskAutomationAction
+    extra = 1
+
+
+@admin.register(TaskAutomationRule)
+class TaskAutomationRuleAdmin(admin.ModelAdmin):
+    list_display = ("name", "organization", "project", "trigger_type", "is_active", "created_by", "created_at")
+    search_fields = ("name", "organization__name", "project__title")
+    list_filter = ("trigger_type", "is_active")
+    inlines = [TaskAutomationActionInline]
+
+
+@admin.register(TaskAutomationAction)
+class TaskAutomationActionAdmin(admin.ModelAdmin):
+    list_display = ("rule", "action_type", "sort_order")
+    search_fields = ("rule__name",)
+    list_filter = ("action_type",)
+
+
+@admin.register(TaskAutomationLog)
+class TaskAutomationLogAdmin(admin.ModelAdmin):
+    list_display = ("rule", "task", "status", "executed_at")
+    search_fields = ("rule__name", "task__title")
+    list_filter = ("status",)
+    readonly_fields = ("rule", "task", "status", "message", "executed_at")
+
+
+class TaskButtonActionInline(admin.TabularInline):
+    model = TaskButtonAction
+    extra = 1
+
+
+@admin.register(TaskButton)
+class TaskButtonAdmin(admin.ModelAdmin):
+    list_display = ("name", "organization", "project", "icon", "color", "is_active", "created_by")
+    search_fields = ("name", "organization__name", "project__title")
+    list_filter = ("is_active", "color")
+    inlines = [TaskButtonActionInline]
+
+
+@admin.register(TaskButtonAction)
+class TaskButtonActionAdmin(admin.ModelAdmin):
+    list_display = ("button", "action_type", "sort_order")
+    search_fields = ("button__name",)
+    list_filter = ("action_type",)

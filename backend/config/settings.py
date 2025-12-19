@@ -15,6 +15,10 @@ env = environ.Env(
     SESSION_COOKIE_SECURE=(bool, False),
     DEFAULT_FROM_EMAIL=(str, "no-reply@localhost"),
     EMAIL_BACKEND=(str, "django.core.mail.backends.console.EmailBackend"),
+    AI_PROVIDER=(str, "anthropic"),
+    ANTHROPIC_API_KEY=(str, ""),
+    ANTHROPIC_MODEL=(str, "claude-3-5-sonnet-20240620"),
+    ANTHROPIC_BASE_URL=(str, "https://api.anthropic.com"),
 )
 
 if (BASE_DIR / ".env").exists():
@@ -153,3 +157,8 @@ REST_FRAMEWORK = {
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
+
+AI_PROVIDER = env("AI_PROVIDER")
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
+ANTHROPIC_MODEL = env("ANTHROPIC_MODEL")
+ANTHROPIC_BASE_URL = env("ANTHROPIC_BASE_URL")

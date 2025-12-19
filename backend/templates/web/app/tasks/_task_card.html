@@ -1,12 +1,17 @@
 {% load i18n %}
 <div class="rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 shadow-sm hover:bg-zinc-950/45 transition {% if running_task_ids and task.id in running_task_ids %}border-emerald-500/60 bg-emerald-950/20{% endif %}"
      data-task-id="{{ task.id }}"
+     data-open-url="{% url 'web:tasks_detail' task.id %}"
      data-move-url="{% url 'web:tasks_move' task.id %}"
+     {% if hx_swap_oob_target %}hx-swap-oob="afterbegin:#{{ hx_swap_oob_target }}"{% endif %}
      {% if task.running_started_at %}data-running-started-at="{{ task.running_started_at|date:'c' }}"{% endif %}>
   <div class="flex items-start gap-3">
     <div class="drag-handle select-none pt-0.5 text-zinc-500 cursor-grab active:cursor-grabbing">⋮⋮</div>
     <div class="min-w-0 flex-1">
       {% include "web/app/tasks/_task_title.html" with task=task %}
+      {% if task.subtitle %}
+        <div class="mt-1 text-sm text-zinc-400 truncate">{{ task.subtitle }}</div>
+      {% endif %}
       <div class="mt-1 text-xs text-zinc-500 truncate">{{ task.project.title }}</div>
 
       {% if task.idea_card or task.links.all %}
@@ -48,6 +53,10 @@
       {% endif %}
     </div>
     <div class="flex items-center gap-2">
+      <a href="{% url 'web:tasks_detail' task.id %}"
+         class="rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1 hover:bg-zinc-900/55 transition">
+        {% trans "Open" %}
+      </a>
       <div class="hidden sm:block text-zinc-500">{{ task.tracked_human }}</div>
       <div class="hidden sm:block font-mono text-zinc-400" data-live-timer></div>
       <button class="rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1 hover:bg-zinc-900/55 transition"

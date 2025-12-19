@@ -36,6 +36,7 @@
         {% trans "Save" %}
       </button>
     </form>
+
   </div>
 
   <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5 space-y-6">
@@ -56,7 +57,7 @@
         {% csrf_token %}
         <input name="title" placeholder="{% trans 'Link title (optional)' %}"
                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
-        <input name="url" required placeholder="{% trans 'https://...' %}"
+        <input name="url" required placeholder="https://..."
                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
         <button type="submit" class="w-full rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm hover:bg-zinc-900/60">
           {% trans "Add link" %}

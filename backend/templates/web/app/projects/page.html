@@ -102,9 +102,23 @@
       {% for project in projects %}
         {% include "web/app/projects/_project_row.html" with project=project %}
       {% empty %}
-        <div class="p-6 text-sm text-zinc-400">{% trans "No projects yet. Create the first one on the left." %}</div>
+        <div id="project-empty" class="p-6 text-sm text-zinc-400">{% trans "No projects yet. Create the first one on the left." %}</div>
       {% endfor %}
     </div>
   </div>
 </div>
+
+<script>
+  function cleanupProjectEmptyState() {
+    const list = document.getElementById('project-list');
+    if (!list) return;
+    const hasRows = list.querySelector('[data-project-id]');
+    if (!hasRows) return;
+    const empty = document.getElementById('project-empty');
+    if (empty) empty.remove();
+  }
+
+  document.addEventListener('DOMContentLoaded', cleanupProjectEmptyState);
+  document.body.addEventListener('htmx:afterSwap', cleanupProjectEmptyState);
+</script>
 {% endblock %}

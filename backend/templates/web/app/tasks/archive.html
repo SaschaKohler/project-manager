@@ -1,0 +1,121 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Archived Tasks" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Archived Tasks" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Restore or permanently delete archived tasks" %}</p>
+  </div>
+  <a href="{% url 'web:tasks' %}" class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+    {% trans "Back to Tasks" %}
+  </a>
+</div>
+
+<div class="mt-6 flex items-center justify-between">
+  <form method="get" class="flex items-center gap-2">
+    <label class="text-sm text-zinc-400">{% trans "Project" %}</label>
+    <select name="project"
+            onchange="this.form.submit()"
+            class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+      <option value="">{% trans "All projects" %}</option>
+      {% for p in projects %}
+        <option value="{{ p.id }}" {% if active_project and active_project.id == p.id %}selected{% endif %}>{{ p.title }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if archived_tasks %}
+  <div class="mt-8 space-y-3">
+    {% for task in archived_tasks %}
+      <div class="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 hover:bg-zinc-900/60 transition">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-3 mb-2">
+              <h3 class="text-base font-medium text-zinc-100 truncate">{{ task.title }}</h3>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-zinc-800 text-zinc-400">
+                {{ task.get_status_display }}
+              </span>
+              {% if task.priority == 'HIGH' %}
+                <span class="px-2 py-0.5 text-xs rounded-full bg-red-900/30 text-red-400">
+                  {% trans "High Priority" %}
+                </span>
+              {% endif %}
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-4 text-sm text-zinc-400">
+              <div class="flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                </svg>
+                <span>{{ task.project.title }}</span>
+              </div>
+              
+              {% if task.assigned_to %}
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  <span>{{ task.assigned_to.email }}</span>
+                </div>
+              {% endif %}
+              
+              {% if task.archived_at %}
+                <div class="flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                  </svg>
+                  <span>{% trans "Archived" %} {{ task.archived_at|date:"SHORT_DATE_FORMAT" }}</span>
+                  {% if task.archived_by %}
+                    <span>{% trans "by" %} {{ task.archived_by.email }}</span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            {% if task.subtitle %}
+              <p class="mt-2 text-sm text-zinc-400">{{ task.subtitle }}</p>
+            {% endif %}
+          </div>
+
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <form method="post" action="{% url 'web:tasks_restore' task.id %}">
+              {% csrf_token %}
+              <button type="submit" 
+                      class="px-3 py-1.5 text-sm font-medium rounded-lg border border-green-600 bg-green-600/20 text-green-400 hover:bg-green-600/30 transition">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                {% trans "Restore" %}
+              </button>
+            </form>
+            
+            <form method="post" action="{% url 'web:tasks_delete_permanent' task.id %}" data-confirm="{% trans 'Permanently delete this task? This cannot be undone!' %}">
+              {% csrf_token %}
+              <button type="submit" 
+                      onclick="return confirm(this.form.dataset.confirm)"
+                      class="px-3 py-1.5 text-sm font-medium rounded-lg border border-red-600 bg-red-600/20 text-red-400 hover:bg-red-600/30 transition">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                {% trans "Delete Forever" %}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="mt-12 text-center">
+    <svg class="mx-auto h-12 w-12 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-zinc-300">{% trans "No archived tasks" %}</h3>
+    <p class="mt-1 text-sm text-zinc-500">{% trans "Archived tasks will appear here" %}</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1296,32 +1296,43 @@ def tasks_create(request):
     idea_card_id = (request.POST.get("idea_card_id") or "").strip()
     link_url = (request.POST.get("link_url") or "").strip()
     link_title = (request.POST.get("link_title") or "").strip()
-    if not title or not project_id:
-        return HttpResponse("", status=400)
+    
+    if not title:
+        return JsonResponse({"error": _("Bitte geben Sie einen Titel für die Aufgabe ein.")}, status=400)
+    
+    if not project_id:
+        return JsonResponse({"error": _("Bitte wählen Sie ein Projekt aus.")}, status=400)
 
     try:
         project = Project.objects.get(id=project_id, organization=org)
     except Project.DoesNotExist:
-        return HttpResponse("", status=400)
+        return JsonResponse({"error": _("Das ausgewählte Projekt wurde nicht gefunden.")}, status=400)
 
     assigned_to = request.user
     if assigned_to_id:
         if not Membership.objects.filter(organization=org, user_id=assigned_to_id).exists():
-            return HttpResponse("", status=400)
+            return JsonResponse({"error": _("Der ausgewählte Benutzer ist kein Mitglied dieser Organisation.")}, status=400)
         assigned_to = Membership.objects.get(organization=org, user_id=assigned_to_id).user
 
     due_date = None
     if due_date_raw:
         due_d = parse_date(due_date_raw)
         if due_d is None:
-            return HttpResponse("", status=400)
+            return JsonResponse({"error": _("Das Fälligkeitsdatum hat ein ungültiges Format.")}, status=400)
 
         due_date = datetime.combine(due_d, time(17, 0))
         if timezone.is_naive(due_date):
             due_date = timezone.make_aware(due_date)
 
         if due_date < project.start_date or due_date > project.end_date:
-            return HttpResponse("", status=400)
+            project_start = project.start_date.strftime("%d.%m.%Y")
+            project_end = project.end_date.strftime("%d.%m.%Y")
+            return JsonResponse({
+                "error": _("Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - {end}).").format(
+                    start=project_start,
+                    end=project_end
+                )
+            }, status=400)
 
     idea_card = None
     if idea_card_id:
@@ -1330,7 +1341,7 @@ def tasks_create(request):
             column__board__organization=org,
         ).first()
         if idea_card is None:
-            return HttpResponse("", status=400)
+            return JsonResponse({"error": _("Die ausgewählte Ideen-Karte wurde nicht gefunden.")}, status=400)
 
     task = Task.objects.create(
         project=project,

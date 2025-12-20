@@ -1341,3 +1341,35 @@ msgstr "Konto erstellen"
 #: templates/web/auth/register.html:69
 msgid "Already have an account?"
 msgstr "Haben Sie bereits ein Konto?"
+
+#: apps/web/views.py:1301
+msgid "Bitte geben Sie einen Titel für die Aufgabe ein."
+msgstr "Bitte geben Sie einen Titel für die Aufgabe ein."
+
+#: apps/web/views.py:1304
+msgid "Bitte wählen Sie ein Projekt aus."
+msgstr "Bitte wählen Sie ein Projekt aus."
+
+#: apps/web/views.py:1309
+msgid "Das ausgewählte Projekt wurde nicht gefunden."
+msgstr "Das ausgewählte Projekt wurde nicht gefunden."
+
+#: apps/web/views.py:1314
+msgid "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
+msgstr "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
+
+#: apps/web/views.py:1321
+msgid "Das Fälligkeitsdatum hat ein ungültiges Format."
+msgstr "Das Fälligkeitsdatum hat ein ungültiges Format."
+
+#: apps/web/views.py:1331
+msgid "Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - {end})."
+msgstr "Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - {end})."
+
+#: apps/web/views.py:1344
+msgid "Die ausgewählte Ideen-Karte wurde nicht gefunden."
+msgstr "Die ausgewählte Ideen-Karte wurde nicht gefunden."
+
+#: templates/web/app/tasks/page.html:391
+msgid "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."

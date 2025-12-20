@@ -293,7 +293,7 @@
     columnEl.insertBefore(cardEl, before);
   }
 
-  function postMove(cardEl, columnEl, position) {
+  async function postMove(cardEl, columnEl, position) {
     const status = columnEl.dataset.status;
     const url = cardEl.dataset.moveUrl;
 
@@ -301,7 +301,7 @@
     body.set('status', status);
     body.set('position', String(position));
 
-    return fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
@@ -309,6 +309,23 @@
       },
       body,
     });
+
+    if (res.ok) {
+      const html = await res.text();
+      if (html) {
+        // Replace card with updated HTML from server (includes new buttons/labels)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const newCard = tempDiv.firstElementChild;
+        if (newCard) {
+          cardEl.replaceWith(newCard);
+          // Re-initialize UI components on the new card
+          initTasksUi(newCard);
+        }
+      }
+    }
+
+    return res;
   }
 
   function initKanban() {

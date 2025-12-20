@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
+from django.db import models, transaction
 from django.db.models import F
 from django.db.models import OuterRef, Prefetch, Subquery
 from django.db.models import Q
@@ -17,7 +18,6 @@ from django.utils.html import escape
 from django.utils.text import slugify
 from datetime import datetime, time, timedelta
 from django.utils.translation import gettext as _
-from django.db import transaction
 from decimal import Decimal
 import json
 
@@ -599,6 +599,10 @@ def board_automation_rule_create(request, board_id):
             lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
             if lbl_id:
                 action_config["label_id"] = lbl_id
+        elif action_type == AutomationAction.ActionType.REMOVE_LABEL:
+            lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
+            if lbl_id:
+                action_config["label_id"] = lbl_id
         elif action_type == AutomationAction.ActionType.SET_DUE_DATE:
             days = (request.POST.get(f"action_days_offset_{i}") or "3").strip()
             try:
@@ -683,6 +687,8 @@ def board_card_button_create(request, board_id):
     name = (request.POST.get("name") or "").strip()
     icon = (request.POST.get("icon") or "play").strip()
     color = (request.POST.get("color") or "indigo").strip()
+    show_when_has_label_id = (request.POST.get("show_when_has_label") or "").strip()
+    hide_when_has_label_id = (request.POST.get("hide_when_has_label") or "").strip()
 
     if not name:
         return HttpResponse("", status=400)
@@ -695,6 +701,14 @@ def board_card_button_create(request, board_id):
         is_active=True,
         created_by=request.user,
     )
+    
+    # Set label display conditions
+    if show_when_has_label_id:
+        button.show_when_has_label_id = show_when_has_label_id
+    if hide_when_has_label_id:
+        button.hide_when_has_label_id = hide_when_has_label_id
+    if show_when_has_label_id or hide_when_has_label_id:
+        button.save()
 
     # Create actions
     action_types = request.POST.getlist("action_type")
@@ -709,6 +723,10 @@ def board_card_button_create(request, board_id):
             if col_id:
                 action_config["column_id"] = col_id
         elif action_type == AutomationAction.ActionType.ADD_LABEL:
+            lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
+            if lbl_id:
+                action_config["label_id"] = lbl_id
+        elif action_type == AutomationAction.ActionType.REMOVE_LABEL:
             lbl_id = (request.POST.get(f"action_label_id_{i}") or "").strip()
             if lbl_id:
                 action_config["label_id"] = lbl_id
@@ -1171,7 +1189,7 @@ def tasks_page(request):
     tasks = (
         Task.objects.filter(project__organization=org, is_archived=False)
         .select_related("project", "assigned_to", "idea_card")
-        .prefetch_related("links")
+        .prefetch_related("links", "label_assignments__label")
         .annotate(running_started_at=open_started_at_subquery)
     )
 
@@ -1192,13 +1210,13 @@ def tasks_page(request):
     else:
         view = "all"
 
-    todo_tasks = tasks.filter(status=Task.Status.TODO).order_by("sort_order", "-created_at")
-    in_progress_tasks = tasks.filter(status=Task.Status.IN_PROGRESS).order_by("sort_order", "-created_at")
-    done_tasks = tasks.filter(status=Task.Status.DONE).order_by("sort_order", "-created_at")
+    todo_tasks = list(tasks.filter(status=Task.Status.TODO).order_by("sort_order", "-created_at"))
+    in_progress_tasks = list(tasks.filter(status=Task.Status.IN_PROGRESS).order_by("sort_order", "-created_at"))
+    done_tasks = list(tasks.filter(status=Task.Status.DONE).order_by("sort_order", "-created_at"))
 
     running_task_ids = list(tasks.filter(running_started_at__isnull=False).values_list("id", flat=True))
 
-    done_total_seconds = int(done_tasks.aggregate(total=Sum("tracked_seconds")).get("total") or 0)
+    done_total_seconds = sum(task.tracked_seconds or 0 for task in done_tasks)
     done_total_human = _humanize_seconds(done_total_seconds)
 
     project_time_overview = []
@@ -1233,6 +1251,22 @@ def tasks_page(request):
                     "total_human": _humanize_seconds(total),
                 }
             )
+
+    # Load all buttons for the organization/project
+    all_buttons = list(TaskButton.objects.filter(
+        organization=org,
+        is_active=True
+    ).filter(
+        models.Q(project=active_project) | models.Q(project__isnull=True)
+    ).prefetch_related("actions", "show_when_has_label", "hide_when_has_label") if active_project else TaskButton.objects.filter(
+        organization=org,
+        is_active=True,
+        project__isnull=True
+    ).prefetch_related("actions", "show_when_has_label", "hide_when_has_label"))
+    
+    # Attach filtered buttons to each task
+    for task in todo_tasks + in_progress_tasks + done_tasks:
+        task.filtered_buttons = [btn for btn in all_buttons if btn.should_show_for_task(task)]
 
     context = {
         **_web_shell_context(request),
@@ -1756,7 +1790,43 @@ def tasks_move(request, task_id):
         if new_status == Task.Status.DONE:
             engine.trigger_task_completed(task)
 
-    return HttpResponse("", status=204)
+    # Refresh task to get updated labels and data from automation
+    task.refresh_from_db()
+    task = (
+        Task.objects.filter(id=task.id)
+        .select_related("project", "assigned_to", "idea_card")
+        .prefetch_related("links", "label_assignments__label")
+        .first()
+    )
+    
+    # Load buttons for this task
+    members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
+    all_buttons = list(
+        TaskButton.objects.filter(
+            organization=org,
+            is_active=True
+        )
+        .filter(models.Q(project=task.project) | models.Q(project__isnull=True))
+        .prefetch_related("actions", "show_when_has_label", "hide_when_has_label")
+    )
+    task.filtered_buttons = [btn for btn in all_buttons if btn.should_show_for_task(task)]
+    
+    # Check if task is running
+    started_at = (
+        TaskTimeEntry.objects.filter(task_id=task.id, user=request.user, stopped_at__isnull=True)
+        .order_by("-started_at")
+        .values_list("started_at", flat=True)
+        .first()
+    )
+    running_task_ids = [task.id] if started_at else []
+    task.running_started_at = started_at
+    
+    # Return updated card HTML
+    return render(
+        request,
+        "web/app/tasks/_task_card.html",
+        {"task": task, "members": members, "running_task_ids": running_task_ids},
+    )
 
 
 @login_required
@@ -2044,6 +2114,14 @@ def task_automation_rule_create(request):
         to_status = request.POST.get("to_status")
         if to_status:
             trigger_config["to_status"] = to_status
+    elif trigger_type == TaskAutomationRule.TriggerType.PRIORITY_CHANGED:
+        to_priority = request.POST.get("to_priority")
+        if to_priority:
+            trigger_config["to_priority"] = to_priority
+    elif trigger_type in [TaskAutomationRule.TriggerType.LABEL_ADDED, TaskAutomationRule.TriggerType.LABEL_REMOVED]:
+        trigger_label_id = request.POST.get("trigger_label_id")
+        if trigger_label_id:
+            trigger_config["label_id"] = trigger_label_id
 
     # Build action config
     action_config = {}
@@ -2063,7 +2141,11 @@ def task_automation_rule_create(request):
             if user_id:
                 action_config["user_id"] = user_id
     elif action_type == TaskAutomationAction.ActionType.ADD_LABEL:
-        label_id = request.POST.get("label_id")
+        label_id = request.POST.get("action_label_id")
+        if label_id:
+            action_config["label_id"] = label_id
+    elif action_type == TaskAutomationAction.ActionType.REMOVE_LABEL:
+        label_id = request.POST.get("action_label_id")
         if label_id:
             action_config["label_id"] = label_id
     elif action_type == TaskAutomationAction.ActionType.SET_DUE_DATE:
@@ -2168,6 +2250,10 @@ def task_button_create(request):
     color = (request.POST.get("color") or "indigo").strip()
     action_type = (request.POST.get("action_type") or "").strip()
     project_id = (request.POST.get("project_id") or "").strip()
+    show_when_has_label_id = (request.POST.get("show_when_has_label") or "").strip()
+    hide_when_has_label_id = (request.POST.get("hide_when_has_label") or "").strip()
+    show_on_status = request.POST.getlist("show_on_status")
+    show_on_priority = request.POST.getlist("show_on_priority")
 
     if not name or not action_type:
         messages.error(request, _("Please fill all required fields"))
@@ -2179,6 +2265,18 @@ def task_button_create(request):
         status = request.POST.get("action_status")
         if status:
             action_config["status"] = status
+    elif action_type == TaskAutomationAction.ActionType.SET_PRIORITY:
+        priority = request.POST.get("action_priority")
+        if priority:
+            action_config["priority"] = priority
+    elif action_type == TaskAutomationAction.ActionType.ADD_LABEL:
+        label_id = request.POST.get("label_id")
+        if label_id:
+            action_config["label_id"] = label_id
+    elif action_type == TaskAutomationAction.ActionType.REMOVE_LABEL:
+        label_id = request.POST.get("label_id")
+        if label_id:
+            action_config["label_id"] = label_id
 
     project = None
     if project_id:
@@ -2190,8 +2288,18 @@ def task_button_create(request):
         name=name,
         icon=icon,
         color=color,
+        show_on_status=show_on_status if show_on_status else [],
+        show_on_priority=show_on_priority if show_on_priority else [],
         created_by=request.user,
     )
+    
+    # Set label display conditions
+    if show_when_has_label_id:
+        button.show_when_has_label_id = show_when_has_label_id
+    if hide_when_has_label_id:
+        button.hide_when_has_label_id = hide_when_has_label_id
+    if show_when_has_label_id or hide_when_has_label_id:
+        button.save()
 
     TaskButtonAction.objects.create(
         button=button,
@@ -2238,7 +2346,7 @@ def task_button_execute(request, task_id, button_id):
     org = request.active_org
     
     try:
-        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org, is_archived=False)
     except Task.DoesNotExist as exc:
         raise Http404() from exc
 
@@ -2248,12 +2356,51 @@ def task_button_execute(request, task_id, button_id):
 
     success = execute_task_button(button_id, task, request.user)
     
-    if success:
-        messages.success(request, _("Button action executed"))
-    else:
-        messages.error(request, _("Button action failed"))
+    if not success:
+        return JsonResponse({"error": _("Button action failed")}, status=400)
 
-    return redirect("web:tasks_detail", task_id=task_id)
+    # Reload task to get updated data
+    task.refresh_from_db()
+    
+    # If task was archived, return empty response to remove it from the list
+    if task.is_archived:
+        return HttpResponse("")
+    
+    # Return updated task card for HTMX swap
+    members = Membership.objects.filter(organization=org).select_related("user")
+    
+    open_started_at_subquery = Subquery(
+        TaskTimeEntry.objects.filter(task_id=OuterRef("pk"), user=request.user, stopped_at__isnull=True)
+        .order_by("-started_at")
+        .values("started_at")[:1]
+    )
+    
+    running_task_ids = list(
+        Task.objects.filter(
+            project__organization=org,
+            is_archived=False
+        ).annotate(
+            running_started_at=open_started_at_subquery
+        ).filter(
+            running_started_at__isnull=False
+        ).values_list("id", flat=True)
+    )
+    
+    all_buttons = TaskButton.objects.filter(
+        organization=org,
+        is_active=True
+    ).filter(
+        models.Q(project=task.project) | models.Q(project__isnull=True)
+    ).prefetch_related("actions", "show_when_has_label", "hide_when_has_label")
+    
+    # Filter buttons based on task conditions and attach to task
+    task.filtered_buttons = [btn for btn in all_buttons if btn.should_show_for_task(task)]
+    
+    return render(request, "web/app/tasks/_task_card.html", {
+        "task": task,
+        "members": members,
+        "running_task_ids": running_task_ids,
+    })
 
 
 @login_required

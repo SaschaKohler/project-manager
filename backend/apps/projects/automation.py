@@ -230,6 +230,76 @@ class TaskAutomationEngine:
 
         return logs
 
+    def trigger_due_date_approaching(
+        self, task: Task, days_until_due: int
+    ) -> list[TaskAutomationLog]:
+        """Trigger automation rules when due date is approaching."""
+        from django.db import models
+
+        rules = (
+            TaskAutomationRule.objects.filter(
+                organization=task.project.organization,
+                trigger_type=TaskAutomationRule.TriggerType.DUE_DATE_APPROACHING,
+                is_active=True,
+            )
+            .filter(models.Q(project=task.project) | models.Q(project__isnull=True))
+            .prefetch_related("actions")
+        )
+
+        logs = []
+        for rule in rules:
+            config = rule.trigger_config or {}
+            threshold_days = config.get("days_before", 3)
+
+            # Only trigger if days match the threshold
+            if days_until_due == threshold_days:
+                log = self._execute_rule(rule, task)
+                logs.append(log)
+
+        return logs
+
+    def trigger_due_date_reached(self, task: Task) -> list[TaskAutomationLog]:
+        """Trigger automation rules when due date is reached (today)."""
+        from django.db import models
+
+        rules = (
+            TaskAutomationRule.objects.filter(
+                organization=task.project.organization,
+                trigger_type=TaskAutomationRule.TriggerType.DUE_DATE_REACHED,
+                is_active=True,
+            )
+            .filter(models.Q(project=task.project) | models.Q(project__isnull=True))
+            .prefetch_related("actions")
+        )
+
+        return self._execute_rules(rules, task)
+
+    def trigger_due_date_overdue(self, task: Task, days_overdue: int) -> list[TaskAutomationLog]:
+        """Trigger automation rules when task is overdue."""
+        from django.db import models
+
+        rules = (
+            TaskAutomationRule.objects.filter(
+                organization=task.project.organization,
+                trigger_type=TaskAutomationRule.TriggerType.DUE_DATE_OVERDUE,
+                is_active=True,
+            )
+            .filter(models.Q(project=task.project) | models.Q(project__isnull=True))
+            .prefetch_related("actions")
+        )
+
+        logs = []
+        for rule in rules:
+            config = rule.trigger_config or {}
+            trigger_every_n_days = config.get("trigger_every_n_days", 1)
+
+            # Only trigger on specific day intervals (e.g., every day, every 3 days)
+            if days_overdue % trigger_every_n_days == 0:
+                log = self._execute_rule(rule, task)
+                logs.append(log)
+
+        return logs
+
     def _execute_rules(self, rules, task: Task) -> list[TaskAutomationLog]:
         """Execute a queryset of rules for a task."""
         logs = []
@@ -291,6 +361,8 @@ class TaskAutomationEngine:
             self._action_post_comment(task, config)
         elif action_type == TaskAutomationAction.ActionType.ADD_TO_CALENDAR:
             self._action_add_to_calendar(task, config)
+        elif action_type == TaskAutomationAction.ActionType.ARCHIVE_TASK:
+            self._action_archive_task(task)
 
     def _action_change_status(self, task: Task, config: dict) -> None:
         """Change task status."""
@@ -405,6 +477,14 @@ class TaskAutomationEngine:
             task.duration_minutes = int(duration)
 
             task.save(update_fields=["scheduled_start", "duration_minutes"])
+
+    def _action_archive_task(self, task: Task) -> None:
+        """Archive the task."""
+        if not task.is_archived:
+            task.is_archived = True
+            task.archived_at = timezone.now()
+            task.archived_by = self.triggered_by
+            task.save(update_fields=["is_archived", "archived_at", "archived_by"])
 
 
 def execute_task_button(button_id: str, task: Task, triggered_by: "User") -> bool:

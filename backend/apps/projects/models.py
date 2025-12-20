@@ -256,6 +256,7 @@ class TaskAutomationAction(models.Model):
         SEND_NOTIFICATION = "send_notification", "Send Notification"
         POST_COMMENT = "post_comment", "Post Comment"
         ADD_TO_CALENDAR = "add_to_calendar", "Add to Calendar"
+        ARCHIVE_TASK = "archive_task", "Archive Task"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rule = models.ForeignKey(TaskAutomationRule, on_delete=models.CASCADE, related_name="actions")
@@ -298,6 +299,35 @@ class TaskButton(models.Model):
     icon = models.CharField(max_length=50, default="play")
     color = models.CharField(max_length=20, default="indigo")
     is_active = models.BooleanField(default=True)
+    
+    # Display conditions - button only shows when these conditions match
+    show_on_status = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of task statuses where this button should appear (empty = all)"
+    )
+    show_on_priority = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of task priorities where this button should appear (empty = all)"
+    )
+    show_when_has_label = models.ForeignKey(
+        TaskLabel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="required_by_buttons",
+        help_text="Button only shows when task has this label"
+    )
+    hide_when_has_label = models.ForeignKey(
+        TaskLabel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="hidden_by_buttons",
+        help_text="Button hides when task has this label"
+    )
+    
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -310,6 +340,28 @@ class TaskButton(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+    def should_show_for_task(self, task: Task) -> bool:
+        """Check if this button should be displayed for the given task."""
+        # Check status condition
+        if self.show_on_status and task.status not in self.show_on_status:
+            return False
+        
+        # Check priority condition
+        if self.show_on_priority and task.priority not in self.show_on_priority:
+            return False
+        
+        # Check required label
+        if self.show_when_has_label:
+            if not task.label_assignments.filter(label=self.show_when_has_label).exists():
+                return False
+        
+        # Check hidden label
+        if self.hide_when_has_label:
+            if task.label_assignments.filter(label=self.hide_when_has_label).exists():
+                return False
+        
+        return True
 
 
 class TaskButtonAction(models.Model):

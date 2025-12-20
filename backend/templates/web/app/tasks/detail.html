@@ -95,9 +95,10 @@
         </button>
         <button type="submit"
                 formaction="{% url 'web:tasks_delete' task.id %}"
-                class="ml-2 rounded-lg border border-red-900/40 bg-red-950/20 px-3 py-2 text-sm font-medium text-red-200 hover:bg-red-950/35 transition"
-                onclick="return confirm('Delete this task?')">
-          {% trans "Delete" %}
+                class="ml-2 rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-900/60 transition"
+                data-confirm="{% trans 'Archive this task?' %}"
+                onclick="return confirm(this.dataset.confirm)">
+          {% trans "Archive" %}
         </button>
       {% else %}
         <div class="text-xs text-zinc-500">{% trans "You don't have permission to edit this task." %}</div>

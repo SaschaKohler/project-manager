@@ -100,6 +100,16 @@
           </select>
         </div>
         <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="rule-trigger-label">{% trans "When label added/removed (optional)" %}</label>
+          <select id="rule-trigger-label" name="trigger_label_id"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Any label" %}</option>
+            {% for label in labels %}
+              <option value="{{ label.id }}">{{ label.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
           <label class="block text-xs text-zinc-400 mb-1">{% trans "Action" %}</label>
           <select name="action_type" required
                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
@@ -119,7 +129,7 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs text-zinc-400 mb-1" for="action-label">{% trans "Add label (for Add Label action)" %}</label>
+          <label class="block text-xs text-zinc-400 mb-1" for="action-label">{% trans "Label (for Add/Remove Label action)" %}</label>
           <select id="action-label" name="action_label_id_0"
                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
             <option value="">{% trans "Select label" %}</option>
@@ -229,6 +239,38 @@
               <option value="{{ col.id }}">{{ col.title }}</option>
             {% endfor %}
           </select>
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-1" for="btn-action-label">{% trans "Label (for Add/Remove Label action)" %}</label>
+          <select id="btn-action-label" name="action_label_id_0"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "Select label" %}</option>
+            {% for label in labels %}
+              <option value="{{ label.id }}">{{ label.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1" for="btn-show-when-label">{% trans "Show when has label" %}</label>
+            <select id="btn-show-when-label" name="show_when_has_label"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">{% trans "Always show" %}</option>
+              {% for label in labels %}
+                <option value="{{ label.id }}">{{ label.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1" for="btn-hide-when-label">{% trans "Hide when has label" %}</label>
+            <select id="btn-hide-when-label" name="hide_when_has_label"
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="">{% trans "Never hide" %}</option>
+              {% for label in labels %}
+                <option value="{{ label.id }}">{{ label.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
         <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
           {% trans "Create Button" %}

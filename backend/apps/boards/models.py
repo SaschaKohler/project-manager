@@ -220,6 +220,24 @@ class CardButton(models.Model):
     icon = models.CharField(max_length=50, default="play")
     color = models.CharField(max_length=20, default="indigo")
     is_active = models.BooleanField(default=True)
+    
+    show_when_has_label = models.ForeignKey(
+        BoardCardLabel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="required_by_buttons",
+        help_text="Button only shows when card has this label"
+    )
+    hide_when_has_label = models.ForeignKey(
+        BoardCardLabel,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="hidden_by_buttons",
+        help_text="Button hides when card has this label"
+    )
+    
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -232,6 +250,18 @@ class CardButton(models.Model):
 
     def __str__(self) -> str:
         return self.name
+    
+    def should_show_for_card(self, card: "BoardCard") -> bool:
+        """Check if this button should be displayed for the given card."""
+        if self.show_when_has_label:
+            if not card.label_assignments.filter(label=self.show_when_has_label).exists():
+                return False
+        
+        if self.hide_when_has_label:
+            if card.label_assignments.filter(label=self.hide_when_has_label).exists():
+                return False
+        
+        return True
 
 
 class CardButtonAction(models.Model):

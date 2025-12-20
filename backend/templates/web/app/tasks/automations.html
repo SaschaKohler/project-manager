@@ -119,6 +119,26 @@
                             </select>
                         </div>
 
+                        <div id="priority_filter" class="hidden">
+                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "When priority changes to" %} ({% trans "optional" %})</label>
+                            <select name="to_priority" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">{% trans "Any priority" %}</option>
+                                {% for value, label in priority_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="label_filter" class="hidden">
+                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "When this label is added/removed" %} ({% trans "optional" %})</label>
+                            <select name="trigger_label_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">{% trans "Any label" %}</option>
+                                {% for label in labels %}
+                                    <option value="{{ label.id }}">{{ label.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Project" %} ({% trans "optional" %})</label>
                             <select name="project_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
@@ -170,7 +190,7 @@
 
                         <div id="action_label_field" class="hidden">
                             <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Label" %}</label>
-                            <select name="label_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <select name="action_label_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                 <option value="">{% trans "Select label..." %}</option>
                                 {% for label in labels %}
                                     <option value="{{ label.id }}">{{ label.name }}</option>
@@ -293,8 +313,9 @@
                         <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Action" %}</label>
                         <select name="action_type" required class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                             <option value="">{% trans "Select action..." %}</option>
-                            <option value="change_status">{% trans "Change Status" %}</option>
-                            <option value="set_priority">{% trans "Set Priority" %}</option>
+                            {% for value, label in action_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
@@ -307,6 +328,25 @@
                         </select>
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Set priority to" %}</label>
+                        <select name="action_priority" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Label (for Add/Remove Label)" %}</label>
+                        <select name="label_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">{% trans "Select label..." %}</option>
+                            {% for label in labels %}
+                                <option value="{{ label.id }}">{{ label.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Project" %} ({% trans "optional" %})</label>
                         <select name="project_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
@@ -315,6 +355,46 @@
                                 <option value="{{ project.id }}">{{ project.title }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Show when has label" %}</label>
+                        <select name="show_when_has_label" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">{% trans "Always show" %}</option>
+                            {% for label in labels %}
+                                <option value="{{ label.id }}">{{ label.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Hide when has label" %}</label>
+                        <select name="hide_when_has_label" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">{% trans "Never hide" %}</option>
+                            {% for label in labels %}
+                                <option value="{{ label.id }}">{{ label.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Show on status" %}</label>
+                        <select name="show_on_status" multiple class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="mt-1 text-xs text-zinc-500">{% trans "Hold Ctrl/Cmd to select multiple" %}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Show on priority" %}</label>
+                        <select name="show_on_priority" multiple class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            {% for value, label in priority_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="mt-1 text-xs text-zinc-500">{% trans "Hold Ctrl/Cmd to select multiple" %}</p>
                     </div>
                 </div>
 
@@ -377,10 +457,21 @@ document.addEventListener('DOMContentLoaded', function() {
     if (triggerSelect) {
         triggerSelect.addEventListener('change', function() {
             const statusFilter = document.getElementById('status_filter');
+            const priorityFilter = document.getElementById('priority_filter');
+            const labelFilter = document.getElementById('label_filter');
+            
+            // Hide all filters first
+            statusFilter.classList.add('hidden');
+            priorityFilter.classList.add('hidden');
+            labelFilter.classList.add('hidden');
+            
+            // Show relevant filter
             if (this.value === 'status_changed') {
                 statusFilter.classList.remove('hidden');
-            } else {
-                statusFilter.classList.add('hidden');
+            } else if (this.value === 'priority_changed') {
+                priorityFilter.classList.remove('hidden');
+            } else if (this.value === 'label_added' || this.value === 'label_removed') {
+                labelFilter.classList.remove('hidden');
             }
         });
     }

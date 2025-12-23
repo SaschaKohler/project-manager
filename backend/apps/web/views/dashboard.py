@@ -13,7 +13,7 @@ from django.utils.dateparse import parse_datetime
 from apps.projects.models import Project, Task, TaskTimeEntry
 from apps.tenants.models import Membership
 
-from .utils import task_event_style, web_shell_context
+from .utils import project_span_event_style, task_event_style_for_project, web_shell_context
 
 
 @login_required
@@ -121,7 +121,45 @@ def calendar_events(request):
                 "duration_minutes": duration,
                 "project_title": task.project.title,
             },
-            **task_event_style(task.status),
+            **task_event_style_for_project(task.status, getattr(task.project, "color", "")),
+        })
+
+    project_qs = Project.objects.filter(organization=org)
+    if project_id:
+        project_qs = project_qs.filter(id=project_id)
+    if start is not None:
+        project_qs = project_qs.filter(end_date__gte=start)
+    if end is not None:
+        project_qs = project_qs.filter(start_date__lt=end)
+    project_qs = project_qs.only("id", "title", "start_date", "end_date", "color")
+
+    for project in project_qs:
+        start_dt = getattr(project, "start_date", None)
+        end_dt = getattr(project, "end_date", None)
+        if start_dt is None or end_dt is None:
+            continue
+
+        start_local = timezone.localtime(start_dt)
+        end_local = timezone.localtime(end_dt)
+        start_date = start_local.date()
+        end_date = end_local.date()
+        if end_date < start_date:
+            continue
+
+        events.append({
+            "id": f"project-span-{project.id}",
+            "title": project.title,
+            "start": start_date.isoformat(),
+            "end": (end_date + timedelta(days=1)).isoformat(),
+            "allDay": True,
+            "editable": False,
+            "durationEditable": False,
+            "extendedProps": {
+                "project_id": str(project.id),
+                "project_title": project.title,
+                "kind": "project_span",
+            },
+            **project_span_event_style(getattr(project, "color", "")),
         })
 
     return JsonResponse(events, safe=False)

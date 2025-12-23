@@ -18,8 +18,8 @@ from .models import (
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "title", "status", "category", "priority", "created_at")
-    list_filter = ("status", "category", "priority")
+    list_display = ("id", "organization", "title", "status", "category", "priority", "color", "created_at")
+    list_filter = ("status", "category", "priority", "color")
     search_fields = ("title", "organization__name")
 
 

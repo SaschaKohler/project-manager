@@ -17,6 +17,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             "category",
             "budget",
             "priority",
+            "color",
             "created_by",
             "created_at",
             "updated_at",

@@ -38,6 +38,18 @@ class Project(models.Model):
         MEDIUM = "MEDIUM", "Medium"
         HIGH = "HIGH", "High"
 
+    class Color(models.TextChoices):
+        INDIGO = "indigo", _("Indigo")
+        EMERALD = "emerald", _("Emerald")
+        SKY = "sky", _("Sky")
+        VIOLET = "violet", _("Violet")
+        ROSE = "rose", _("Rose")
+        AMBER = "amber", _("Amber")
+        TEAL = "teal", _("Teal")
+        ORANGE = "orange", _("Orange")
+        LIME = "lime", _("Lime")
+        FUCHSIA = "fuchsia", _("Fuchsia")
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="projects"
@@ -55,6 +67,9 @@ class Project(models.Model):
     budget = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     priority = models.CharField(
         max_length=20, choices=Priority.choices, default=Priority.MEDIUM
+    )
+    color = models.CharField(
+        max_length=20, choices=Color.choices, default=Color.INDIGO
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

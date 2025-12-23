@@ -5,8 +5,9 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import OuterRef, Subquery
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
 from django.utils.translation import gettext as _
@@ -14,7 +15,7 @@ from django.utils.translation import gettext as _
 from apps.projects.models import Project, Task, TaskTimeEntry
 from apps.tenants.models import Membership
 
-from .utils import task_event_style, web_shell_context
+from .utils import task_event_style_for_project, web_shell_context
 
 
 @login_required
@@ -47,6 +48,7 @@ def projects_create(request):
     description = (request.POST.get("description") or "").strip()
     category = (request.POST.get("category") or "").strip().upper()
     priority = (request.POST.get("priority") or "").strip().upper()
+    color = (request.POST.get("color") or "").strip().lower()
     start_date_raw = (request.POST.get("start_date") or "").strip()
     end_date_raw = (request.POST.get("end_date") or "").strip()
     budget_raw = (request.POST.get("budget") or "").strip()
@@ -59,6 +61,9 @@ def projects_create(request):
 
     if priority not in dict(Project.Priority.choices):
         priority = Project.Priority.MEDIUM
+
+    if color not in dict(Project.Color.choices):
+        color = Project.Color.INDIGO
 
     start_date = None
     if start_date_raw:
@@ -87,17 +92,31 @@ def projects_create(request):
         except Exception:  # noqa: BLE001
             pass
 
-    Project.objects.create(
+    project = Project.objects.create(
         organization=org,
         title=title,
         description=description,
         category=category,
         priority=priority,
+        color=color,
         start_date=start_date,
         end_date=end_date,
         budget=budget,
         created_by=request.user,
     )
+
+    if request.headers.get("HX-Request") == "true":
+        row_html = render_to_string(
+            "web/app/projects/_project_row.html",
+            {**web_shell_context(request), "project": project},
+            request=request,
+        )
+        total = Project.objects.filter(organization=org).count()
+        count_html = (
+            f'<div id="project-count" class="text-xs text-zinc-500" '
+            f'hx-swap-oob="outerHTML">{total} {_("total")}</div>'
+        )
+        return HttpResponse(row_html + count_html)
 
     return redirect("web:projects")
 
@@ -136,10 +155,34 @@ def project_calendar_page(request, project_id):
 
     members = Membership.objects.filter(organization=org).select_related("user")
 
+    in_progress_unscheduled = (
+        Task.objects.filter(
+            project=project,
+            status=Task.Status.IN_PROGRESS,
+            scheduled_start__isnull=True,
+            is_archived=False,
+        )
+        .select_related("assigned_to")
+        .order_by("-updated_at")
+    )
+
+    unscheduled_tasks = (
+        Task.objects.filter(
+            project=project,
+            status=Task.Status.TODO,
+            scheduled_start__isnull=True,
+            is_archived=False,
+        )
+        .select_related("assigned_to")
+        .order_by("-updated_at")
+    )
+
     context = {
         **web_shell_context(request),
         "project": project,
         "members": members,
+        "in_progress_unscheduled": in_progress_unscheduled,
+        "unscheduled_tasks": unscheduled_tasks,
     }
     return render(request, "web/app/projects/calendar.html", context)
 
@@ -201,7 +244,7 @@ def project_calendar_events(request, project_id):
                 "task_title": task.title,
                 "duration_minutes": duration,
             },
-            **task_event_style(task.status),
+            **task_event_style_for_project(task.status, getattr(project, "color", "")),
         })
 
     return JsonResponse(events, safe=False)

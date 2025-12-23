@@ -109,6 +109,27 @@ def _task_event_style(status: str):
     }
 
 
+def _project_event_style(color: str):
+    palette = {
+        "indigo": ("rgba(99, 102, 241, 0.30)", "rgba(99, 102, 241, 0.85)", "rgb(224, 231, 255)"),
+        "emerald": ("rgba(16, 185, 129, 0.28)", "rgba(16, 185, 129, 0.85)", "rgb(209, 250, 229)"),
+        "sky": ("rgba(14, 165, 233, 0.28)", "rgba(14, 165, 233, 0.85)", "rgb(224, 242, 254)"),
+        "violet": ("rgba(139, 92, 246, 0.28)", "rgba(139, 92, 246, 0.85)", "rgb(237, 233, 254)"),
+        "rose": ("rgba(244, 63, 94, 0.26)", "rgba(244, 63, 94, 0.85)", "rgb(255, 228, 230)"),
+        "amber": ("rgba(245, 158, 11, 0.26)", "rgba(245, 158, 11, 0.85)", "rgb(254, 243, 199)"),
+        "teal": ("rgba(20, 184, 166, 0.26)", "rgba(20, 184, 166, 0.85)", "rgb(204, 251, 241)"),
+        "orange": ("rgba(249, 115, 22, 0.26)", "rgba(249, 115, 22, 0.85)", "rgb(255, 237, 213)"),
+        "lime": ("rgba(132, 204, 22, 0.24)", "rgba(132, 204, 22, 0.85)", "rgb(236, 252, 203)"),
+        "fuchsia": ("rgba(217, 70, 239, 0.26)", "rgba(217, 70, 239, 0.85)", "rgb(250, 232, 255)"),
+    }
+    bg, border, text = palette.get((color or "").strip().lower(), palette["indigo"])
+    return {
+        "backgroundColor": bg,
+        "borderColor": border,
+        "textColor": text,
+    }
+
+
 def healthz(request):
     return HttpResponse("ok")
 
@@ -254,8 +275,38 @@ def calendar_events(request):
     if start is not None:
         project_qs = project_qs.filter(end_date__gte=start)
     if end is not None:
-        project_qs = project_qs.filter(end_date__lt=end)
-    project_qs = project_qs.only("id", "title", "end_date")
+        project_qs = project_qs.filter(start_date__lt=end)
+    project_qs = project_qs.only("id", "title", "start_date", "end_date", "color")
+
+    for project in project_qs:
+        start_dt = getattr(project, "start_date", None)
+        end_dt = getattr(project, "end_date", None)
+        if start_dt is None or end_dt is None:
+            continue
+
+        start_local = timezone.localtime(start_dt)
+        end_local = timezone.localtime(end_dt)
+        start_date = start_local.date()
+        end_date = end_local.date()
+        if end_date < start_date:
+            continue
+
+        payload = {
+            "id": f"project-span-{project.id}",
+            "title": project.title,
+            "start": start_date.isoformat(),
+            "end": (end_date + timedelta(days=1)).isoformat(),
+            "allDay": True,
+            "editable": False,
+            "durationEditable": False,
+            "extendedProps": {
+                "project_id": str(project.id),
+                "project_title": project.title,
+                "kind": "project_span",
+            },
+            **_project_event_style(getattr(project, "color", "")),
+        }
+        events.append(payload)
 
     for project in project_qs:
         end_dt = project.end_date
@@ -276,9 +327,7 @@ def calendar_events(request):
                 "project_title": project.title,
                 "kind": "project_deadline",
             },
-            "backgroundColor": "rgba(239, 68, 68, 0.30)",
-            "borderColor": "rgba(239, 68, 68, 0.85)",
-            "textColor": "rgb(254, 226, 226)",
+            **_project_event_style(getattr(project, "color", "")),
         }
         events.append(payload)
 

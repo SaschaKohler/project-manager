@@ -5,13 +5,81 @@
 
 {% block content %}
 <div class="flex items-end justify-between gap-6">
-  <div>
-    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Tasks" %}</h1>
-    <p class="mt-2 text-sm text-zinc-300">{% trans "Small wins, compounding daily." %}</p>
+   <div>
+     <h1 class="text-3xl font-semibold tracking-tight">{% trans "Tasks" %}</h1>
+     <p class="mt-2 text-sm text-zinc-300">{% trans "Small wins, compounding daily." %}</p>
+   </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="mt-6">
+  <div class="flex flex-col sm:flex-row gap-3 mb-4">
+    <div class="flex-1 relative">
+      <input type="text"
+             id="task-search"
+             placeholder="{% trans 'Search tasks by title, description, or assignee...' %}"
+             class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-4 py-2 pl-10 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+      <svg class="absolute left-3 top-2.5 w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+    </div>
+    <button id="filters-toggle" class="rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-2 text-sm hover:bg-zinc-800 transition">
+      {% trans "Filters" %}
+    </button>
+    <button id="bulk-select-toggle" class="rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-2 text-sm hover:bg-zinc-800 transition hidden">
+      {% trans "Select" %}
+    </button>
+  </div>
+
+  <!-- Active filters -->
+  <div id="active-filters" class="flex flex-wrap gap-2 mb-4 hidden">
+    <!-- Filter tags will be added here -->
+  </div>
+
+  <!-- Filters panel (hidden by default) -->
+  <div id="filters-panel" class="hidden rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2">{% trans "Assignee" %}</label>
+        <select id="filter-assignee" multiple class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+          {% for m in members %}
+            <option value="{{ m.user.id }}">{{ m.user.email }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2">{% trans "Priority" %}</label>
+        <select id="filter-priority" multiple class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+          <option value="HIGH">{% trans "High" %}</option>
+          <option value="MEDIUM">{% trans "Medium" %}</option>
+          <option value="LOW">{% trans "Low" %}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2">{% trans "Due Date" %}</label>
+        <div class="flex gap-2">
+          <input type="date" id="filter-due-from" class="flex-1 rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+          <input type="date" id="filter-due-to" class="flex-1 rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-400 mb-2">{% trans "Status" %}</label>
+        <select id="filter-status" multiple class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+          <option value="TODO">{% trans "Todo" %}</option>
+          <option value="IN_PROGRESS">{% trans "In Progress" %}</option>
+          <option value="DONE">{% trans "Done" %}</option>
+        </select>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+      <button id="clear-filters" class="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm hover:bg-zinc-800">{% trans "Clear" %}</button>
+      <button id="apply-filters" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm">{% trans "Apply" %}</button>
+    </div>
   </div>
 </div>
 
-<div class="mt-6 flex flex-wrap items-center justify-between gap-3">
+<!-- View tabs and project filter -->
+<div class="flex flex-wrap items-center justify-between gap-3">
   <div class="flex flex-wrap items-center gap-2">
   <a href="?view=all{% if active_project %}&project={{ active_project.id }}{% endif %}"
      class="rounded-lg px-3 py-1.5 text-sm border transition {% if active_view == 'all' %}border-indigo-500 bg-indigo-600/20 text-zinc-100{% else %}border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900{% endif %}">
@@ -80,7 +148,9 @@
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Project" %}</label>
           <select name="project_id" required class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
             {% for p in projects %}
-              <option value="{{ p.id }}">{{ p.title }}</option>
+              {% if not p.is_archived %}
+                <option value="{{ p.id }}">{{ p.title }}</option>
+              {% endif %}
             {% endfor %}
           </select>
         </div>
@@ -459,7 +529,198 @@
       }
     }
   });
+
+  // Bulk selection functionality
+  let bulkMode = false;
+  const bulkActionsBar = document.getElementById('bulk-actions-bar');
+  const bulkSelectToggle = document.getElementById('bulk-select-toggle');
+  const bulkCount = document.getElementById('bulk-count');
+  const bulkApply = document.getElementById('bulk-apply');
+  const bulkCancel = document.getElementById('bulk-cancel');
+  const selectedTasks = new Set();
+
+  function updateBulkUI() {
+    const count = selectedTasks.size;
+    bulkCount.textContent = `{% trans "${count} tasks selected" %}`.replace('${count}', count);
+    bulkApply.disabled = count === 0;
+
+    if (count > 0) {
+      bulkActionsBar.classList.remove('translate-y-full');
+    } else {
+      bulkActionsBar.classList.add('translate-y-full');
+    }
+  }
+
+  function toggleBulkMode() {
+    bulkMode = !bulkMode;
+    const checkboxes = document.querySelectorAll('.task-checkbox');
+    const selectBtn = document.getElementById('bulk-select-toggle');
+
+    if (bulkMode) {
+      checkboxes.forEach(cb => cb.classList.remove('opacity-0', 'pointer-events-none'));
+      selectBtn.textContent = '{% trans "Cancel" %}';
+      selectedTasks.clear();
+      updateBulkUI();
+    } else {
+      checkboxes.forEach(cb => cb.classList.add('opacity-0', 'pointer-events-none'));
+      selectBtn.textContent = '{% trans "Select" %}';
+      selectedTasks.clear();
+      updateBulkUI();
+    }
+  }
+
+  bulkSelectToggle.addEventListener('click', toggleBulkMode);
+  bulkCancel.addEventListener('click', toggleBulkMode);
+
+  document.addEventListener('change', (evt) => {
+    if (evt.target.classList.contains('task-checkbox')) {
+      const taskId = evt.target.dataset.taskId;
+      if (evt.target.checked) {
+        selectedTasks.add(taskId);
+      } else {
+        selectedTasks.delete(taskId);
+      }
+      updateBulkUI();
+    }
+  });
+
+  bulkApply.addEventListener('click', async () => {
+    const status = document.getElementById('bulk-status').value;
+    const assignee = document.getElementById('bulk-assignee').value;
+    const priority = document.getElementById('bulk-priority').value;
+
+    if (!status && !assignee && !priority) return;
+
+    const updates = [];
+    if (status) updates.push(`status=${status}`);
+    if (assignee) updates.push(`assigned_to=${assignee}`);
+    if (priority) updates.push(`priority=${priority}`);
+
+    for (const taskId of selectedTasks) {
+      try {
+        const url = `/web/tasks/${taskId}/update/`;
+        const body = new URLSearchParams(updates.join('&'));
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body,
+        });
+        if (res.ok) {
+          // Update the card in place
+          const card = document.querySelector(`[data-task-id="${taskId}"]`);
+          if (card) {
+            const html = await res.text();
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const newCard = tempDiv.firstElementChild;
+            if (newCard) card.replaceWith(newCard);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to update task', taskId, e);
+      }
+    }
+
+    selectedTasks.clear();
+    updateBulkUI();
+    showToast('{% trans "Tasks updated successfully" %}');
+  });
+
+  // Filters functionality
+  const filtersToggle = document.getElementById('filters-toggle');
+  const filtersPanel = document.getElementById('filters-panel');
+  const activeFilters = document.getElementById('active-filters');
+  const applyFilters = document.getElementById('apply-filters');
+  const clearFilters = document.getElementById('clear-filters');
+
+  filtersToggle.addEventListener('click', () => {
+    filtersPanel.classList.toggle('hidden');
+  });
+
+  applyFilters.addEventListener('click', () => {
+    // For now, just hide the panel. Backend filtering would need API endpoints
+    filtersPanel.classList.add('hidden');
+    showToast('{% trans "Filters applied (frontend only for now)" %}');
+  });
+
+  clearFilters.addEventListener('click', () => {
+    document.querySelectorAll('#filters-panel select, #filters-panel input').forEach(el => {
+      if (el.type === 'date') el.value = '';
+      else el.selectedIndex = -1;
+    });
+    activeFilters.innerHTML = '';
+    activeFilters.classList.add('hidden');
+  });
+
+  // Search functionality (basic client-side for now)
+  const searchInput = document.getElementById('task-search');
+  searchInput.addEventListener('input', (evt) => {
+    const query = evt.target.value.toLowerCase();
+    document.querySelectorAll('[data-task-id]').forEach(card => {
+      const title = card.textContent.toLowerCase();
+      const shouldShow = !query || title.includes(query);
+      card.style.display = shouldShow ? '' : 'none';
+    });
+  });
+
+  // Task card expand/collapse functionality
+  document.body.addEventListener('click', (evt) => {
+    const expandBtn = evt.target.closest('.expand-btn');
+    if (!expandBtn) return;
+
+    evt.stopPropagation(); // Prevent card click
+
+    const card = expandBtn.closest('.task-card');
+    const expandedContent = card.querySelector('.expanded-content');
+    const isExpanded = expandBtn.dataset.expanded === 'true';
+
+    if (isExpanded) {
+      expandedContent.classList.add('hidden');
+      expandBtn.dataset.expanded = 'false';
+      expandBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>`;
+    } else {
+      expandedContent.classList.remove('hidden');
+      expandBtn.dataset.expanded = 'true';
+      expandBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+      </svg>`;
+    }
+  });
 </script>
+
+<!-- Bulk actions bar -->
+<div id="bulk-actions-bar" class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 p-4 transform translate-y-full transition-transform duration-200">
+  <div class="flex items-center justify-between max-w-7xl mx-auto">
+    <span id="bulk-count" class="text-sm text-zinc-300">0 tasks selected</span>
+    <div class="flex gap-2">
+      <select id="bulk-status" class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+        <option value="">{% trans "Change Status" %}</option>
+        <option value="TODO">{% trans "Todo" %}</option>
+        <option value="IN_PROGRESS">{% trans "In Progress" %}</option>
+        <option value="DONE">{% trans "Done" %}</option>
+      </select>
+      <select id="bulk-assignee" class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+        <option value="">{% trans "Assign To" %}</option>
+        {% for m in members %}
+          <option value="{{ m.user.id }}">{{ m.user.email }}</option>
+        {% endfor %}
+      </select>
+      <select id="bulk-priority" class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm">
+        <option value="">{% trans "Set Priority" %}</option>
+        <option value="HIGH">{% trans "High" %}</option>
+        <option value="MEDIUM">{% trans "Medium" %}</option>
+        <option value="LOW">{% trans "Low" %}</option>
+      </select>
+      <button id="bulk-apply" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm disabled:opacity-50" disabled>{% trans "Apply" %}</button>
+      <button id="bulk-cancel" class="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm hover:bg-zinc-800">{% trans "Cancel" %}</button>
+    </div>
+  </div>
+</div>
 
 <div id="toast"
      class="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-xl border border-zinc-800 bg-zinc-950/90 px-4 py-2 text-sm text-zinc-200 shadow-lg opacity-0 pointer-events-none transition-opacity">

@@ -70,6 +70,58 @@ class TestProject:
         project = project_factory(title="My Awesome Project")
         assert str(project) == "My Awesome Project"
 
+    def test_project_archive_with_tasks(self, project_factory, task_factory):
+        """Test archiving a project with tasks."""
+        project = project_factory()
+        task1 = task_factory(project=project)
+        task2 = task_factory(project=project)
+
+        # Archive the project
+        project.is_archived = True
+        project.archived_at = timezone.now()
+        project.save()
+
+        # Refresh tasks from database
+        task1.refresh_from_db()
+        task2.refresh_from_db()
+
+        # Tasks should remain unarchived
+        assert task1.is_archived is False
+        assert task2.is_archived is False
+        assert project.is_archived is True
+
+    def test_project_restore_with_tasks(self, project_factory, task_factory):
+        """Test restoring a project with tasks."""
+        project = project_factory()
+        task1 = task_factory(project=project)
+        task2 = task_factory(project=project)
+
+        # Archive project and tasks
+        project.is_archived = True
+        project.archived_at = timezone.now()
+        project.save()
+
+        task1.is_archived = True
+        task1.archived_at = timezone.now()
+        task1.save()
+
+        task2.is_archived = True
+        task2.archived_at = timezone.now()
+        task2.save()
+
+        # Restore the project (this should restore tasks too in the view logic)
+        project.is_archived = False
+        project.archived_at = None
+        project.save()
+
+        # Tasks should remain archived (restore logic is in views)
+        task1.refresh_from_db()
+        task2.refresh_from_db()
+
+        assert task1.is_archived is True
+        assert task2.is_archived is True
+        assert project.is_archived is False
+
 
 class TestTask:
     """Test cases for Task model."""

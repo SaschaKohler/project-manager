@@ -27,9 +27,12 @@ from .team import invite_accept, team_invite, team_page
 from .projects import (
     project_calendar_events,
     project_calendar_page,
+    projects_archive,
+    projects_archive_page,
     projects_complete,
     projects_create,
     projects_page,
+    projects_restore,
 )
 
 # Boards
@@ -114,6 +117,9 @@ __all__ = [
     "projects_page",
     "projects_create",
     "projects_complete",
+    "projects_archive",
+    "projects_restore",
+    "projects_archive_page",
     "project_calendar_page",
     "project_calendar_events",
     # Boards

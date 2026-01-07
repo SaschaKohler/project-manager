@@ -23,6 +23,17 @@ urlpatterns = [
         name="projects_complete",
     ),
     path(
+        "projects/<uuid:project_id>/archive/",
+        views.projects_archive,
+        name="projects_archive",
+    ),
+    path(
+        "projects/<uuid:project_id>/restore/",
+        views.projects_restore,
+        name="projects_restore",
+    ),
+    path("projects/archive/", views.projects_archive_page, name="projects_archive_page"),
+    path(
         "projects/<uuid:project_id>/calendar/",
         views.project_calendar_page,
         name="project_calendar",

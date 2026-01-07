@@ -76,6 +76,15 @@ class Project(models.Model):
         on_delete=models.PROTECT,
         related_name="created_projects",
     )
+    is_archived = models.BooleanField(default=False, db_index=True)
+    archived_at = models.DateTimeField(blank=True, null=True)
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="archived_projects",
+        blank=True,
+        null=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

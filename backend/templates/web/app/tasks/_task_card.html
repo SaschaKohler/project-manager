@@ -1,108 +1,144 @@
 {% load i18n %}
-<div class="rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 shadow-sm hover:bg-zinc-950/45 transition {% if running_task_ids and task.id in running_task_ids %}border-emerald-500/60 bg-emerald-950/20{% endif %}"
-     data-task-id="{{ task.id }}"
-     data-open-url="{% url 'web:tasks_detail' task.id %}"
-     data-move-url="{% url 'web:tasks_move' task.id %}"
-     {% if hx_swap_oob_target %}hx-swap-oob="afterbegin:#{{ hx_swap_oob_target }}"{% endif %}
-     {% if task.running_started_at %}data-running-started-at="{{ task.running_started_at|date:'c' }}"{% endif %}>
+<div class="task-card rounded-xl border border-zinc-800/70 bg-zinc-950/35 p-4 shadow-sm hover:bg-zinc-950/45 transition {% if running_task_ids and task.id in running_task_ids %}border-emerald-500/60 bg-emerald-950/20{% endif %}"
+      data-task-id="{{ task.id }}"
+      data-open-url="{% url 'web:tasks_detail' task.id %}"
+      data-move-url="{% url 'web:tasks_move' task.id %}"
+      {% if hx_swap_oob_target %}hx-swap-oob="afterbegin:#{{ hx_swap_oob_target }}"{% endif %}
+      {% if task.running_started_at %}data-running-started-at="{{ task.running_started_at|date:'c' }}"{% endif %}>
+
+  <!-- Bulk selection checkbox (hidden by default, shown when bulk mode active) -->
+  <input type="checkbox" class="task-checkbox absolute top-3 left-3 opacity-0 pointer-events-none" data-task-id="{{ task.id }}">
+
   <div class="flex items-start gap-3">
     <div class="drag-handle select-none pt-0.5 text-zinc-500 cursor-grab active:cursor-grabbing flex-shrink-0">⋮⋮</div>
-    <div class="min-w-0 flex-1">
-      {% include "web/app/tasks/_task_title.html" with task=task %}
-      {% if task.subtitle %}
-        <div class="mt-1 text-sm text-zinc-400 truncate">{{ task.subtitle }}</div>
-      {% endif %}
-      <div class="mt-1 text-xs text-zinc-500 truncate">{{ task.project.title }}</div>
+    <div class="flex-1 min-w-0">
+      <!-- Basic info row -->
+      <div class="flex items-center gap-2 mb-2">
+        <span class="priority-dot w-2 h-2 rounded-full {% if task.priority == 'HIGH' %}bg-red-500{% elif task.priority == 'MEDIUM' %}bg-yellow-500{% else %}bg-gray-500{% endif %}"></span>
+        <h3 class="font-medium text-zinc-100 truncate flex-1">{% include "web/app/tasks/_task_title.html" with task=task %}</h3>
+        <button class="expand-btn text-zinc-400 hover:text-zinc-200 transition" data-expanded="false">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
 
-      {% if task.idea_card or task.links.all %}
-        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
-          {% if task.idea_card %}
-            <a href="{% url 'web:board_card_detail' task.idea_card.id %}" class="underline hover:text-zinc-200 truncate">
-              {% trans "Idea" %}: {{ task.idea_card.title }}
-            </a>
-          {% endif %}
-          {% if task.links.all %}
-            {% with l=task.links.all.0 %}
-              <a href="{{ l.url }}" target="_blank" rel="noopener" class="underline hover:text-zinc-200 truncate">
-                {% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}
+      <!-- Compact info -->
+      <div class="flex items-center gap-2 text-sm text-zinc-400 mb-2">
+        <span class="assignee-avatar w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-medium text-zinc-200">
+          {{ task.assigned_to.email|slice:":2"|upper }}
+        </span>
+        {% if task.due_date %}
+          {% load tz %}
+          {% timezone "Europe/Vienna" %}
+            {% if task.due_date < now %}
+              <span class="text-red-400">Overdue</span>
+            {% endif %}
+          {% endtimezone %}
+        {% endif %}
+        <span class="status-badge px-2 py-0.5 rounded text-xs {% if task.status == 'TODO' %}bg-gray-800 text-gray-300{% elif task.status == 'IN_PROGRESS' %}bg-blue-800 text-blue-300{% else %}bg-green-800 text-green-300{% endif %}">
+          {% if task.status == 'TODO' %}{% trans "Todo" %}{% elif task.status == 'IN_PROGRESS' %}{% trans "In Progress" %}{% else %}{% trans "Done" %}{% endif %}
+        </span>
+      </div>
+
+      <!-- Expanded content (hidden by default) -->
+      <div class="expanded-content hidden">
+        {% if task.subtitle %}
+          <div class="mt-2 text-sm text-zinc-400">{{ task.subtitle }}</div>
+        {% endif %}
+        <div class="mt-1 text-xs text-zinc-500">{{ task.project.title }}</div>
+
+        {% if task.idea_card or task.links.all %}
+          <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-400">
+            {% if task.idea_card %}
+              <a href="{% url 'web:board_card_detail' task.idea_card.id %}" class="underline hover:text-zinc-200 truncate">
+                {% trans "Idea" %}: {{ task.idea_card.title }}
               </a>
-            {% endwith %}
+            {% endif %}
+            {% if task.links.all %}
+              {% with l=task.links.all.0 %}
+                <a href="{{ l.url }}" target="_blank" rel="noopener" class="underline hover:text-zinc-200 truncate">
+                  {% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}
+                </a>
+              {% endwith %}
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <!-- Expanded actions -->
+        <div class="mt-4 flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3 text-xs">
+            <div class="min-w-0 flex-1">
+              {% if members %}
+                <label class="sr-only" for="assign-{{ task.id }}">{% trans "Assigned to" %}</label>
+                <select id="assign-{{ task.id }}"
+                        name="assigned_to"
+                        class="w-full rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1.5 text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500 truncate"
+                        hx-post="{% url 'web:tasks_assign' task.id %}"
+                        hx-trigger="change"
+                        hx-target="closest [data-task-id]"
+                        hx-swap="outerHTML">
+                  <option value="">{% trans "Me" %}</option>
+                  {% for m in members %}
+                    <option value="{{ m.user.id }}" {% if task.assigned_to_id == m.user.id %}selected{% endif %}>{{ m.user.email }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <div class="text-zinc-500 truncate">{% trans "Assigned to" %} {{ task.assigned_to.email }}</div>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-2 text-zinc-500 flex-shrink-0">
+              <span>{{ task.tracked_human }}</span>
+              <span class="font-mono text-zinc-400" data-live-timer></span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <a href="{% url 'web:tasks_detail' task.id %}"
+               class="flex-1 min-w-[80px] text-center rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition">
+              {% trans "Open" %}
+            </a>
+            <button class="flex-1 min-w-[80px] rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition"
+                    hx-post="{% url 'web:tasks_timer' task.id %}"
+                    hx-target="closest [data-task-id]"
+                    hx-swap="outerHTML">
+              {% if running_task_ids and task.id in running_task_ids %}{% trans "Stop" %}{% else %}{% trans "Start" %}{% endif %}
+            </button>
+            <button class="flex-1 min-w-[80px] rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition"
+                    hx-post="{% url 'web:tasks_toggle' task.id %}"
+                    hx-target="closest [data-task-id]"
+                    hx-swap="outerHTML">
+              {% if task.status == 'DONE' %}{% trans "Undo" %}{% else %}{% trans "Done" %}{% endif %}
+            </button>
+          </div>
+
+          {% if task.filtered_buttons %}
+            <div class="flex items-center gap-2 flex-wrap pt-1 border-t border-zinc-800/50">
+              {% for button in task.filtered_buttons %}
+                <button class="flex-1 min-w-[80px] rounded-md border border-{{ button.color }}-800/70 bg-{{ button.color }}-950/35 px-3 py-1.5 text-xs text-{{ button.color }}-400 hover:bg-{{ button.color }}-900/55 transition"
+                        hx-post="{% url 'web:task_button_execute' task.id button.id %}"
+                        hx-target="closest [data-task-id]"
+                        hx-swap="outerHTML">
+                  {{ button.name }}
+                </button>
+              {% endfor %}
+            </div>
           {% endif %}
         </div>
-      {% endif %}
-    </div>
-  </div>
-  
-  <div class="mt-4 flex flex-col gap-3">
-    <div class="flex items-center justify-between gap-3 text-xs">
-      <div class="min-w-0 flex-1">
-        {% if members %}
-          <label class="sr-only" for="assign-{{ task.id }}">{% trans "Assigned to" %}</label>
-          <select id="assign-{{ task.id }}"
-                  name="assigned_to"
-                  class="w-full rounded-md border border-zinc-800/70 bg-zinc-900/35 px-2 py-1.5 text-zinc-400 outline-none focus:ring-2 focus:ring-indigo-500 truncate"
-                  hx-post="{% url 'web:tasks_assign' task.id %}"
-                  hx-trigger="change"
-                  hx-target="closest [data-task-id]"
-                  hx-swap="outerHTML">
-            <option value="">{% trans "Me" %}</option>
-            {% for m in members %}
-              <option value="{{ m.user.id }}" {% if task.assigned_to_id == m.user.id %}selected{% endif %}>{{ m.user.email }}</option>
-            {% endfor %}
-          </select>
-        {% else %}
-          <div class="text-zinc-500 truncate">{% trans "Assigned to" %} {{ task.assigned_to.email }}</div>
+
+        {% if task.status == 'DONE' %}
+          <details class="mt-3" data-time-accordion>
+            <summary class="cursor-pointer select-none text-xs text-zinc-400 hover:text-zinc-200"
+                     hx-get="{% url 'web:tasks_time_entries' task.id %}"
+                     hx-trigger="click once"
+                     hx-target="#time-entries-{{ task.id }}"
+                     hx-swap="innerHTML">
+              {% trans "Time entries" %}
+            </summary>
+            <div id="time-entries-{{ task.id }}" class="mt-2"></div>
+          </details>
         {% endif %}
       </div>
-      <div class="flex items-center gap-2 text-zinc-500 flex-shrink-0">
-        <span>{{ task.tracked_human }}</span>
-        <span class="font-mono text-zinc-400" data-live-timer></span>
-      </div>
     </div>
-    
-    <div class="flex items-center gap-2 flex-wrap">
-      <a href="{% url 'web:tasks_detail' task.id %}"
-         class="flex-1 min-w-[80px] text-center rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition">
-        {% trans "Open" %}
-      </a>
-      <button class="flex-1 min-w-[80px] rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition"
-              hx-post="{% url 'web:tasks_timer' task.id %}"
-              hx-target="closest [data-task-id]"
-              hx-swap="outerHTML">
-        {% if running_task_ids and task.id in running_task_ids %}{% trans "Stop" %}{% else %}{% trans "Start" %}{% endif %}
-      </button>
-      <button class="flex-1 min-w-[80px] rounded-md border border-zinc-800/70 bg-zinc-900/35 px-3 py-1.5 text-xs hover:bg-zinc-900/55 transition"
-              hx-post="{% url 'web:tasks_toggle' task.id %}"
-              hx-target="closest [data-task-id]"
-              hx-swap="outerHTML">
-        {% if task.status == 'DONE' %}{% trans "Undo" %}{% else %}{% trans "Done" %}{% endif %}
-      </button>
-    </div>
-
-    {% if task.filtered_buttons %}
-      <div class="flex items-center gap-2 flex-wrap pt-1 border-t border-zinc-800/50">
-        {% for button in task.filtered_buttons %}
-          <button class="flex-1 min-w-[80px] rounded-md border border-{{ button.color }}-800/70 bg-{{ button.color }}-950/35 px-3 py-1.5 text-xs text-{{ button.color }}-400 hover:bg-{{ button.color }}-900/55 transition"
-                  hx-post="{% url 'web:task_button_execute' task.id button.id %}"
-                  hx-target="closest [data-task-id]"
-                  hx-swap="outerHTML">
-            {{ button.name }}
-          </button>
-        {% endfor %}
-      </div>
-    {% endif %}
   </div>
-
-  {% if task.status == 'DONE' %}
-    <details class="mt-3" data-time-accordion>
-      <summary class="cursor-pointer select-none text-xs text-zinc-400 hover:text-zinc-200"
-               hx-get="{% url 'web:tasks_time_entries' task.id %}"
-               hx-trigger="click once"
-               hx-target="#time-entries-{{ task.id }}"
-               hx-swap="innerHTML">
-        {% trans "Time entries" %}
-      </summary>
-      <div id="time-entries-{{ task.id }}" class="mt-2"></div>
-    </details>
-  {% endif %}
 </div>

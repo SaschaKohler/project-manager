@@ -9,6 +9,9 @@
     <h1 class="text-3xl font-semibold tracking-tight">{% trans "Projects" %}</h1>
     <p class="mt-2 text-sm text-zinc-300">{% trans "Create momentum. Keep scope tight." %}</p>
   </div>
+  <a href="{% url 'web:projects_archive_page' %}" class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+    {% trans "Archived Projects" %}
+  </a>
 </div>
 
 <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">

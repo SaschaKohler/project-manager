@@ -10,6 +10,7 @@ Handles all task-related operations including:
 """
 from datetime import datetime, time
 import json
+import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -38,6 +39,8 @@ from .utils import (
     require_task_edit_permission,
     web_shell_context,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -93,7 +96,7 @@ def tasks_page(request):
     view = (request.GET.get("view") or "all").strip().lower()
     project_id = (request.GET.get("project") or "").strip()
     
-    projects = Project.objects.filter(organization=org).order_by("title")
+    projects = Project.objects.filter(organization=org, is_archived=False).order_by("title")
     members = Membership.objects.filter(organization=org).select_related("user").order_by("user__email")
     
     # Subquery for running timers
@@ -223,9 +226,12 @@ def tasks_page(request):
 @login_required
 def tasks_create(request):
     """Create a new task."""
+    logger.info(f"tasks_create called by user {request.user.id}, method: {request.method}")
     if request.active_org is None:
+        logger.warning(f"User {request.user.id} has no active_org")
         return redirect("web:onboarding")
     if request.method != "POST":
+        logger.warning(f"Invalid method {request.method} for tasks_create")
         raise Http404()
 
     org = request.active_org
@@ -236,18 +242,29 @@ def tasks_create(request):
     idea_card_id = (request.POST.get("idea_card_id") or "").strip()
     link_url = (request.POST.get("link_url") or "").strip()
     link_title = (request.POST.get("link_title") or "").strip()
-    
+
+    logger.info(f"Task creation data: title='{title}', project_id='{project_id}', assigned_to_id='{assigned_to_id}', due_date_raw='{due_date_raw}', idea_card_id='{idea_card_id}'")
+
     # Validation
     if not title:
+        logger.error("Task creation failed: no title provided")
         return JsonResponse({"error": _("Bitte geben Sie einen Titel für die Aufgabe ein.")}, status=400)
-    
+
     if not project_id:
+        logger.error("Task creation failed: no project_id provided")
         return JsonResponse({"error": _("Bitte wählen Sie ein Projekt aus.")}, status=400)
 
     try:
         project = Project.objects.get(id=project_id, organization=org)
+        logger.info(f"Found project: {project.id} - {project.title}")
     except Project.DoesNotExist:
+        logger.error(f"Project not found: id={project_id}, org={org.id}")
         return JsonResponse({"error": _("Das ausgewählte Projekt wurde nicht gefunden.")}, status=400)
+
+    # Check if project is archived
+    if project.is_archived:
+        logger.error(f"Cannot create task for archived project: {project.id}")
+        return JsonResponse({"error": _("Aufgaben können nicht für archivierte Projekte erstellt werden.")}, status=400)
 
     # Handle assignment
     assigned_to = request.user
@@ -288,14 +305,20 @@ def tasks_create(request):
             return JsonResponse({"error": _("Die ausgewählte Ideen-Karte wurde nicht gefunden.")}, status=400)
 
     # Create task
-    task = Task.objects.create(
-        project=project,
-        title=title,
-        assigned_to=assigned_to,
-        status=Task.Status.TODO,
-        due_date=due_date,
-        idea_card=idea_card,
-    )
+    logger.info(f"Creating task with data: project={project.id}, title='{title}', assigned_to={assigned_to.id}, due_date={due_date}, idea_card={idea_card.id if idea_card else None}")
+    try:
+        task = Task.objects.create(
+            project=project,
+            title=title,
+            assigned_to=assigned_to,
+            status=Task.Status.TODO,
+            due_date=due_date,
+            idea_card=idea_card,
+        )
+        logger.info(f"Task created successfully: id={task.id}")
+    except Exception as e:
+        logger.error(f"Task creation failed: {e}", exc_info=True)
+        return JsonResponse({"error": _("Fehler beim Erstellen der Aufgabe.")}, status=500)
 
     if link_url:
         TaskLink.objects.create(task=task, url=link_url, title=link_title)

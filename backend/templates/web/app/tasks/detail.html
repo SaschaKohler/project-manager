@@ -20,91 +20,140 @@
 </div>
 
 <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-4">
-  <div class="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/30 p-5">
-    <div class="text-sm font-medium text-zinc-200">{% trans "Details" %}</div>
+   <div class="lg:col-span-2 rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
+     <!-- Tab navigation -->
+     <div class="border-b border-zinc-800 px-5 py-3">
+       <div class="flex gap-6">
+         <button class="tab-button active text-sm font-medium text-zinc-200 border-b-2 border-indigo-500 pb-2" data-tab="details">
+           {% trans "Details" %}
+         </button>
+         <button class="tab-button text-sm font-medium text-zinc-400 hover:text-zinc-200 pb-2" data-tab="time-tracking">
+           {% trans "Time Tracking" %}
+         </button>
+         <button class="tab-button text-sm font-medium text-zinc-400 hover:text-zinc-200 pb-2" data-tab="links">
+           {% trans "Links" %}
+         </button>
+       </div>
+     </div>
 
-    <form method="post" class="mt-4 space-y-3">
-      {% csrf_token %}
+     <!-- Tab content -->
+     <div class="p-5">
+       <!-- Details Tab -->
+       <div id="tab-details" class="tab-content">
+         <form method="post" class="space-y-3">
+           {% csrf_token %}
 
-      <div>
-        <label class="block text-sm text-zinc-400 mb-2" for="title">{% trans "Title" %}</label>
-        <input id="title" name="title" required value="{{ task.title }}"
-               {% if not can_edit %}disabled{% endif %}
-               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
-      </div>
+           <div>
+             <label class="block text-sm text-zinc-400 mb-2" for="title">{% trans "Title" %}</label>
+             <input id="title" name="title" required value="{{ task.title }}"
+                    {% if not can_edit %}disabled{% endif %}
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+           </div>
 
-      <div>
-        <label class="block text-sm text-zinc-400 mb-2" for="subtitle">{% trans "Subtitle" %}</label>
-        <input id="subtitle" name="subtitle" value="{{ task.subtitle }}"
-               {% if not can_edit %}disabled{% endif %}
-               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
-      </div>
+           <div>
+             <label class="block text-sm text-zinc-400 mb-2" for="subtitle">{% trans "Subtitle" %}</label>
+             <input id="subtitle" name="subtitle" value="{{ task.subtitle }}"
+                    {% if not can_edit %}disabled{% endif %}
+                    class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+           </div>
 
-      <div>
-        <label class="block text-sm text-zinc-400 mb-2" for="description">{% trans "Description" %}</label>
-        <textarea id="description" name="description" rows="8"
-                  {% if not can_edit %}disabled{% endif %}
-                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">{{ task.description }}</textarea>
-      </div>
+           <div>
+             <label class="block text-sm text-zinc-400 mb-2" for="description">{% trans "Description" %}</label>
+             <textarea id="description" name="description" rows="8"
+                       {% if not can_edit %}disabled{% endif %}
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">{{ task.description }}</textarea>
+           </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm text-zinc-400 mb-2" for="status">{% trans "Status" %}</label>
-          <select id="status" name="status" {% if not can_edit %}disabled{% endif %}
-                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
-            <option value="TODO" {% if task.status == 'TODO' %}selected{% endif %}>{% trans "Todo" %}</option>
-            <option value="IN_PROGRESS" {% if task.status == 'IN_PROGRESS' %}selected{% endif %}>{% trans "In progress" %}</option>
-            <option value="DONE" {% if task.status == 'DONE' %}selected{% endif %}>{% trans "Done" %}</option>
-          </select>
-        </div>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div>
+               <label class="block text-sm text-zinc-400 mb-2" for="status">{% trans "Status" %}</label>
+               <select id="status" name="status" {% if not can_edit %}disabled{% endif %}
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+                 <option value="TODO" {% if task.status == 'TODO' %}selected{% endif %}>{% trans "Todo" %}</option>
+                 <option value="IN_PROGRESS" {% if task.status == 'IN_PROGRESS' %}selected{% endif %}>{% trans "In progress" %}</option>
+                 <option value="DONE" {% if task.status == 'DONE' %}selected{% endif %}>{% trans "Done" %}</option>
+               </select>
+             </div>
 
-        <div>
-          <label class="block text-sm text-zinc-400 mb-2" for="priority">{% trans "Priority" %}</label>
-          <select id="priority" name="priority" {% if not can_edit %}disabled{% endif %}
-                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
-            <option value="LOW" {% if task.priority == 'LOW' %}selected{% endif %}>{% trans "Low" %}</option>
-            <option value="MEDIUM" {% if task.priority == 'MEDIUM' %}selected{% endif %}>{% trans "Medium" %}</option>
-            <option value="HIGH" {% if task.priority == 'HIGH' %}selected{% endif %}>{% trans "High" %}</option>
-          </select>
-        </div>
-      </div>
+             <div>
+               <label class="block text-sm text-zinc-400 mb-2" for="priority">{% trans "Priority" %}</label>
+               <select id="priority" name="priority" {% if not can_edit %}disabled{% endif %}
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+                 <option value="LOW" {% if task.priority == 'LOW' %}selected{% endif %}>{% trans "Low" %}</option>
+                 <option value="MEDIUM" {% if task.priority == 'MEDIUM' %}selected{% endif %}>{% trans "Medium" %}</option>
+                 <option value="HIGH" {% if task.priority == 'HIGH' %}selected{% endif %}>{% trans "High" %}</option>
+               </select>
+             </div>
+           </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm text-zinc-400 mb-2" for="assigned_to">{% trans "Assigned to" %}</label>
-          <select id="assigned_to" name="assigned_to" {% if not can_edit %}disabled{% endif %}
-                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
-            {% for m in members %}
-              <option value="{{ m.user.id }}" {% if task.assigned_to_id == m.user.id %}selected{% endif %}>{{ m.user.email }}</option>
-            {% endfor %}
-          </select>
-        </div>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div>
+               <label class="block text-sm text-zinc-400 mb-2" for="assigned_to">{% trans "Assigned to" %}</label>
+               <select id="assigned_to" name="assigned_to" {% if not can_edit %}disabled{% endif %}
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60">
+                 {% for m in members %}
+                   <option value="{{ m.user.id }}" {% if task.assigned_to_id == m.user.id %}selected{% endif %}>{{ m.user.email }}</option>
+                 {% endfor %}
+               </select>
+             </div>
 
-        <div>
-          <label class="block text-sm text-zinc-400 mb-2" for="due_date">{% trans "Due date" %}</label>
-          <input id="due_date" name="due_date" type="date"
-                 value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}"
-                 {% if not can_edit %}disabled{% endif %}
-                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
-        </div>
-      </div>
+             <div>
+               <label class="block text-sm text-zinc-400 mb-2" for="due_date">{% trans "Due date" %}</label>
+               <input id="due_date" name="due_date" type="date"
+                      value="{% if task.due_date %}{{ task.due_date|date:'Y-m-d' }}{% endif %}"
+                      {% if not can_edit %}disabled{% endif %}
+                      class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60" />
+             </div>
+           </div>
 
-      {% if can_edit %}
-        <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
-          {% trans "Save" %}
-        </button>
-        <button type="submit"
-                formaction="{% url 'web:tasks_delete' task.id %}"
-                class="ml-2 rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-900/60 transition"
-                data-confirm="{% trans 'Archive this task?' %}"
-                onclick="return confirm(this.dataset.confirm)">
-          {% trans "Archive" %}
-        </button>
-      {% else %}
-        <div class="text-xs text-zinc-500">{% trans "You don't have permission to edit this task." %}</div>
-      {% endif %}
-    </form>
-  </div>
+           {% if can_edit %}
+             <div class="flex gap-2 pt-4">
+               <button type="submit" class="rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-sm font-medium">
+                 {% trans "Save" %}
+               </button>
+               <button type="submit"
+                       formaction="{% url 'web:tasks_delete' task.id %}"
+                       class="rounded-lg border border-zinc-800/70 bg-zinc-900/40 px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-900/60 transition"
+                       data-confirm="{% trans 'Archive this task?' %}"
+                       onclick="return confirm(this.dataset.confirm)">
+                 {% trans "Archive" %}
+               </button>
+             </div>
+           {% else %}
+             <div class="text-xs text-zinc-500 pt-4">{% trans "You don't have permission to edit this task." %}</div>
+           {% endif %}
+         </form>
+       </div>
+
+       <!-- Time Tracking Tab -->
+       <div id="tab-time-tracking" class="tab-content hidden">
+         <div class="space-y-4">
+           <div class="text-sm text-zinc-400">{% trans "Time tracking functionality would go here" %}</div>
+           <div class="rounded-lg border border-zinc-800 bg-zinc-950/20 p-4">
+             <div class="text-sm text-zinc-300">{% trans "Total tracked time" %}: {{ task.tracked_human }}</div>
+           </div>
+         </div>
+       </div>
+
+       <!-- Links Tab -->
+       <div id="tab-links" class="tab-content hidden">
+         <div class="space-y-4">
+           <div class="text-sm text-zinc-400">{% trans "Link management functionality would go here" %}</div>
+           <div class="space-y-2">
+             {% for l in task.links.all %}
+               <div class="rounded-lg border border-zinc-800 bg-zinc-950/20 p-3">
+                 <a href="{{ l.url }}" target="_blank" rel="noopener" class="text-sm text-zinc-200 hover:text-zinc-100">
+                   {% if l.title %}{{ l.title }}{% else %}{{ l.url }}{% endif %}
+                 </a>
+               </div>
+             {% empty %}
+               <div class="text-sm text-zinc-500">{% trans "No links yet." %}</div>
+             {% endfor %}
+           </div>
+         </div>
+       </div>
+     </div>
+   </div>
 
   <div class="rounded-2xl border border-zinc-800 bg-zinc-900/20 p-5 space-y-6">
     <div>
@@ -148,4 +197,36 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Tab switching functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all buttons
+        tabButtons.forEach(btn => {
+          btn.classList.remove('active', 'text-zinc-200', 'border-b-2', 'border-indigo-500');
+          btn.classList.add('text-zinc-400');
+        });
+
+        // Hide all tab contents
+        tabContents.forEach(content => content.classList.add('hidden'));
+
+        // Add active class to clicked button
+        button.classList.add('active', 'text-zinc-200', 'border-b-2', 'border-indigo-500');
+        button.classList.remove('text-zinc-400');
+
+        // Show corresponding tab content
+        const tabId = button.dataset.tab;
+        const tabContent = document.getElementById(`tab-${tabId}`);
+        if (tabContent) {
+          tabContent.classList.remove('hidden');
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -25,7 +25,7 @@ def projects_page(request):
         return redirect("web:onboarding")
 
     org = request.active_org
-    projects = Project.objects.filter(organization=org).order_by("-created_at")
+    projects = Project.objects.filter(organization=org, is_archived=False).order_by("-created_at")
 
     context = {**web_shell_context(request), "projects": projects}
     return render(request, "web/app/projects/page.html", context)
@@ -122,6 +122,86 @@ def projects_create(request):
 
 
 @login_required
+def projects_archive(request, project_id):
+    """Archive a project."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        project = Project.objects.get(id=project_id, organization=org)
+    except Project.DoesNotExist as exc:
+        raise Http404() from exc
+
+    if not project.is_archived:
+        Project.objects.filter(id=project.id).update(
+            is_archived=True,
+            archived_at=timezone.now(),
+            archived_by=request.user,
+        )
+
+    if request.headers.get("HX-Request") == "true":
+        return HttpResponse("")
+
+    return redirect("web:projects")
+
+
+@login_required
+def projects_restore(request, project_id):
+    """Restore an archived project."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        project = Project.objects.get(id=project_id, organization=org)
+    except Project.DoesNotExist as exc:
+        raise Http404() from exc
+
+    if project.is_archived:
+        # Restore all tasks associated with this project
+        from apps.projects.models import Task
+        Task.objects.filter(project=project, is_archived=True).update(
+            is_archived=False,
+            archived_at=None,
+            archived_by=None,
+        )
+
+        # Restore the project itself
+        Project.objects.filter(id=project.id).update(
+            is_archived=False,
+            archived_at=None,
+            archived_by=None,
+        )
+
+    if request.headers.get("HX-Request") == "true":
+        return render(
+            request, "web/app/projects/_project_row.html", {"project": project}
+        )
+
+    return redirect("web:projects_archive")
+
+
+@login_required
+def projects_archive_page(request):
+    """View archived projects."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    archived_projects = Project.objects.filter(
+        organization=org, is_archived=True
+    ).order_by("-archived_at")
+
+    context = {**web_shell_context(request), "archived_projects": archived_projects}
+    return render(request, "web/app/projects/archive.html", context)
+
+
+@login_required
 def projects_complete(request, project_id):
     """Mark a project as completed."""
     if request.active_org is None:
@@ -137,6 +217,11 @@ def projects_complete(request, project_id):
 
     project.status = Project.Status.COMPLETED
     project.save(update_fields=["status"])
+
+    if request.headers.get("HX-Request") == "true":
+        return render(
+            request, "web/app/projects/_project_row.html", {"project": project}
+        )
 
     return redirect("web:projects")
 

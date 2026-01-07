@@ -1,12 +1,23 @@
 -r requirements.txt
 
+# Testing
+pytest
+pytest-django
+pytest-cov
+pytest-mock
+factory-boy
+faker
+
 # Typing / stubs
 django-stubs
 djangorestframework-stubs
 
-# Tooling
+# Code Quality
 pyright
 ruff
 black
-pytest
-pytest-django
+isort
+
+# Documentation
+sphinx
+sphinx-rtd-theme

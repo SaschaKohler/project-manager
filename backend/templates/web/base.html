@@ -20,6 +20,36 @@
         background: rgba(99, 102, 241, 0.35);
         color: rgb(250, 250, 250);
       }
+      
+      /* Custom scrollbar styles for better cross-browser compatibility */
+      .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(113 113 122) rgb(24 24 27);
+      }
+      
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: rgb(24 24 27);
+        border-radius: 3px;
+      }
+      
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: rgb(113 113 122);
+        border-radius: 3px;
+      }
+      
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: rgb(161 161 170);
+      }
+      
+      /* Firefox scrollbar */
+      .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(113 113 122) rgb(24 24 27);
+      }
     </style>
     <script>
       function getCookie(name) {

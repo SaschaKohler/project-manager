@@ -11,10 +11,11 @@ Handles all task-related operations including:
 from datetime import datetime, time
 import json
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import models
-from django.db.models import OuterRef, Subquery, Sum
-from django.http import Http404, HttpResponse, JsonResponse
+from django.db import models, transaction
+from django.db.models import F, OuterRef, Subquery, Sum
+from django.http import Http404, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_datetime
@@ -327,6 +328,673 @@ def tasks_create(request):
         return response
 
     return redirect("web:tasks")
+
+
+@login_required
+def tasks_detail(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    membership = (
+        Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    )
+    if membership is None:
+        raise Http404()
+
+    try:
+        task = (
+            Task.objects.select_related("project", "assigned_to", "idea_card")
+            .prefetch_related("links")
+            .get(id=task_id, project__organization=org)
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    can_edit = can_edit_task(request, task)
+
+    if request.method == "POST":
+        permission_response = require_task_edit_permission(request, task)
+        if permission_response is not None:
+            return permission_response
+
+        title = (request.POST.get("title") or "").strip()
+        subtitle = (request.POST.get("subtitle") or "").strip()
+        description = (request.POST.get("description") or "").strip()
+        status = (request.POST.get("status") or "").strip().upper()
+        priority = (request.POST.get("priority") or "").strip().upper()
+        assigned_to_id = (request.POST.get("assigned_to") or "").strip()
+        due_date_raw = (request.POST.get("due_date") or "").strip()
+
+        if not title:
+            return HttpResponse("", status=400)
+
+        if status and status not in {
+            Task.Status.TODO,
+            Task.Status.IN_PROGRESS,
+            Task.Status.DONE,
+        }:
+            return HttpResponse("", status=400)
+        if priority and priority not in {
+            Task.Priority.LOW,
+            Task.Priority.MEDIUM,
+            Task.Priority.HIGH,
+        }:
+            return HttpResponse("", status=400)
+
+        assigned_to = task.assigned_to
+        if assigned_to_id:
+            if not Membership.objects.filter(organization=org, user_id=assigned_to_id).exists():
+                return HttpResponse("", status=400)
+            assigned_to = Membership.objects.get(organization=org, user_id=assigned_to_id).user
+
+        due_date = None
+        if due_date_raw:
+            due_d = parse_date(due_date_raw)
+            if due_d is None:
+                return HttpResponse("", status=400)
+
+            due_date = datetime.combine(due_d, time(17, 0))
+            if timezone.is_naive(due_date):
+                due_date = timezone.make_aware(due_date)
+
+            if due_date < task.project.start_date or due_date > task.project.end_date:
+                return HttpResponse("", status=400)
+
+        update_fields = {
+            "title": title,
+            "subtitle": subtitle,
+            "description": description or None,
+            "assigned_to": assigned_to,
+            "due_date": due_date,
+        }
+        if status:
+            update_fields["status"] = status
+        if priority:
+            update_fields["priority"] = priority
+
+        Task.objects.filter(id=task.id).update(**update_fields)
+        return redirect("web:tasks_detail", task_id=task.id)
+
+    members = (
+        Membership.objects.filter(organization=org)
+        .select_related("user")
+        .order_by("user__email")
+    )
+    context = {
+        **web_shell_context(request),
+        "task": task,
+        "members": members,
+        "can_edit": can_edit,
+    }
+    return render(request, "web/app/tasks/detail.html", context)
+
+
+@login_required
+def tasks_delete(request, task_id):
+    """Archive a task (soft delete)."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(
+            id=task_id, project__organization=org, is_archived=False
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    Task.objects.filter(id=task.id).update(
+        is_archived=True,
+        archived_at=timezone.now(),
+        archived_by=request.user,
+    )
+
+    messages.success(request, _("Task archived"))
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_time_entries(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "GET":
+        raise Http404()
+
+    org = request.active_org
+    if not Membership.objects.filter(organization=org, user=request.user).exists():
+        return HttpResponse("", status=403)
+
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    if task.status != Task.Status.DONE:
+        return HttpResponse("", status=400)
+
+    entries = (
+        TaskTimeEntry.objects.filter(task=task)
+        .select_related("user")
+        .order_by("-started_at")
+    )
+
+    entry_items = []
+    for e in entries:
+        started = timezone.localtime(e.started_at) if e.started_at else None
+        stopped = timezone.localtime(e.stopped_at) if e.stopped_at else None
+        duration = int(e.duration_seconds or 0)
+        entry_items.append(
+            {
+                "id": e.id,
+                "user_email": getattr(e.user, "email", ""),
+                "started_at": started,
+                "stopped_at": stopped,
+                "duration_seconds": duration,
+                "duration_human": humanize_seconds(duration),
+            }
+        )
+
+    total_seconds = int(task.tracked_seconds or 0)
+    context = {
+        "task": task,
+        "entries": entry_items,
+        "total_seconds": total_seconds,
+        "total_human": humanize_seconds(total_seconds),
+    }
+    return render(request, "web/app/tasks/_task_time_entries.html", context)
+
+
+@login_required
+def tasks_assign(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project", "assigned_to").get(
+            id=task_id, project__organization=org
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    assigned_to_id = (request.POST.get("assigned_to") or "").strip()
+    assigned_to = request.user
+    if assigned_to_id:
+        if not Membership.objects.filter(organization=org, user_id=assigned_to_id).exists():
+            return HttpResponse("", status=400)
+        assigned_to = Membership.objects.get(organization=org, user_id=assigned_to_id).user
+
+    if task.assigned_to_id != assigned_to.id:
+        Task.objects.filter(id=task.id).update(assigned_to=assigned_to)
+        task.assigned_to = assigned_to
+
+    members = (
+        Membership.objects.filter(organization=org)
+        .select_related("user")
+        .order_by("user__email")
+    )
+    if request.headers.get("HX-Request") == "true":
+        started_at = (
+            TaskTimeEntry.objects.filter(task_id=task.id, user=request.user, stopped_at__isnull=True)
+            .order_by("-started_at")
+            .values_list("started_at", flat=True)
+            .first()
+        )
+        running_task_ids = [task.id] if started_at else []
+        task.running_started_at = started_at
+        return render(
+            request,
+            "web/app/tasks/_task_card.html",
+            {"task": task, "members": members, "running_task_ids": running_task_ids},
+        )
+
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_schedule(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    start_raw = (request.POST.get("start") or "").strip()
+    end_raw = (request.POST.get("end") or "").strip()
+
+    start_dt = parse_datetime(start_raw) if start_raw else None
+    end_dt = parse_datetime(end_raw) if end_raw else None
+    if start_dt is None:
+        return HttpResponse("", status=400)
+
+    duration_minutes = None
+    if end_dt is not None:
+        diff = end_dt - start_dt
+        duration_minutes = max(1, int((diff.total_seconds() + 59) // 60))
+    else:
+        try:
+            duration_minutes = int(request.POST.get("duration_minutes") or "")
+        except ValueError:
+            duration_minutes = None
+
+    if duration_minutes is None:
+        duration_minutes = task.duration_minutes or 60
+
+    Task.objects.filter(id=task.id).update(
+        scheduled_start=start_dt,
+        duration_minutes=duration_minutes,
+        due_date=start_dt,
+    )
+
+    return HttpResponse("", status=204)
+
+
+@login_required
+def tasks_unschedule(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    clear_due = (request.POST.get("clear_due_date") or "").strip() in {"1", "true", "yes"}
+
+    update_fields = {
+        "scheduled_start": None,
+        "duration_minutes": None,
+    }
+    if clear_due:
+        update_fields["due_date"] = None
+
+    Task.objects.filter(id=task.id).update(**update_fields)
+    return HttpResponse("", status=204)
+
+
+@login_required
+def tasks_title(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project", "assigned_to").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    if request.method == "GET":
+        mode = (request.GET.get("mode") or "view").strip().lower()
+        if mode == "edit":
+            return render(request, "web/app/tasks/_task_title_edit.html", {"task": task})
+        return render(request, "web/app/tasks/_task_title.html", {"task": task})
+
+    if request.method != "POST":
+        raise Http404()
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    title = (request.POST.get("title") or "").strip()
+    if title:
+        Task.objects.filter(id=task.id).update(title=title)
+        task.title = title
+
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "web/app/tasks/_task_title.html", {"task": task})
+
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_move(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    new_status = (request.POST.get("status") or "").strip()
+    try:
+        position = int(request.POST.get("position", "0"))
+    except ValueError:
+        position = 0
+
+    if new_status not in {Task.Status.TODO, Task.Status.IN_PROGRESS, Task.Status.DONE}:
+        return HttpResponse("", status=400)
+
+    old_status = task.status
+
+    with transaction.atomic():
+        if old_status != new_status:
+            task.status = new_status
+            task.save(update_fields=["status", "updated_at"])
+
+        insert_task_at_position(org, task, new_status, position)
+        normalize_column_order(org, new_status)
+        if old_status != new_status:
+            normalize_column_order(org, old_status)
+
+    if old_status != new_status:
+        engine = TaskAutomationEngine(triggered_by=request.user)
+        engine.trigger_status_changed(task, old_status, new_status)
+
+        if new_status == Task.Status.DONE:
+            engine.trigger_task_completed(task)
+
+    task.refresh_from_db()
+    task = (
+        Task.objects.filter(id=task.id)
+        .select_related("project", "assigned_to", "idea_card")
+        .prefetch_related("links", "label_assignments__label")
+        .first()
+    )
+
+    members = (
+        Membership.objects.filter(organization=org)
+        .select_related("user")
+        .order_by("user__email")
+    )
+    all_buttons = list(
+        TaskButton.objects.filter(organization=org, is_active=True)
+        .filter(models.Q(project=task.project) | models.Q(project__isnull=True))
+        .prefetch_related("actions", "show_when_has_label", "hide_when_has_label")
+    )
+    task.filtered_buttons = [btn for btn in all_buttons if btn.should_show_for_task(task)]
+
+    started_at = (
+        TaskTimeEntry.objects.filter(task_id=task.id, user=request.user, stopped_at__isnull=True)
+        .order_by("-started_at")
+        .values_list("started_at", flat=True)
+        .first()
+    )
+    running_task_ids = [task.id] if started_at else []
+    task.running_started_at = started_at
+
+    return render(
+        request,
+        "web/app/tasks/_task_card.html",
+        {"task": task, "members": members, "running_task_ids": running_task_ids},
+    )
+
+
+@login_required
+def tasks_toggle(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    old_status = task.status
+    new_status = Task.Status.DONE if task.status != Task.Status.DONE else Task.Status.TODO
+
+    with transaction.atomic():
+        task.status = new_status
+        task.save(update_fields=["status", "updated_at"])
+
+        engine = TaskAutomationEngine(triggered_by=request.user)
+        engine.trigger_status_changed(task, old_status, new_status)
+
+        if new_status == Task.Status.DONE:
+            engine.trigger_task_completed(task)
+
+        if new_status == Task.Status.DONE:
+            now = timezone.now()
+            open_entries = list(TaskTimeEntry.objects.filter(task=task, stopped_at__isnull=True))
+            total_added = 0
+            for entry in open_entries:
+                delta = now - entry.started_at
+                added = max(0, int(delta.total_seconds()))
+                if added:
+                    TaskTimeEntry.objects.filter(id=entry.id).update(
+                        stopped_at=now,
+                        duration_seconds=entry.duration_seconds + added,
+                    )
+                    total_added += added
+                else:
+                    TaskTimeEntry.objects.filter(id=entry.id).update(stopped_at=now)
+
+            if total_added:
+                Task.objects.filter(id=task.id).update(tracked_seconds=F("tracked_seconds") + total_added)
+
+        normalize_column_order(org, new_status)
+        if old_status != new_status:
+            normalize_column_order(org, old_status)
+
+    if request.headers.get("HX-Request") == "true":
+        members = (
+            Membership.objects.filter(organization=org)
+            .select_related("user")
+            .order_by("user__email")
+        )
+        task.refresh_from_db(fields=["tracked_seconds"])
+        started_at = (
+            TaskTimeEntry.objects.filter(task_id=task.id, user=request.user, stopped_at__isnull=True)
+            .order_by("-started_at")
+            .values_list("started_at", flat=True)
+            .first()
+        )
+        running_task_ids = [task.id] if started_at else []
+        task.running_started_at = started_at
+        response = render(
+            request,
+            "web/app/tasks/_task_card.html",
+            {"task": task, "members": members, "running_task_ids": running_task_ids},
+        )
+        response["HX-Trigger"] = json.dumps(
+            {"taskStatusChanged": {"task_id": str(task.id), "new_status": new_status}}
+        )
+        return response
+
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_timer(request, task_id):
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(id=task_id, project__organization=org)
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    now = timezone.now()
+    open_entry = (
+        TaskTimeEntry.objects.filter(task=task, user=request.user, stopped_at__isnull=True)
+        .order_by("-started_at")
+        .first()
+    )
+
+    if open_entry is None:
+        if task.status == Task.Status.TODO:
+            Task.objects.filter(id=task.id).update(status=Task.Status.IN_PROGRESS)
+            task.status = Task.Status.IN_PROGRESS
+
+        TaskTimeEntry.objects.create(task=task, user=request.user, started_at=now)
+    else:
+        delta = now - open_entry.started_at
+        added = max(0, int(delta.total_seconds()))
+        TaskTimeEntry.objects.filter(id=open_entry.id).update(
+            stopped_at=now,
+            duration_seconds=open_entry.duration_seconds + added,
+        )
+        if added:
+            Task.objects.filter(id=task.id).update(tracked_seconds=F("tracked_seconds") + added)
+            task.refresh_from_db(fields=["tracked_seconds"])
+
+    if request.headers.get("HX-Request") == "true":
+        members = (
+            Membership.objects.filter(organization=org)
+            .select_related("user")
+            .order_by("user__email")
+        )
+        started_at = (
+            TaskTimeEntry.objects.filter(task_id=task.id, user=request.user, stopped_at__isnull=True)
+            .order_by("-started_at")
+            .values_list("started_at", flat=True)
+            .first()
+        )
+        running_task_ids = [task.id] if started_at else []
+        task.running_started_at = started_at
+        return render(
+            request,
+            "web/app/tasks/_task_card.html",
+            {"task": task, "members": members, "running_task_ids": running_task_ids},
+        )
+
+    return redirect("web:tasks")
+
+
+@login_required
+def tasks_archive(request):
+    """View archived tasks."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+
+    org = request.active_org
+    projects = Project.objects.filter(organization=org).order_by("title")
+
+    archived_tasks = (
+        Task.objects.filter(project__organization=org, is_archived=True)
+        .select_related("project", "assigned_to", "archived_by")
+        .order_by("-archived_at")
+    )
+
+    project_id = (request.GET.get("project") or "").strip()
+    active_project = None
+    if project_id:
+        try:
+            active_project = Project.objects.get(id=project_id, organization=org)
+            archived_tasks = archived_tasks.filter(project=active_project)
+        except Project.DoesNotExist:
+            pass
+
+    context = {
+        **web_shell_context(request),
+        "archived_tasks": archived_tasks,
+        "projects": projects,
+        "active_project": active_project,
+    }
+    return render(request, "web/app/tasks/archive.html", context)
+
+
+@login_required
+def tasks_restore(request, task_id):
+    """Restore an archived task."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    try:
+        task = Task.objects.select_related("project").get(
+            id=task_id, project__organization=org, is_archived=True
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    permission_response = require_task_edit_permission(request, task)
+    if permission_response is not None:
+        return permission_response
+
+    Task.objects.filter(id=task.id).update(
+        is_archived=False,
+        archived_at=None,
+        archived_by=None,
+    )
+
+    messages.success(request, _("Task restored"))
+    return redirect("web:tasks_archive")
+
+
+@login_required
+def tasks_delete_permanent(request, task_id):
+    """Permanently delete an archived task."""
+    if request.active_org is None:
+        return redirect("web:onboarding")
+    if request.method != "POST":
+        raise Http404()
+
+    org = request.active_org
+    membership = (
+        Membership.objects.filter(organization=org, user=request.user).only("role").first()
+    )
+    if membership is None or membership.role not in {
+        Membership.Role.OWNER,
+        Membership.Role.ADMIN,
+    }:
+        return HttpResponseForbidden()
+
+    try:
+        task = Task.objects.select_related("project").get(
+            id=task_id, project__organization=org, is_archived=True
+        )
+    except Task.DoesNotExist as exc:
+        raise Http404() from exc
+
+    task_title = task.title
+    task.delete()
+
+    messages.success(request, _("Task permanently deleted: %(title)s") % {"title": task_title})
+    return redirect("web:tasks_archive")
 
 
 # Note: Due to length constraints, I'm creating a focused version.

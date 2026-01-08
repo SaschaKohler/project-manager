@@ -33,6 +33,11 @@
          <button class="tab-button text-sm font-medium text-zinc-400 hover:text-zinc-200 pb-2" data-tab="links">
            {% trans "Links" %}
          </button>
+         {% if task.recurring.is_recurring %}
+           <button class="tab-button text-sm font-medium text-zinc-400 hover:text-zinc-200 pb-2" data-tab="recurring">
+             {% trans "Recurring" %}
+           </button>
+         {% endif %}
        </div>
      </div>
 
@@ -152,6 +157,41 @@
            </div>
          </div>
        </div>
+
+       <!-- Recurring Tab -->
+       {% if task.recurring.is_recurring %}
+         <div id="tab-recurring" class="tab-content hidden">
+           <div class="space-y-4">
+             <div class="text-sm text-zinc-400">{% trans "Recurring task settings" %}</div>
+             <div class="space-y-3">
+               <div class="rounded-lg border border-zinc-800 bg-zinc-950/20 p-4">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div>
+                     <div class="text-sm text-zinc-400">{% trans "Frequency" %}</div>
+                     <div class="text-sm text-zinc-200">{{ task.recurring.get_recurrence_frequency_display }}</div>
+                   </div>
+                   <div>
+                     <div class="text-sm text-zinc-400">{% trans "Interval" %}</div>
+                     <div class="text-sm text-zinc-200">{{ task.recurring.recurrence_interval }}</div>
+                   </div>
+                   {% if task.recurring.recurrence_end_date %}
+                     <div>
+                       <div class="text-sm text-zinc-400">{% trans "End date" %}</div>
+                       <div class="text-sm text-zinc-200">{{ task.recurring.recurrence_end_date|date:"Y-m-d H:i" }}</div>
+                     </div>
+                   {% endif %}
+                   {% if task.recurring.recurrence_max_occurrences %}
+                     <div>
+                       <div class="text-sm text-zinc-400">{% trans "Max occurrences" %}</div>
+                       <div class="text-sm text-zinc-200">{{ task.recurring.recurrence_max_occurrences }}</div>
+                     </div>
+                   {% endif %}
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+       {% endif %}
      </div>
    </div>
 

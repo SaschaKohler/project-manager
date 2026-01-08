@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-19 12:48+0100\n"
+"POT-Creation-Date: 2026-01-08 09:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,158 +17,272 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: apps/boards/automation.py:155 apps/projects/automation.py:252
+#: apps/boards/automation.py:155 apps/projects/automation.py:322
+#: apps/projects/automation_refactored.py:191
 msgid "Rule executed successfully"
 msgstr "Regel erfolgreich ausgeführt"
 
-#: apps/projects/models.py:19
+#: apps/projects/models.py:22
 msgid "Workshop"
 msgstr "Workshop"
 
-#: apps/projects/models.py:20
+#: apps/projects/models.py:23
 msgid "Retreat"
-msgstr ""
+msgstr "Klausur"
 
-#: apps/projects/models.py:21
+#: apps/projects/models.py:24
 msgid "Consultation"
 msgstr "Beratung"
 
-#: apps/projects/models.py:22
+#: apps/projects/models.py:25
 msgid "IT Service"
 msgstr "IT-Service"
 
-#: apps/projects/models.py:23
+#: apps/projects/models.py:26
 msgid "Marketing"
 msgstr "Marketing"
 
-#: apps/projects/models.py:24 templates/web/app/projects/page.html:60
+#: apps/projects/models.py:27 templates/web/app/projects/page.html:63
 msgid "Development"
 msgstr "Entwicklung"
 
-#: apps/projects/models.py:25 templates/web/app/projects/page.html:61
+#: apps/projects/models.py:28 templates/web/app/projects/page.html:64
 msgid "Design"
 msgstr "Design"
 
-#: apps/projects/models.py:26 templates/web/app/projects/page.html:62
+#: apps/projects/models.py:29 templates/web/app/projects/page.html:65
 msgid "Research"
 msgstr "Forschung"
 
-#: apps/projects/models.py:27 templates/web/app/projects/page.html:64
+#: apps/projects/models.py:30 templates/web/app/projects/page.html:67
 msgid "Sales"
 msgstr "Vertrieb"
 
-#: apps/projects/models.py:28 templates/web/app/projects/page.html:65
+#: apps/projects/models.py:31 templates/web/app/projects/page.html:68
 msgid "Finance"
 msgstr "Finanzen"
 
-#: apps/projects/models.py:29 templates/web/app/projects/page.html:66
+#: apps/projects/models.py:32 templates/web/app/projects/page.html:69
 msgid "Legal"
 msgstr "Recht"
 
-#: apps/projects/models.py:30 templates/web/app/projects/page.html:67
+#: apps/projects/models.py:33 templates/web/app/projects/page.html:70
 msgid "HR"
 msgstr "Personal"
 
-#: apps/projects/models.py:31 templates/web/app/projects/page.html:68
+#: apps/projects/models.py:34 templates/web/app/projects/page.html:71
 msgid "Operations"
 msgstr "Betrieb"
 
-#: apps/projects/models.py:32 templates/web/app/projects/page.html:69
+#: apps/projects/models.py:35 templates/web/app/projects/page.html:72
 msgid "Event"
 msgstr "Veranstaltung"
 
-#: apps/projects/models.py:33 templates/web/app/projects/page.html:63
+#: apps/projects/models.py:36 templates/web/app/projects/page.html:66
 msgid "Content"
 msgstr "Inhalt"
 
-#: apps/projects/models.py:34 templates/web/app/projects/page.html:70
+#: apps/projects/models.py:37 templates/web/app/projects/page.html:73
 msgid "Training"
 msgstr "Schulung"
 
-#: apps/web/views.py:320
+#: apps/projects/models.py:45 templates/web/app/boards/automations.html:216
+#: templates/web/app/boards/automations.html:310
+#: templates/web/app/tasks/automations.html:303
+#: templates/web/app/tasks/automations.html:441
+msgid "Indigo"
+msgstr "Indigo"
+
+#: apps/projects/models.py:46
+msgid "Emerald"
+msgstr "Smaragd"
+
+#: apps/projects/models.py:47
+msgid "Sky"
+msgstr "Himmelblau"
+
+#: apps/projects/models.py:48
+msgid "Violet"
+msgstr "Violett"
+
+#: apps/projects/models.py:49
+msgid "Rose"
+msgstr "Rosa"
+
+#: apps/projects/models.py:50
+msgid "Amber"
+msgstr "Bernstein"
+
+#: apps/projects/models.py:51
+msgid "Teal"
+msgstr "Türkis"
+
+#: apps/projects/models.py:52
+msgid "Orange"
+msgstr "Orange"
+
+#: apps/projects/models.py:53
+msgid "Lime"
+msgstr "Limette"
+
+#: apps/projects/models.py:54
+msgid "Fuchsia"
+msgstr "Fuchsia"
+
+#: apps/web/views/boards.py:58 apps/web/views_backup.py:428
 msgid "Ideas"
 msgstr "Ideen"
 
-#: apps/web/views.py:321
+#: apps/web/views/boards.py:59 apps/web/views_backup.py:429
 msgid "In review"
 msgstr "In Prüfung"
 
-#: apps/web/views.py:322 templates/web/app/projects/page.html:37
+#: apps/web/views/boards.py:60 apps/web/views_backup.py:430
+#: templates/web/app/projects/page.html:40
 msgid "Planned"
 msgstr "Geplant"
 
-#: apps/web/views.py:323 templates/web/app/calendar.html:58
+#: apps/web/views/boards.py:61 apps/web/views_backup.py:431
+#: templates/web/app/calendar.html:58
 #: templates/web/app/projects/calendar.html:73
-#: templates/web/app/tasks/_task_card.html:72
+#: templates/web/app/tasks/_task_card.html:45
+#: templates/web/app/tasks/_task_card.html:116
 #: templates/web/app/tasks/_task_row.html:25
-#: templates/web/app/tasks/detail.html:57 templates/web/app/tasks/page.html:206
+#: templates/web/app/tasks/detail.html:79 templates/web/app/tasks/page.html:70
+#: templates/web/app/tasks/page.html:310 templates/web/app/tasks/page.html:748
 msgid "Done"
 msgstr "Erledigt"
 
-#: apps/web/views.py:623 apps/web/views.py:2091
+#: apps/web/views/boards.py:375 apps/web/views/task_automations.py:179
+#: apps/web/views_backup.py:771 apps/web/views_backup.py:2569
 msgid "Automation rule created"
 msgstr "Automatisierungsregel erstellt"
 
-#: apps/web/views.py:666 apps/web/views.py:2138
+#: apps/web/views/boards.py:420 apps/web/views/task_automations.py:236
+#: apps/web/views_backup.py:822 apps/web/views_backup.py:2630
 msgid "Automation rule deleted"
 msgstr "Automatisierungsregel gelöscht"
 
-#: apps/web/views.py:729
+#: apps/web/views/boards.py:495 apps/web/views_backup.py:899
 msgid "Card button created"
 msgstr "Karten-Button erstellt"
 
-#: apps/web/views.py:751
+#: apps/web/views/boards.py:518 apps/web/views_backup.py:925
 msgid "Card button deleted"
 msgstr "Karten-Button gelöscht"
 
-#: apps/web/views.py:781 apps/web/views.py:2241
+#: apps/web/views/boards.py:549 apps/web/views_backup.py:959
 msgid "Button action executed"
 msgstr "Button-Aktion ausgeführt"
 
-#: apps/web/views.py:783 apps/web/views.py:2243
+#: apps/web/views/boards.py:551 apps/web/views/task_automations.py:375
+#: apps/web/views_backup.py:961 apps/web/views_backup.py:2775
 msgid "Button action failed"
 msgstr "Button-Aktion fehlgeschlagen"
 
-#: apps/web/views.py:1487
-msgid "Task archived"
-msgstr "Aufgabe archiviert"
-
-#: apps/web/views.py:1899 apps/web/views.py:1928
+#: apps/web/views/onboarding.py:21 apps/web/views/onboarding.py:56
+#: apps/web/views_backup.py:2332 apps/web/views_backup.py:2365
 msgid "Please provide a workspace name"
 msgstr "Bitte geben Sie einen Workspace-Namen an"
 
-#: apps/web/views.py:2027 apps/web/views.py:2162
-msgid "Please fill all required fields"
-msgstr "Bitte füllen Sie alle Pflichtfelder aus"
+#: apps/web/views/projects.py:117 templates/web/app/projects/page.html:177
+msgid "total"
+msgstr "gesamt"
 
-#: apps/web/views.py:2192
+#: apps/web/views/task_automations.py:104
+#: apps/web/views/task_automations.py:269 apps/web/views_backup.py:2490
+#: apps/web/views_backup.py:2665
+msgid "Please fill all required fields"
+msgstr "Bitte füllen Sie alle erforderlichen Felder aus"
+
+#: apps/web/views/task_automations.py:319 apps/web/views_backup.py:2717
 msgid "Task button created"
 msgstr "Aufgaben-Button erstellt"
 
-#: apps/web/views.py:2215
+#: apps/web/views/task_automations.py:347 apps/web/views_backup.py:2747
 msgid "Task button deleted"
 msgstr "Aufgaben-Button gelöscht"
 
-#: apps/web/views.py:2265
+#: apps/web/views/task_automations.py:437 apps/web/views_backup.py:2845
 msgid "Please provide a label name"
 msgstr "Bitte geben Sie einen Label-Namen an"
 
-#: apps/web/views.py:2274
+#: apps/web/views/task_automations.py:446 apps/web/views_backup.py:2854
 msgid "Label created"
 msgstr "Label erstellt"
 
-#: apps/web/views.py:2342
+#: apps/web/views/tasks.py:257 apps/web/views_backup.py:1565
+msgid "Bitte geben Sie einen Titel für die Aufgabe ein."
+msgstr ""
+
+#: apps/web/views/tasks.py:261 apps/web/views_backup.py:1570
+msgid "Bitte wählen Sie ein Projekt aus."
+msgstr ""
+
+#: apps/web/views/tasks.py:268 apps/web/views_backup.py:1577
+msgid "Das ausgewählte Projekt wurde nicht gefunden."
+msgstr ""
+
+#: apps/web/views/tasks.py:273
+msgid "Aufgaben können nicht für archivierte Projekte erstellt werden."
+msgstr ""
+
+#: apps/web/views/tasks.py:279 apps/web/views_backup.py:1588
+msgid "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
+msgstr ""
+
+#: apps/web/views/tasks.py:287 apps/web/views_backup.py:1602
+msgid "Das Fälligkeitsdatum hat ein ungültiges Format."
+msgstr ""
+
+#: apps/web/views/tasks.py:297 apps/web/views_backup.py:1616
+#, python-brace-format
+msgid ""
+"Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - "
+"{end})."
+msgstr ""
+
+#: apps/web/views/tasks.py:305
+msgid "Recurrence frequency is required when task is recurring."
+msgstr "Wiederholungshäufigkeit ist erforderlich, wenn die Aufgabe wiederkehrend ist."
+
+#: apps/web/views/tasks.py:311
+msgid "Invalid recurrence end date format."
+msgstr "Ungültiges Format für Wiederholungs-Enddatum."
+
+#: apps/web/views/tasks.py:322
+msgid "Recurrence max occurrences must be a positive integer."
+msgstr "Maximale Wiederholungen müssen eine positive ganze Zahl sein."
+
+#: apps/web/views/tasks.py:331
+msgid "Recurrence interval must be a positive integer."
+msgstr "Wiederholungsintervall muss eine positive ganze Zahl sein."
+
+#: apps/web/views/tasks.py:341 apps/web/views_backup.py:1630
+msgid "Die ausgewählte Ideen-Karte wurde nicht gefunden."
+msgstr ""
+
+#: apps/web/views/tasks.py:367
+msgid "Fehler beim Erstellen der Aufgabe."
+msgstr ""
+
+#: apps/web/views/tasks.py:528 apps/web/views_backup.py:1823
+msgid "Task archived"
+msgstr "Aufgabe archiviert"
+
+#: apps/web/views/tasks.py:1033 apps/web/views_backup.py:2925
 msgid "Task restored"
 msgstr "Aufgabe wiederhergestellt"
 
-#: apps/web/views.py:2367
+#: apps/web/views/tasks.py:1065 apps/web/views_backup.py:2960
 #, python-format
 msgid "Task permanently deleted: %(title)s"
 msgstr "Aufgabe endgültig gelöscht: %(title)s"
 
 #: templates/web/app/boards/automations.html:4
 #: templates/web/app/boards/automations.html:10
-#: templates/web/app/boards/detail.html:14 templates/web/app/tasks/page.html:39
+#: templates/web/app/boards/detail.html:14
+#: templates/web/app/tasks/page.html:107
 msgid "Automations"
 msgstr "Automatisierungen"
 
@@ -188,7 +302,7 @@ msgid "Automation Rules"
 msgstr "Automatisierungsregeln"
 
 #: templates/web/app/boards/automations.html:35
-#: templates/web/app/projects/page.html:38
+#: templates/web/app/projects/page.html:41
 #: templates/web/app/tasks/automations.html:33
 msgid "Active"
 msgstr "Aktiv"
@@ -220,9 +334,8 @@ msgid "Delete this rule?"
 msgstr "Diese Regel löschen?"
 
 #: templates/web/app/boards/automations.html:62
-#: templates/web/app/boards/automations.html:171
+#: templates/web/app/boards/automations.html:181
 #: templates/web/app/tasks/automations.html:62
-#: templates/web/app/tasks/detail.html:100
 msgid "Delete"
 msgstr "Löschen"
 
@@ -232,21 +345,21 @@ msgid "No automation rules yet."
 msgstr "Noch keine Automatisierungsregeln."
 
 #: templates/web/app/boards/automations.html:75
-#: templates/web/app/boards/automations.html:141
+#: templates/web/app/boards/automations.html:151
 #: templates/web/app/tasks/automations.html:80
-#: templates/web/app/tasks/automations.html:214
+#: templates/web/app/tasks/automations.html:234
 msgid "Create Rule"
 msgstr "Regel erstellen"
 
 #: templates/web/app/boards/automations.html:79
-#: templates/web/app/boards/automations.html:187
+#: templates/web/app/boards/automations.html:197
 #: templates/web/auth/register.html:35
 msgid "Name"
 msgstr "Name"
 
 #: templates/web/app/boards/automations.html:80
 msgid "e.g. Auto-assign on move to In Progress"
-msgstr "z.B. Auto-Zuweisung bei Verschiebung zu In Bearbeitung"
+msgstr "z.B. Automatisch zuweisen bei Verschiebung zu In Bearbeitung"
 
 #: templates/web/app/boards/automations.html:93
 msgid "When moved to column (optional)"
@@ -257,154 +370,179 @@ msgid "Any column"
 msgstr "Beliebige Spalte"
 
 #: templates/web/app/boards/automations.html:103
-#: templates/web/app/boards/automations.html:215
-#: templates/web/app/tasks/automations.html:143
-#: templates/web/app/tasks/automations.html:293
+msgid "When label added/removed (optional)"
+msgstr "Wenn Label hinzugefügt/entfernt (optional)"
+
+#: templates/web/app/boards/automations.html:106
+#: templates/web/app/tasks/automations.html:135
+msgid "Any label"
+msgstr "Beliebiges Label"
+
+#: templates/web/app/boards/automations.html:113
+#: templates/web/app/boards/automations.html:225
+#: templates/web/app/tasks/automations.html:163
+#: templates/web/app/tasks/automations.html:313
 msgid "Action"
 msgstr "Aktion"
 
-#: templates/web/app/boards/automations.html:112
+#: templates/web/app/boards/automations.html:122
 msgid "Move to column (for Move Card action)"
 msgstr "In Spalte verschieben (für Karte verschieben-Aktion)"
 
-#: templates/web/app/boards/automations.html:115
-#: templates/web/app/boards/automations.html:227
+#: templates/web/app/boards/automations.html:125
+#: templates/web/app/boards/automations.html:237
 msgid "Select column"
 msgstr "Spalte auswählen"
 
-#: templates/web/app/boards/automations.html:122
-msgid "Add label (for Add Label action)"
-msgstr "Label hinzufügen (für Label hinzufügen-Aktion)"
+#: templates/web/app/boards/automations.html:132
+#: templates/web/app/boards/automations.html:244
+msgid "Label (for Add/Remove Label action)"
+msgstr "Label (für Label hinzufügen/entfernen-Aktion)"
 
-#: templates/web/app/boards/automations.html:125
+#: templates/web/app/boards/automations.html:135
+#: templates/web/app/boards/automations.html:247
 msgid "Select label"
 msgstr "Label auswählen"
 
-#: templates/web/app/boards/automations.html:132
+#: templates/web/app/boards/automations.html:142
 msgid "Days offset (for Set Due Date action)"
 msgstr "Tage-Versatz (für Fälligkeitsdatum setzen-Aktion)"
 
-#: templates/web/app/boards/automations.html:138
-#: templates/web/app/tasks/automations.html:184
+#: templates/web/app/boards/automations.html:148
+#: templates/web/app/tasks/automations.html:204
 msgid "Assign to user who triggered the action"
 msgstr "Dem Benutzer zuweisen, der die Aktion ausgelöst hat"
 
-#: templates/web/app/boards/automations.html:150
+#: templates/web/app/boards/automations.html:160
 msgid "Card Buttons"
 msgstr "Karten-Buttons"
 
-#: templates/web/app/boards/automations.html:168
-#: templates/web/app/tasks/automations.html:236
+#: templates/web/app/boards/automations.html:178
+#: templates/web/app/tasks/automations.html:256
 msgid "Delete this button?"
 msgstr "Diesen Button löschen?"
 
-#: templates/web/app/boards/automations.html:177
+#: templates/web/app/boards/automations.html:187
 msgid "No card buttons yet."
 msgstr "Noch keine Karten-Buttons."
 
-#: templates/web/app/boards/automations.html:183
-#: templates/web/app/boards/automations.html:234
-#: templates/web/app/tasks/automations.html:267
-#: templates/web/app/tasks/automations.html:323
+#: templates/web/app/boards/automations.html:193
+#: templates/web/app/boards/automations.html:276
+#: templates/web/app/tasks/automations.html:287
+#: templates/web/app/tasks/automations.html:403
 msgid "Create Button"
 msgstr "Button erstellen"
 
-#: templates/web/app/boards/automations.html:188
+#: templates/web/app/boards/automations.html:198
 msgid "e.g. Move Forward"
-msgstr "z.B. Vorwärts verschieben"
+msgstr "z.B. Vorwärts bewegen"
 
-#: templates/web/app/boards/automations.html:193
+#: templates/web/app/boards/automations.html:203
 msgid "Icon"
 msgstr "Symbol"
 
-#: templates/web/app/boards/automations.html:196
+#: templates/web/app/boards/automations.html:206
 msgid "Play"
 msgstr "Abspielen"
 
-#: templates/web/app/boards/automations.html:197
+#: templates/web/app/boards/automations.html:207
 msgid "Check"
-msgstr "Häkchen"
+msgstr "Haken"
 
-#: templates/web/app/boards/automations.html:198
+#: templates/web/app/boards/automations.html:208
 msgid "Arrow"
 msgstr "Pfeil"
 
-#: templates/web/app/boards/automations.html:199
+#: templates/web/app/boards/automations.html:209
 msgid "Star"
 msgstr "Stern"
 
-#: templates/web/app/boards/automations.html:203
-#: templates/web/app/tasks/automations.html:281
+#: templates/web/app/boards/automations.html:213
+#: templates/web/app/projects/page.html:77
+#: templates/web/app/tasks/automations.html:301
 msgid "Color"
 msgstr "Farbe"
 
-#: templates/web/app/boards/automations.html:206
-#: templates/web/app/boards/automations.html:268
-#: templates/web/app/tasks/automations.html:283
-#: templates/web/app/tasks/automations.html:361
-msgid "Indigo"
-msgstr "Indigo"
-
-#: templates/web/app/boards/automations.html:207
-#: templates/web/app/boards/automations.html:266
-#: templates/web/app/tasks/automations.html:284
-#: templates/web/app/tasks/automations.html:359
+#: templates/web/app/boards/automations.html:217
+#: templates/web/app/boards/automations.html:308
+#: templates/web/app/tasks/automations.html:304
+#: templates/web/app/tasks/automations.html:439
 msgid "Green"
 msgstr "Grün"
 
-#: templates/web/app/boards/automations.html:208
-#: templates/web/app/boards/automations.html:264
-#: templates/web/app/tasks/automations.html:285
-#: templates/web/app/tasks/automations.html:357
+#: templates/web/app/boards/automations.html:218
+#: templates/web/app/boards/automations.html:306
+#: templates/web/app/tasks/automations.html:305
+#: templates/web/app/tasks/automations.html:437
 msgid "Red"
 msgstr "Rot"
 
-#: templates/web/app/boards/automations.html:209
-#: templates/web/app/boards/automations.html:265
-#: templates/web/app/tasks/automations.html:286
-#: templates/web/app/tasks/automations.html:358
+#: templates/web/app/boards/automations.html:219
+#: templates/web/app/boards/automations.html:307
+#: templates/web/app/tasks/automations.html:306
+#: templates/web/app/tasks/automations.html:438
 msgid "Yellow"
 msgstr "Gelb"
 
-#: templates/web/app/boards/automations.html:210
-#: templates/web/app/boards/automations.html:267
-#: templates/web/app/tasks/automations.html:287
-#: templates/web/app/tasks/automations.html:360
+#: templates/web/app/boards/automations.html:220
+#: templates/web/app/boards/automations.html:309
+#: templates/web/app/tasks/automations.html:307
+#: templates/web/app/tasks/automations.html:440
 msgid "Blue"
 msgstr "Blau"
 
-#: templates/web/app/boards/automations.html:224
+#: templates/web/app/boards/automations.html:234
 msgid "Move to column"
 msgstr "In Spalte verschieben"
 
-#: templates/web/app/boards/automations.html:244
-#: templates/web/app/tasks/automations.html:334
+#: templates/web/app/boards/automations.html:255
+#: templates/web/app/tasks/automations.html:361
+msgid "Show when has label"
+msgstr "Anzeigen wenn Label vorhanden"
+
+#: templates/web/app/boards/automations.html:258
+#: templates/web/app/tasks/automations.html:363
+msgid "Always show"
+msgstr "Immer anzeigen"
+
+#: templates/web/app/boards/automations.html:265
+#: templates/web/app/tasks/automations.html:371
+msgid "Hide when has label"
+msgstr "Ausblenden wenn Label vorhanden"
+
+#: templates/web/app/boards/automations.html:268
+#: templates/web/app/tasks/automations.html:373
+msgid "Never hide"
+msgstr "Nie ausblenden"
+
+#: templates/web/app/boards/automations.html:286
+#: templates/web/app/tasks/automations.html:414
 msgid "Labels"
 msgstr "Labels"
 
-#: templates/web/app/boards/automations.html:253
-#: templates/web/app/tasks/automations.html:348
+#: templates/web/app/boards/automations.html:295
+#: templates/web/app/tasks/automations.html:428
 msgid "No labels yet."
 msgstr "Noch keine Labels."
 
-#: templates/web/app/boards/automations.html:259
-#: templates/web/app/tasks/automations.html:354
+#: templates/web/app/boards/automations.html:301
+#: templates/web/app/tasks/automations.html:434
 msgid "Label name"
 msgstr "Label-Name"
 
-#: templates/web/app/boards/automations.html:263
-#: templates/web/app/tasks/automations.html:356
+#: templates/web/app/boards/automations.html:305
+#: templates/web/app/tasks/automations.html:436
 msgid "Gray"
 msgstr "Grau"
 
-#: templates/web/app/boards/automations.html:269
-#: templates/web/app/tasks/automations.html:288
-#: templates/web/app/tasks/automations.html:362
+#: templates/web/app/boards/automations.html:311
+#: templates/web/app/tasks/automations.html:308
+#: templates/web/app/tasks/automations.html:442
 msgid "Purple"
 msgstr "Lila"
 
-#: templates/web/app/boards/automations.html:272
-#: templates/web/app/tasks/automations.html:365
+#: templates/web/app/boards/automations.html:314
+#: templates/web/app/tasks/automations.html:445
 msgid "Add"
 msgstr "Hinzufügen"
 
@@ -419,34 +557,36 @@ msgid "Back"
 msgstr "Zurück"
 
 #: templates/web/app/boards/card_detail.html:22
-#: templates/web/app/tasks/detail.html:24
+#: templates/web/app/tasks/detail.html:28
 msgid "Details"
 msgstr "Details"
 
 #: templates/web/app/boards/card_detail.html:26
-#: templates/web/app/projects/page.html:24
-#: templates/web/app/tasks/detail.html:30 templates/web/app/tasks/page.html:87
+#: templates/web/app/projects/page.html:27
+#: templates/web/app/tasks/detail.html:52 templates/web/app/tasks/page.html:158
 msgid "Title"
 msgstr "Titel"
 
 #: templates/web/app/boards/card_detail.html:31
-#: templates/web/app/projects/page.html:29
-#: templates/web/app/tasks/detail.html:44
+#: templates/web/app/projects/page.html:32
+#: templates/web/app/tasks/detail.html:66
 msgid "Description"
 msgstr "Beschreibung"
 
 #: templates/web/app/boards/card_detail.html:36
-#: templates/web/app/tasks/detail.html:94
+#: templates/web/app/tasks/detail.html:117
 msgid "Save"
 msgstr "Speichern"
 
 #: templates/web/app/boards/card_detail.html:44
-#: templates/web/app/tasks/detail.html:136
+#: templates/web/app/tasks/detail.html:34
+#: templates/web/app/tasks/detail.html:226
 msgid "Links"
 msgstr "Links"
 
 #: templates/web/app/boards/card_detail.html:52
-#: templates/web/app/tasks/detail.html:144
+#: templates/web/app/tasks/detail.html:155
+#: templates/web/app/tasks/detail.html:234
 msgid "No links yet."
 msgstr "Noch keine Links."
 
@@ -464,7 +604,7 @@ msgstr "Screenshots"
 
 #: templates/web/app/boards/card_detail.html:74
 #: templates/web/app/calendar.html:30 templates/web/app/dashboard.html:71
-#: templates/web/app/tasks/_task_card.html:58
+#: templates/web/app/tasks/_task_card.html:104
 #: templates/web/app/team/page.html:78
 msgid "Open"
 msgstr "Öffnen"
@@ -478,7 +618,8 @@ msgid "Upload"
 msgstr "Hochladen"
 
 #: templates/web/app/boards/detail.html:4 templates/web/app/boards/page.html:4
-#: templates/web/app/boards/page.html:9 templates/web/app/layout.html:18
+#: templates/web/app/boards/page.html:9 templates/web/app/layout.html:70
+#: templates/web/app/layout.html:210
 msgid "Boards"
 msgstr "Boards"
 
@@ -488,7 +629,7 @@ msgstr "Idee hinzufügen…"
 
 #: templates/web/app/boards/detail.html:37
 #: templates/web/app/boards/page.html:22
-#: templates/web/app/projects/page.html:91
+#: templates/web/app/projects/page.html:169
 msgid "Create"
 msgstr "Erstellen"
 
@@ -533,11 +674,11 @@ msgid "No boards yet."
 msgstr "Noch keine Boards."
 
 #: templates/web/app/calendar.html:5 templates/web/app/calendar.html:10
-#: templates/web/app/layout.html:19
-#: templates/web/app/projects/_project_row.html:26
+#: templates/web/app/layout.html:76 templates/web/app/layout.html:216
+#: templates/web/app/projects/_project_row.html:39
 #: templates/web/app/projects/calendar.html:5
 #: templates/web/app/projects/calendar.html:11
-#: templates/web/app/tasks/page.html:31
+#: templates/web/app/tasks/page.html:99
 msgid "Calendar"
 msgstr "Kalender"
 
@@ -548,44 +689,45 @@ msgstr "Ihr Zeitplan über alle Projekte hinweg."
 #: templates/web/app/calendar.html:18
 #: templates/web/app/projects/calendar.html:27
 msgid "In progress (unscheduled)"
-msgstr "In Bearbeitung (ungeplant)"
+msgstr "In Bearbeitung (nicht geplant)"
 
 #: templates/web/app/calendar.html:26
 #: templates/web/app/projects/calendar.html:35
 #: templates/web/app/projects/calendar.html:50
 #: templates/web/app/projects/calendar.html:249
-#: templates/web/app/tasks/_task_card.html:38
-#: templates/web/app/tasks/_task_card.html:52
+#: templates/web/app/tasks/_task_card.html:78
+#: templates/web/app/tasks/_task_card.html:92
 #: templates/web/app/tasks/_task_row.html:18
-#: templates/web/app/tasks/detail.html:74 templates/web/app/tasks/page.html:92
+#: templates/web/app/tasks/detail.html:96 templates/web/app/tasks/page.html:163
 msgid "Assigned to"
 msgstr "Zugewiesen an"
 
 #: templates/web/app/calendar.html:40
 #: templates/web/app/projects/calendar.html:64
+#: templates/web/app/tasks/page.html:27
 msgid "Filters"
 msgstr "Filter"
 
 #: templates/web/app/calendar.html:43 templates/web/app/tasks/archive.html:19
-#: templates/web/app/tasks/automations.html:123
-#: templates/web/app/tasks/automations.html:311
-#: templates/web/app/tasks/detail.html:12 templates/web/app/tasks/page.html:52
-#: templates/web/app/tasks/page.html:79
+#: templates/web/app/tasks/automations.html:143
+#: templates/web/app/tasks/automations.html:351
+#: templates/web/app/tasks/detail.html:12 templates/web/app/tasks/page.html:120
+#: templates/web/app/tasks/page.html:148
 msgid "Project"
 msgstr "Projekt"
 
-#: templates/web/app/calendar.html:45 templates/web/app/projects/page.html:98
+#: templates/web/app/calendar.html:45 templates/web/app/projects/page.html:176
 #: templates/web/app/tasks/archive.html:23
-#: templates/web/app/tasks/automations.html:125
-#: templates/web/app/tasks/automations.html:313
-#: templates/web/app/tasks/page.html:56
+#: templates/web/app/tasks/automations.html:145
+#: templates/web/app/tasks/automations.html:353
+#: templates/web/app/tasks/page.html:124
 msgid "All projects"
 msgstr "Alle Projekte"
 
 #: templates/web/app/calendar.html:53
 #: templates/web/app/projects/calendar.html:67
-#: templates/web/app/projects/page.html:35
-#: templates/web/app/tasks/detail.html:52
+#: templates/web/app/projects/page.html:38
+#: templates/web/app/tasks/detail.html:74 templates/web/app/tasks/page.html:66
 msgid "Status"
 msgstr "Status"
 
@@ -596,14 +738,16 @@ msgstr "Alle Status"
 
 #: templates/web/app/calendar.html:56
 #: templates/web/app/projects/calendar.html:71
+#: templates/web/app/tasks/_task_card.html:45
 #: templates/web/app/tasks/_task_row.html:27
-#: templates/web/app/tasks/detail.html:55 templates/web/app/tasks/page.html:178
+#: templates/web/app/tasks/detail.html:77 templates/web/app/tasks/page.html:68
+#: templates/web/app/tasks/page.html:282 templates/web/app/tasks/page.html:746
 msgid "Todo"
 msgstr "Zu erledigen"
 
 #: templates/web/app/calendar.html:57
 #: templates/web/app/projects/calendar.html:72
-#: templates/web/app/tasks/detail.html:56 templates/web/app/tasks/page.html:192
+#: templates/web/app/tasks/detail.html:78 templates/web/app/tasks/page.html:296
 msgid "In progress"
 msgstr "In Bearbeitung"
 
@@ -614,7 +758,7 @@ msgstr "Erledigte anzeigen"
 
 #: templates/web/app/calendar.html:177
 #: templates/web/app/projects/calendar.html:295
-#: templates/web/app/tasks/page.html:26
+#: templates/web/app/tasks/page.html:94
 msgid "Today"
 msgstr "Heute"
 
@@ -643,23 +787,25 @@ msgid "Could not refresh calendar."
 msgstr "Kalender konnte nicht aktualisiert werden."
 
 #: templates/web/app/dashboard.html:4 templates/web/app/dashboard.html:9
-#: templates/web/app/layout.html:15
+#: templates/web/app/layout.html:52 templates/web/app/layout.html:192
 msgid "Dashboard"
 msgstr "Dashboard"
 
 #: templates/web/app/dashboard.html:10
 msgid "A clean overview — fast actions, no noise."
-msgstr "Ein klarer Überblick — schnelle Aktionen, kein Lärm."
+msgstr "Eine klare Übersicht — schnelle Aktionen, kein Lärm."
 
 #: templates/web/app/dashboard.html:13 templates/web/app/dashboard.html:21
-#: templates/web/app/layout.html:16 templates/web/app/projects/page.html:4
+#: templates/web/app/layout.html:58 templates/web/app/layout.html:198
+#: templates/web/app/projects/page.html:4
 #: templates/web/app/projects/page.html:9
 msgid "Projects"
 msgstr "Projekte"
 
 #: templates/web/app/dashboard.html:14 templates/web/app/dashboard.html:27
-#: templates/web/app/layout.html:17 templates/web/app/tasks/detail.html:4
-#: templates/web/app/tasks/page.html:4 templates/web/app/tasks/page.html:9
+#: templates/web/app/layout.html:64 templates/web/app/layout.html:204
+#: templates/web/app/tasks/detail.html:4 templates/web/app/tasks/page.html:4
+#: templates/web/app/tasks/page.html:9
 msgid "Tasks"
 msgstr "Aufgaben"
 
@@ -669,7 +815,7 @@ msgstr "Planen, verfolgen, liefern."
 
 #: templates/web/app/dashboard.html:29
 msgid "Turn chaos into momentum."
-msgstr "Chaos in Schwung verwandeln."
+msgstr "Verwandeln Sie Chaos in Schwung."
 
 #: templates/web/app/dashboard.html:33
 msgid "Marketing tasks"
@@ -689,7 +835,7 @@ msgstr "Richten Sie Ihr erstes Projekt ein"
 
 #: templates/web/app/dashboard.html:44
 msgid "We can turn this into a guided onboarding with templates and streaks."
-msgstr "Wir können dies in ein geführtes Onboarding mit Vorlagen und Streaks verwandeln."
+msgstr "Wir können dies in ein geführtes Onboarding mit Vorlagen und Serien verwandeln."
 
 #: templates/web/app/dashboard.html:46
 msgid "Create project"
@@ -711,36 +857,38 @@ msgstr "Akzeptieren Sie eine Einladung, um einem Workspace beizutreten."
 msgid "View team"
 msgstr "Team anzeigen"
 
-#: templates/web/app/layout.html:11
+#: templates/web/app/layout.html:13 templates/web/app/layout.html:157
 msgid "Workspace"
 msgstr "Workspace"
 
-#: templates/web/app/layout.html:20 templates/web/app/team/page.html:4
-#: templates/web/app/team/page.html:9
-msgid "Team"
-msgstr "Team"
-
-#: templates/web/app/layout.html:42
-msgid "Switch"
-msgstr "Wechseln"
-
-#: templates/web/app/layout.html:47
-msgid "Logout"
-msgstr "Abmelden"
-
-#: templates/web/app/layout.html:52
+#: templates/web/app/layout.html:28 templates/web/app/layout.html:170
 msgid "Workspaces"
 msgstr "Workspaces"
 
-#: templates/web/app/layout.html:61 templates/web/app/workspaces/new.html:4
+#: templates/web/app/layout.html:37 templates/web/app/layout.html:179
+#: templates/web/app/workspaces/new.html:4
 #: templates/web/app/workspaces/new.html:8
 msgid "New workspace"
 msgstr "Neuer Workspace"
 
-#: templates/web/app/layout.html:62 templates/web/app/onboarding.html:30
+#: templates/web/app/layout.html:38 templates/web/app/layout.html:180
+#: templates/web/app/onboarding.html:30
 #: templates/web/app/workspaces/new.html:19
 msgid "Create workspace"
 msgstr "Workspace erstellen"
+
+#: templates/web/app/layout.html:82 templates/web/app/layout.html:222
+#: templates/web/app/team/page.html:4 templates/web/app/team/page.html:9
+msgid "Team"
+msgstr "Team"
+
+#: templates/web/app/layout.html:95 templates/web/app/layout.html:233
+msgid "Logout"
+msgstr "Abmelden"
+
+#: templates/web/app/layout.html:122
+msgid "Toggle theme"
+msgstr "Design umschalten"
 
 #: templates/web/app/onboarding.html:10
 msgid "Create your workspace"
@@ -763,38 +911,85 @@ msgstr "Acme Studio"
 msgid "Tip: you can create multiple workspaces later and switch anytime."
 msgstr "Tipp: Sie können später mehrere Workspaces erstellen und jederzeit wechseln."
 
-#: templates/web/app/projects/_project_row.html:13
+#: templates/web/app/projects/_project_row.html:14
 msgid "Are you sure you want to complete this project?"
-msgstr "Möchten Sie dieses Projekt wirklich abschließen?"
+msgstr "Sind Sie sicher, dass Sie dieses Projekt abschließen möchten?"
 
-#: templates/web/app/projects/_project_row.html:16
+#: templates/web/app/projects/_project_row.html:17
 msgid "Complete"
 msgstr "Abschließen"
 
-#: templates/web/app/projects/_project_row.html:22
+#: templates/web/app/projects/_project_row.html:26
+msgid "Are you sure you want to archive this project?"
+msgstr "Sind Sie sicher, dass Sie dieses Projekt archivieren möchten?"
+
+#: templates/web/app/projects/_project_row.html:29
+#: templates/web/app/tasks/detail.html:124
+#: templates/web/app/tasks/page.html:114
+msgid "Archive"
+msgstr "Archivieren"
+
+#: templates/web/app/projects/_project_row.html:35
 #: templates/web/app/projects/calendar.html:16
 msgid "Kanban"
 msgstr "Kanban"
 
-#: templates/web/app/projects/_project_row.html:30
+#: templates/web/app/projects/_project_row.html:43
 #, python-format
 msgid "Overdue %(days)sd"
 msgstr "Überfällig %(days)sd"
 
-#: templates/web/app/projects/_project_row.html:34
+#: templates/web/app/projects/_project_row.html:47
 msgid "Ends today"
 msgstr "Endet heute"
 
-#: templates/web/app/projects/_project_row.html:38
-#: templates/web/app/projects/_project_row.html:42
-#: templates/web/app/projects/_project_row.html:46
+#: templates/web/app/projects/_project_row.html:51
+#: templates/web/app/projects/_project_row.html:55
+#: templates/web/app/projects/_project_row.html:59
 #, python-format
 msgid "Ends in %(days)sd"
 msgstr "Endet in %(days)sd"
 
+#: templates/web/app/projects/archive.html:4
+#: templates/web/app/projects/archive.html:9
+#: templates/web/app/projects/page.html:13
+msgid "Archived Projects"
+msgstr "Archivierte Projekte"
+
+#: templates/web/app/projects/archive.html:10
+msgid "Restore archived projects"
+msgstr "Archivierte Projekte wiederherstellen"
+
+#: templates/web/app/projects/archive.html:13
+msgid "Back to Projects"
+msgstr "Zurück zu Projekten"
+
+#: templates/web/app/projects/archive.html:44
+#: templates/web/app/tasks/archive.html:71
+msgid "Archived"
+msgstr "Archiviert"
+
+#: templates/web/app/projects/archive.html:46
+#: templates/web/app/tasks/archive.html:73
+msgid "by"
+msgstr "von"
+
+#: templates/web/app/projects/archive.html:68
+#: templates/web/app/tasks/archive.html:92
+msgid "Restore"
+msgstr "Wiederherstellen"
+
+#: templates/web/app/projects/archive.html:81
+msgid "No archived projects"
+msgstr "Keine archivierten Projekte"
+
+#: templates/web/app/projects/archive.html:82
+msgid "Archived projects will appear here"
+msgstr "Archivierte Projekte werden hier angezeigt"
+
 #: templates/web/app/projects/calendar.html:23
 msgid "Unscheduled tasks"
-msgstr "Ungeplante Aufgaben"
+msgstr "Nicht geplante Aufgaben"
 
 #: templates/web/app/projects/calendar.html:42
 msgid "Backlog"
@@ -802,7 +997,7 @@ msgstr "Backlog"
 
 #: templates/web/app/projects/calendar.html:53
 msgid "No unscheduled tasks."
-msgstr "Keine ungeplanten Aufgaben."
+msgstr "Keine nicht geplanten Aufgaben."
 
 #: templates/web/app/projects/calendar.html:60
 msgid "Schedule"
@@ -810,11 +1005,11 @@ msgstr "Planen"
 
 #: templates/web/app/projects/calendar.html:224
 msgid "Unschedule this task?"
-msgstr "Diese Aufgabe aus dem Plan entfernen?"
+msgstr "Diese Aufgabe aus dem Zeitplan entfernen?"
 
 #: templates/web/app/projects/calendar.html:256
 msgid "Could not unschedule task. Please try again."
-msgstr "Aufgabe konnte nicht aus dem Plan entfernt werden. Bitte versuchen Sie es erneut."
+msgstr "Aufgabe konnte nicht aus dem Zeitplan entfernt werden. Bitte versuchen Sie es erneut."
 
 #: templates/web/app/projects/calendar.html:336
 #: templates/web/app/projects/calendar.html:344
@@ -824,100 +1019,106 @@ msgstr "Aufgabe konnte nicht geplant werden. Bitte versuchen Sie es erneut."
 
 #: templates/web/app/projects/page.html:10
 msgid "Create momentum. Keep scope tight."
-msgstr "Schwung erzeugen. Umfang begrenzen."
+msgstr "Schaffen Sie Schwung. Halten Sie den Umfang eng."
 
-#: templates/web/app/projects/page.html:16
+#: templates/web/app/projects/page.html:19
 msgid "New project"
 msgstr "Neues Projekt"
 
-#: templates/web/app/projects/page.html:25
+#: templates/web/app/projects/page.html:28
 msgid "e.g. Launch Q1 Campaign"
 msgstr "z.B. Q1-Kampagne starten"
 
-#: templates/web/app/projects/page.html:30
+#: templates/web/app/projects/page.html:33
 msgid "..."
 msgstr "..."
 
-#: templates/web/app/projects/page.html:39
+#: templates/web/app/projects/page.html:42
 msgid "Completed"
 msgstr "Abgeschlossen"
 
-#: templates/web/app/projects/page.html:40
+#: templates/web/app/projects/page.html:43
 msgid "Cancelled"
 msgstr "Abgebrochen"
 
-#: templates/web/app/projects/page.html:44
-#: templates/web/app/tasks/detail.html:62
+#: templates/web/app/projects/page.html:47
+#: templates/web/app/tasks/detail.html:84 templates/web/app/tasks/page.html:51
 msgid "Priority"
 msgstr "Priorität"
 
-#: templates/web/app/projects/page.html:46
-#: templates/web/app/tasks/detail.html:65
+#: templates/web/app/projects/page.html:49
+#: templates/web/app/tasks/detail.html:87 templates/web/app/tasks/page.html:55
+#: templates/web/app/tasks/page.html:760
 msgid "Low"
 msgstr "Niedrig"
 
-#: templates/web/app/projects/page.html:47
-#: templates/web/app/tasks/detail.html:66
+#: templates/web/app/projects/page.html:50
+#: templates/web/app/tasks/detail.html:88 templates/web/app/tasks/page.html:54
+#: templates/web/app/tasks/page.html:759
 msgid "Medium"
 msgstr "Mittel"
 
-#: templates/web/app/projects/page.html:48
-#: templates/web/app/tasks/detail.html:67
+#: templates/web/app/projects/page.html:51
+#: templates/web/app/tasks/detail.html:89 templates/web/app/tasks/page.html:53
+#: templates/web/app/tasks/page.html:758
 msgid "High"
 msgstr "Hoch"
 
-#: templates/web/app/projects/page.html:53
+#: templates/web/app/projects/page.html:56
 msgid "Category"
 msgstr "Kategorie"
 
-#: templates/web/app/projects/page.html:75
+#: templates/web/app/projects/page.html:153
 msgid "Start date"
 msgstr "Startdatum"
 
-#: templates/web/app/projects/page.html:80
+#: templates/web/app/projects/page.html:158
+#: templates/web/app/tasks/detail.html:179
+#: templates/web/app/tasks/page.html:221
 msgid "End date"
 msgstr "Enddatum"
 
-#: templates/web/app/projects/page.html:86
+#: templates/web/app/projects/page.html:164
 msgid "Budget"
 msgstr "Budget"
 
-#: templates/web/app/projects/page.html:87
+#: templates/web/app/projects/page.html:165
 msgid "0.00"
 msgstr "0,00"
 
-#: templates/web/app/projects/page.html:99
-msgid "total"
-msgstr "gesamt"
-
-#: templates/web/app/projects/page.html:105
+#: templates/web/app/projects/page.html:183
 msgid "No projects yet. Create the first one on the left."
 msgstr "Noch keine Projekte. Erstellen Sie das erste auf der linken Seite."
 
-#: templates/web/app/tasks/_task_card.html:21
-#: templates/web/app/tasks/detail.html:125
-#: templates/web/app/tasks/page.html:102
+#: templates/web/app/tasks/_task_card.html:45
+#: templates/web/app/tasks/page.html:69 templates/web/app/tasks/page.html:747
+msgid "In Progress"
+msgstr "In Bearbeitung"
+
+#: templates/web/app/tasks/_task_card.html:60
+#: templates/web/app/tasks/detail.html:215
+#: templates/web/app/tasks/page.html:173
 msgid "Idea"
 msgstr "Idee"
 
-#: templates/web/app/tasks/_task_card.html:46
-#: templates/web/app/tasks/page.html:94
+#: templates/web/app/tasks/_task_card.html:86
+#: templates/web/app/tasks/page.html:165
 msgid "Me"
 msgstr "Ich"
 
-#: templates/web/app/tasks/_task_card.html:66
+#: templates/web/app/tasks/_task_card.html:110
 msgid "Stop"
 msgstr "Stoppen"
 
-#: templates/web/app/tasks/_task_card.html:66
+#: templates/web/app/tasks/_task_card.html:110
 msgid "Start"
 msgstr "Starten"
 
-#: templates/web/app/tasks/_task_card.html:72
+#: templates/web/app/tasks/_task_card.html:116
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: templates/web/app/tasks/_task_card.html:84
+#: templates/web/app/tasks/_task_card.html:141
 #: templates/web/app/tasks/_task_time_entries.html:5
 msgid "Time entries"
 msgstr "Zeiteinträge"
@@ -947,18 +1148,6 @@ msgstr "Zurück zu Aufgaben"
 #: templates/web/app/tasks/archive.html:44
 msgid "High Priority"
 msgstr "Hohe Priorität"
-
-#: templates/web/app/tasks/archive.html:71
-msgid "Archived"
-msgstr "Archiviert"
-
-#: templates/web/app/tasks/archive.html:73
-msgid "by"
-msgstr "von"
-
-#: templates/web/app/tasks/archive.html:92
-msgid "Restore"
-msgstr "Wiederherstellen"
 
 #: templates/web/app/tasks/archive.html:96
 msgid "Permanently delete this task? This cannot be undone!"
@@ -1007,7 +1196,7 @@ msgstr "Regelname"
 
 #: templates/web/app/tasks/automations.html:99
 msgid "e.g. Auto-complete when moved to Done"
-msgstr "z.B. Auto-Abschluss bei Verschiebung zu Erledigt"
+msgstr "z.B. Automatisch abschließen bei Verschiebung zu Erledigt"
 
 #: templates/web/app/tasks/automations.html:105
 msgid "Select trigger..."
@@ -1019,8 +1208,10 @@ msgstr "Wenn Status wechselt zu"
 
 #: templates/web/app/tasks/automations.html:113
 #: templates/web/app/tasks/automations.html:123
-#: templates/web/app/tasks/automations.html:311
-#: templates/web/app/tasks/page.html:119
+#: templates/web/app/tasks/automations.html:133
+#: templates/web/app/tasks/automations.html:143
+#: templates/web/app/tasks/automations.html:351
+#: templates/web/app/tasks/page.html:190
 msgid "optional"
 msgstr "optional"
 
@@ -1028,81 +1219,104 @@ msgstr "optional"
 msgid "Any status"
 msgstr "Beliebiger Status"
 
-#: templates/web/app/tasks/automations.html:139
+#: templates/web/app/tasks/automations.html:123
+msgid "When priority changes to"
+msgstr "Wenn Priorität wechselt zu"
+
+#: templates/web/app/tasks/automations.html:125
+msgid "Any priority"
+msgstr "Beliebige Priorität"
+
+#: templates/web/app/tasks/automations.html:133
+msgid "When this label is added/removed"
+msgstr "Wenn dieses Label hinzugefügt/entfernt wird"
+
+#: templates/web/app/tasks/automations.html:159
 msgid "Then (Action)"
 msgstr "Dann (Aktion)"
 
-#: templates/web/app/tasks/automations.html:145
-#: templates/web/app/tasks/automations.html:295
+#: templates/web/app/tasks/automations.html:165
+#: templates/web/app/tasks/automations.html:315
 msgid "Select action..."
 msgstr "Aktion auswählen..."
 
-#: templates/web/app/tasks/automations.html:154
-#: templates/web/app/tasks/automations.html:302
+#: templates/web/app/tasks/automations.html:174
+#: templates/web/app/tasks/automations.html:323
 msgid "Change status to"
 msgstr "Status ändern zu"
 
-#: templates/web/app/tasks/automations.html:163
+#: templates/web/app/tasks/automations.html:183
+#: templates/web/app/tasks/automations.html:332
 msgid "Set priority to"
 msgstr "Priorität setzen auf"
 
-#: templates/web/app/tasks/automations.html:172
+#: templates/web/app/tasks/automations.html:192
 msgid "Label"
 msgstr "Label"
 
-#: templates/web/app/tasks/automations.html:174
+#: templates/web/app/tasks/automations.html:194
+#: templates/web/app/tasks/automations.html:343
 msgid "Select label..."
 msgstr "Label auswählen..."
 
-#: templates/web/app/tasks/automations.html:186
+#: templates/web/app/tasks/automations.html:206
 msgid "Or assign to specific user"
 msgstr "Oder bestimmtem Benutzer zuweisen"
 
-#: templates/web/app/tasks/automations.html:188
+#: templates/web/app/tasks/automations.html:208
 msgid "Select user..."
 msgstr "Benutzer auswählen..."
 
-#: templates/web/app/tasks/automations.html:196
+#: templates/web/app/tasks/automations.html:216
 msgid "Days from now"
 msgstr "Tage ab jetzt"
 
-#: templates/web/app/tasks/automations.html:201
+#: templates/web/app/tasks/automations.html:221
 msgid "Move to project"
 msgstr "Zu Projekt verschieben"
 
-#: templates/web/app/tasks/automations.html:203
+#: templates/web/app/tasks/automations.html:223
 msgid "Select project..."
 msgstr "Projekt auswählen..."
 
-#: templates/web/app/tasks/automations.html:225
+#: templates/web/app/tasks/automations.html:245
 msgid "Task Buttons"
 msgstr "Aufgaben-Buttons"
 
-#: templates/web/app/tasks/automations.html:226
+#: templates/web/app/tasks/automations.html:246
 msgid "One-click actions for your tasks"
 msgstr "Ein-Klick-Aktionen für Ihre Aufgaben"
 
-#: templates/web/app/tasks/automations.html:257
+#: templates/web/app/tasks/automations.html:277
 msgid "No task buttons yet."
 msgstr "Noch keine Aufgaben-Buttons."
 
-#: templates/web/app/tasks/automations.html:276
+#: templates/web/app/tasks/automations.html:296
 msgid "Button Name"
 msgstr "Button-Name"
 
-#: templates/web/app/tasks/automations.html:277
+#: templates/web/app/tasks/automations.html:297
 msgid "e.g. Mark as Done"
 msgstr "z.B. Als erledigt markieren"
 
-#: templates/web/app/tasks/automations.html:296
-msgid "Change Status"
-msgstr "Status ändern"
+#: templates/web/app/tasks/automations.html:341
+msgid "Label (for Add/Remove Label)"
+msgstr "Label (für Label hinzufügen/entfernen)"
 
-#: templates/web/app/tasks/automations.html:297
-msgid "Set Priority"
-msgstr "Priorität setzen"
+#: templates/web/app/tasks/automations.html:381
+msgid "Show on status"
+msgstr "Anzeigen bei Status"
 
-#: templates/web/app/tasks/automations.html:335
+#: templates/web/app/tasks/automations.html:387
+#: templates/web/app/tasks/automations.html:397
+msgid "Hold Ctrl/Cmd to select multiple"
+msgstr "Strg/Cmd gedrückt halten für Mehrfachauswahl"
+
+#: templates/web/app/tasks/automations.html:391
+msgid "Show on priority"
+msgstr "Anzeigen bei Priorität"
+
+#: templates/web/app/tasks/automations.html:415
 msgid "Organize and categorize your tasks"
 msgstr "Organisieren und kategorisieren Sie Ihre Aufgaben"
 
@@ -1110,31 +1324,75 @@ msgstr "Organisieren und kategorisieren Sie Ihre Aufgaben"
 msgid "Task"
 msgstr "Aufgabe"
 
-#: templates/web/app/tasks/detail.html:37
+#: templates/web/app/tasks/detail.html:31
+msgid "Time Tracking"
+msgstr "Zeiterfassung"
+
+#: templates/web/app/tasks/detail.html:38
+msgid "Recurring"
+msgstr "Wiederkehrend"
+
+#: templates/web/app/tasks/detail.html:59
 msgid "Subtitle"
 msgstr "Untertitel"
 
-#: templates/web/app/tasks/detail.html:84 templates/web/app/tasks/page.html:125
+#: templates/web/app/tasks/detail.html:106
+#: templates/web/app/tasks/page.html:196
 msgid "Due date"
 msgstr "Fälligkeitsdatum"
 
-#: templates/web/app/tasks/detail.html:103
+#: templates/web/app/tasks/detail.html:122
+msgid "Archive this task?"
+msgstr "Diese Aufgabe archivieren?"
+
+#: templates/web/app/tasks/detail.html:128
 msgid "You don't have permission to edit this task."
 msgstr "Sie haben keine Berechtigung, diese Aufgabe zu bearbeiten."
 
-#: templates/web/app/tasks/detail.html:110
+#: templates/web/app/tasks/detail.html:136
+msgid "Time tracking functionality would go here"
+msgstr "Zeiterfassungsfunktion würde hier erscheinen"
+
+#: templates/web/app/tasks/detail.html:138
+msgid "Total tracked time"
+msgstr "Gesamt erfasste Zeit"
+
+#: templates/web/app/tasks/detail.html:146
+msgid "Link management functionality would go here"
+msgstr "Link-Verwaltungsfunktion würde hier erscheinen"
+
+#: templates/web/app/tasks/detail.html:165
+msgid "Recurring task settings"
+msgstr "Wiederkehrende Aufgaben-Einstellungen"
+
+#: templates/web/app/tasks/detail.html:170
+#: templates/web/app/tasks/page.html:209
+msgid "Frequency"
+msgstr "Häufigkeit"
+
+#: templates/web/app/tasks/detail.html:174
+#: templates/web/app/tasks/page.html:216
+msgid "Interval"
+msgstr "Intervall"
+
+#: templates/web/app/tasks/detail.html:185
+#: templates/web/app/tasks/page.html:226
+msgid "Max occurrences"
+msgstr "Maximale Wiederholungen"
+
+#: templates/web/app/tasks/detail.html:200
 msgid "Meta"
 msgstr "Meta"
 
-#: templates/web/app/tasks/detail.html:113
+#: templates/web/app/tasks/detail.html:203
 msgid "Tracked"
 msgstr "Erfasst"
 
-#: templates/web/app/tasks/detail.html:117
+#: templates/web/app/tasks/detail.html:207
 msgid "Updated"
 msgstr "Aktualisiert"
 
-#: templates/web/app/tasks/detail.html:129
+#: templates/web/app/tasks/detail.html:219
 msgid "Open idea card"
 msgstr "Ideen-Karte öffnen"
 
@@ -1142,74 +1400,139 @@ msgstr "Ideen-Karte öffnen"
 msgid "Small wins, compounding daily."
 msgstr "Kleine Erfolge, täglich wachsend."
 
-#: templates/web/app/tasks/page.html:18
+#: templates/web/app/tasks/page.html:20
+msgid "Search tasks by title, description, or assignee..."
+msgstr "Aufgaben nach Titel, Beschreibung oder Zugewiesenem durchsuchen..."
+
+#: templates/web/app/tasks/page.html:30 templates/web/app/tasks/page.html:609
+msgid "Select"
+msgstr "Auswählen"
+
+#: templates/web/app/tasks/page.html:43
+msgid "Assignee"
+msgstr "Zugewiesen an"
+
+#: templates/web/app/tasks/page.html:59
+msgid "Due Date"
+msgstr "Fälligkeitsdatum"
+
+#: templates/web/app/tasks/page.html:75
+msgid "Clear"
+msgstr "Löschen"
+
+#: templates/web/app/tasks/page.html:76 templates/web/app/tasks/page.html:762
+msgid "Apply"
+msgstr "Anwenden"
+
+#: templates/web/app/tasks/page.html:86
 msgid "All"
 msgstr "Alle"
 
-#: templates/web/app/tasks/page.html:22
+#: templates/web/app/tasks/page.html:90
 msgid "Inbox"
 msgstr "Posteingang"
 
-#: templates/web/app/tasks/page.html:46
-msgid "Archive"
-msgstr "Archiv"
-
-#: templates/web/app/tasks/page.html:66
+#: templates/web/app/tasks/page.html:134
 msgid "Quick add"
 msgstr "Schnell hinzufügen"
 
-#: templates/web/app/tasks/page.html:69
+#: templates/web/app/tasks/page.html:137
 msgid "Create a project first."
 msgstr "Erstellen Sie zuerst ein Projekt."
 
-#: templates/web/app/tasks/page.html:70
+#: templates/web/app/tasks/page.html:138
 msgid "Go to projects"
-msgstr "Zu Projekten gehen"
+msgstr "Zu Projekten"
 
-#: templates/web/app/tasks/page.html:88
+#: templates/web/app/tasks/page.html:159
 msgid "e.g. Write landing copy"
 msgstr "z.B. Landing-Page-Text schreiben"
 
-#: templates/web/app/tasks/page.html:104
+#: templates/web/app/tasks/page.html:175
 msgid "No idea"
 msgstr "Keine Idee"
 
-#: templates/web/app/tasks/page.html:113
+#: templates/web/app/tasks/page.html:184
 msgid "Link"
 msgstr "Link"
 
-#: templates/web/app/tasks/page.html:118
+#: templates/web/app/tasks/page.html:189
 msgid "Link title"
 msgstr "Link-Titel"
 
-#: templates/web/app/tasks/page.html:130
+#: templates/web/app/tasks/page.html:204
+msgid "Recurring task"
+msgstr "Wiederkehrende Aufgabe"
+
+#: templates/web/app/tasks/page.html:211
+msgid "Weekly"
+msgstr "Wöchentlich"
+
+#: templates/web/app/tasks/page.html:212
+msgid "Monthly"
+msgstr "Monatlich"
+
+#: templates/web/app/tasks/page.html:234
 msgid "Add task"
 msgstr "Aufgabe hinzufügen"
 
-#: templates/web/app/tasks/page.html:136
+#: templates/web/app/tasks/page.html:240
 msgid "Time overview"
 msgstr "Zeitübersicht"
 
-#: templates/web/app/tasks/page.html:140
+#: templates/web/app/tasks/page.html:244
 msgid "Total tracked"
 msgstr "Gesamt erfasst"
 
-#: templates/web/app/tasks/page.html:144
+#: templates/web/app/tasks/page.html:248
 msgid "Top tasks"
 msgstr "Top-Aufgaben"
 
-#: templates/web/app/tasks/page.html:154 templates/web/app/tasks/page.html:168
+#: templates/web/app/tasks/page.html:258 templates/web/app/tasks/page.html:272
 msgid "No tracked time yet."
 msgstr "Noch keine erfasste Zeit."
 
-#: templates/web/app/tasks/page.html:185 templates/web/app/tasks/page.html:199
-#: templates/web/app/tasks/page.html:213
+#: templates/web/app/tasks/page.html:289 templates/web/app/tasks/page.html:303
+#: templates/web/app/tasks/page.html:317
 msgid "Drop tasks here"
 msgstr "Aufgaben hier ablegen"
 
-#: templates/web/app/tasks/page.html:340 templates/web/app/tasks/page.html:403
+#: templates/web/app/tasks/page.html:461 templates/web/app/tasks/page.html:571
 msgid "Could not move task. Please try again."
 msgstr "Aufgabe konnte nicht verschoben werden. Bitte versuchen Sie es erneut."
+
+#: templates/web/app/tasks/page.html:511
+msgid "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+
+#: templates/web/app/tasks/page.html:587
+#, python-brace-format
+msgid "${count} tasks selected"
+msgstr "${count} Aufgaben ausgewählt"
+
+#: templates/web/app/tasks/page.html:604 templates/web/app/tasks/page.html:763
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: templates/web/app/tasks/page.html:672
+msgid "Tasks updated successfully"
+msgstr "Aufgaben erfolgreich aktualisiert"
+
+#: templates/web/app/tasks/page.html:689
+msgid "Filters applied (frontend only for now)"
+msgstr "Filter angewendet (vorerst nur Frontend)"
+
+#: templates/web/app/tasks/page.html:745
+msgid "Change Status"
+msgstr "Status ändern"
+
+#: templates/web/app/tasks/page.html:751
+msgid "Assign To"
+msgstr "Zuweisen an"
+
+#: templates/web/app/tasks/page.html:757
+msgid "Set Priority"
+msgstr "Priorität setzen"
 
 #: templates/web/app/team/invite_accept.html:4
 #: templates/web/app/team/invite_accept.html:8
@@ -1235,7 +1558,7 @@ msgstr "Workspace beitreten"
 
 #: templates/web/app/team/page.html:10
 msgid "Manage members and invites for this workspace."
-msgstr "Mitglieder und Einladungen für diesen Workspace verwalten."
+msgstr "Verwalten Sie Mitglieder und Einladungen für diesen Workspace."
 
 #: templates/web/app/team/page.html:16
 msgid "Invite member"
@@ -1341,35 +1664,3 @@ msgstr "Konto erstellen"
 #: templates/web/auth/register.html:69
 msgid "Already have an account?"
 msgstr "Haben Sie bereits ein Konto?"
-
-#: apps/web/views.py:1301
-msgid "Bitte geben Sie einen Titel für die Aufgabe ein."
-msgstr "Bitte geben Sie einen Titel für die Aufgabe ein."
-
-#: apps/web/views.py:1304
-msgid "Bitte wählen Sie ein Projekt aus."
-msgstr "Bitte wählen Sie ein Projekt aus."
-
-#: apps/web/views.py:1309
-msgid "Das ausgewählte Projekt wurde nicht gefunden."
-msgstr "Das ausgewählte Projekt wurde nicht gefunden."
-
-#: apps/web/views.py:1314
-msgid "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
-msgstr "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
-
-#: apps/web/views.py:1321
-msgid "Das Fälligkeitsdatum hat ein ungültiges Format."
-msgstr "Das Fälligkeitsdatum hat ein ungültiges Format."
-
-#: apps/web/views.py:1331
-msgid "Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - {end})."
-msgstr "Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - {end})."
-
-#: apps/web/views.py:1344
-msgid "Die ausgewählte Ideen-Karte wurde nicht gefunden."
-msgstr "Die ausgewählte Ideen-Karte wurde nicht gefunden."
-
-#: templates/web/app/tasks/page.html:391
-msgid "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
-msgstr "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."

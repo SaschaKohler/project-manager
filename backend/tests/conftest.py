@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 # Configure Django settings for testing
 if not settings.configured:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-    os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+    os.environ.setdefault("DATABASE_URL", "sqlite:///test.db")
 
 # Initialize Django
 import django
@@ -109,29 +109,95 @@ def project_factory(db, organization_factory, user_factory):
 
 @pytest.fixture
 def task_factory(db, project_factory, user_factory):
-    """Factory for creating test tasks."""
-    from apps.projects.models import Task
-    
-    def create_task(project=None, assigned_to=None, **kwargs):
+    """Factory for creating test tasks with optional recurring support."""
+    from apps.projects.models import Task, RecurringTask
+
+    def create_task(project=None, assigned_to=None, is_recurring=False, **kwargs):
         if project is None:
             project = project_factory()
         if assigned_to is None:
             assigned_to = user_factory()
-        
+
+        # Extract recurring parameters
+        recurring_fields = [
+            'is_recurring', 'recurrence_frequency', 'recurrence_interval',
+            'recurrence_end_date', 'recurrence_max_occurrences', 'recurrence_parent'
+        ]
+        recurring_kwargs = {k: kwargs.pop(k) for k in recurring_fields if k in kwargs}
+
+        # Override is_recurring if explicitly passed
+        if 'is_recurring' in kwargs:
+            is_recurring = kwargs.pop('is_recurring')
+
         defaults = {
             "title": "Test Task",
             "status": Task.Status.TODO,
             "priority": Task.Priority.MEDIUM,
         }
         defaults.update(kwargs)
-        
-        return Task.objects.create(
+
+        task = Task.objects.create(
             project=project,
             assigned_to=assigned_to,
             **defaults
         )
-    
+
+        # Create RecurringTask if requested
+        if is_recurring:
+            RecurringTask.objects.create(
+                task=task,
+                is_recurring=True,
+                **recurring_kwargs
+            )
+
+        return task
+
     return create_task
+
+
+@pytest.fixture
+def recurring_task_factory(db):
+    """Factory for creating test recurring tasks linked to existing tasks."""
+    from apps.projects.models import RecurringTask, RecurrenceFrequency
+
+    def create_recurring_task(
+        task,
+        is_recurring=True,
+        recurrence_frequency=RecurrenceFrequency.WEEKLY,
+        recurrence_interval=1,
+        recurrence_end_date=None,
+        recurrence_max_occurrences=None,
+        recurrence_parent=None,
+        **kwargs
+    ):
+        """Create a RecurringTask linked to an existing Task.
+
+        Args:
+            task: The Task instance to make recurring
+            is_recurring: Whether the task is recurring (default: True)
+            recurrence_frequency: RecurrenceFrequency choice (default: WEEKLY)
+            recurrence_interval: Interval between recurrences (default: 1)
+            recurrence_end_date: Optional end date for recurrence
+            recurrence_max_occurrences: Optional max number of occurrences
+            recurrence_parent: Optional parent task for recurring chain
+            **kwargs: Additional RecurringTask fields
+
+        Returns:
+            RecurringTask instance
+        """
+        defaults = {
+            'is_recurring': is_recurring,
+            'recurrence_frequency': recurrence_frequency,
+            'recurrence_interval': recurrence_interval,
+            'recurrence_end_date': recurrence_end_date,
+            'recurrence_max_occurrences': recurrence_max_occurrences,
+            'recurrence_parent': recurrence_parent,
+        }
+        defaults.update(kwargs)
+
+        return RecurringTask.objects.create(task=task, **defaults)
+
+    return create_recurring_task
 
 
 @pytest.fixture

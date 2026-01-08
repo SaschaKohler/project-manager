@@ -1,7 +1,10 @@
 import uuid
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -98,6 +101,12 @@ class Project(models.Model):
         return (end_day - today).days
 
 
+class RecurrenceFrequency(models.TextChoices):
+    DAILY = "DAILY", "Daily"
+    WEEKLY = "WEEKLY", "Weekly"
+    MONTHLY = "MONTHLY", "Monthly"
+
+
 class Task(models.Model):
     class Status(models.TextChoices):
         TODO = "TODO", "Todo"
@@ -145,6 +154,9 @@ class Task(models.Model):
         blank=True,
         null=True,
     )
+    recurrence_parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True, related_name='recurring_children'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -153,6 +165,76 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class RecurringTask(models.Model):
+    task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name='recurring')
+    is_recurring = models.BooleanField(default=False)
+    recurrence_frequency = models.CharField(
+        max_length=20, choices=RecurrenceFrequency.choices, blank=True, null=True
+    )
+    recurrence_interval = models.PositiveIntegerField(default=1)
+    recurrence_end_date = models.DateTimeField(blank=True, null=True)
+    recurrence_max_occurrences = models.PositiveIntegerField(blank=True, null=True)
+    recurrence_parent = models.ForeignKey(
+        Task, on_delete=models.SET_NULL, blank=True, null=True, related_name='recurring_task_children'
+    )
+
+    def __str__(self) -> str:
+        return f"Recurring settings for {self.task.title}"
+
+
+@receiver(post_save, sender=Task)
+def create_recurring_task(sender, instance, **kwargs):
+    if instance.status == Task.Status.DONE and hasattr(instance, 'recurring') and instance.recurring.is_recurring:
+        recurring = instance.recurring
+        # Check termination conditions
+        if recurring.recurrence_end_date and timezone.now() >= recurring.recurrence_end_date:
+            return
+        if recurring.recurrence_max_occurrences:
+            child_count = Task.objects.filter(recurrence_parent=recurring.recurrence_parent or instance).count()
+            if child_count >= recurring.recurrence_max_occurrences:
+                return
+
+        # Calculate next due date
+        base_date = instance.due_date or instance.scheduled_start
+        if not base_date:
+            return
+
+        interval = recurring.recurrence_interval
+        if recurring.recurrence_frequency == RecurrenceFrequency.DAILY:
+            next_date = base_date + relativedelta(days=interval)
+        elif recurring.recurrence_frequency == RecurrenceFrequency.WEEKLY:
+            next_date = base_date + relativedelta(weeks=interval)
+        elif recurring.recurrence_frequency == RecurrenceFrequency.MONTHLY:
+            next_date = base_date + relativedelta(months=interval)
+        else:
+            return
+
+        # Create new task
+        new_task = Task.objects.create(
+            project=instance.project,
+            title=instance.title,
+            subtitle=instance.subtitle,
+            description=instance.description,
+            status=Task.Status.TODO,
+            priority=instance.priority,
+            due_date=next_date if instance.due_date else None,
+            scheduled_start=next_date if instance.scheduled_start else None,
+            duration_minutes=instance.duration_minutes,
+            assigned_to=instance.assigned_to,
+            progress=0,
+        )
+        # Create recurring settings for new task
+        RecurringTask.objects.create(
+            task=new_task,
+            is_recurring=True,
+            recurrence_frequency=recurring.recurrence_frequency,
+            recurrence_interval=recurring.recurrence_interval,
+            recurrence_end_date=recurring.recurrence_end_date,
+            recurrence_max_occurrences=recurring.recurrence_max_occurrences,
+            recurrence_parent=recurring.recurrence_parent or instance,
+        )
 
     @property
     def tracked_human(self) -> str:
@@ -256,6 +338,17 @@ class TaskAutomationRule(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    is_recurring = models.BooleanField(default=False)
+    recurrence_frequency = models.CharField(
+        max_length=20, choices=RecurrenceFrequency.choices, blank=True, null=True
+    )
+    recurrence_interval = models.PositiveIntegerField(default=1)
+    recurrence_end_date = models.DateTimeField(blank=True, null=True)
+    recurrence_max_occurrences = models.PositiveIntegerField(blank=True, null=True)
+    recurrence_parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, blank=True, null=True, related_name='recurring_children'
+    )
 
     class Meta:
         ordering = ["-created_at"]

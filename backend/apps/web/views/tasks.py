@@ -26,6 +26,7 @@ from apps.boards.models import BoardCard
 from apps.projects.automation import TaskAutomationEngine, execute_task_button
 from apps.projects.models import (
     Project,
+    RecurringTask,
     Task,
     TaskButton,
     TaskLink,
@@ -112,7 +113,7 @@ def tasks_page(request):
 
     tasks = (
         Task.objects.filter(project__organization=org, is_archived=False)
-        .select_related("project", "assigned_to", "idea_card")
+        .select_related("project", "assigned_to", "idea_card", "recurring")
         .prefetch_related("links", "label_assignments__label")
         .annotate(running_started_at=open_started_at_subquery)
     )
@@ -242,6 +243,11 @@ def tasks_create(request):
     idea_card_id = (request.POST.get("idea_card_id") or "").strip()
     link_url = (request.POST.get("link_url") or "").strip()
     link_title = (request.POST.get("link_title") or "").strip()
+    is_recurring = (request.POST.get("is_recurring") or "").strip() == "on"
+    recurrence_frequency = (request.POST.get("recurrence_frequency") or "").strip()
+    recurrence_interval = (request.POST.get("recurrence_interval") or "").strip()
+    recurrence_end_date_raw = (request.POST.get("recurrence_end_date") or "").strip()
+    recurrence_max_occurrences = (request.POST.get("recurrence_max_occurrences") or "").strip()
 
     logger.info(f"Task creation data: title='{title}', project_id='{project_id}', assigned_to_id='{assigned_to_id}', due_date_raw='{due_date_raw}', idea_card_id='{idea_card_id}'")
 
@@ -294,6 +300,36 @@ def tasks_create(request):
                 )
             }, status=400)
 
+    # Handle recurring fields
+    if is_recurring and not recurrence_frequency:
+        return JsonResponse({"error": _("Recurrence frequency is required when task is recurring.")}, status=400)
+
+    recurrence_end_date = None
+    if recurrence_end_date_raw:
+        recurrence_end_date = parse_datetime(recurrence_end_date_raw)
+        if recurrence_end_date is None:
+            return JsonResponse({"error": _("Invalid recurrence end date format.")}, status=400)
+        if timezone.is_naive(recurrence_end_date):
+            recurrence_end_date = timezone.make_aware(recurrence_end_date)
+
+    recurrence_max_occurrences_int = None
+    if recurrence_max_occurrences:
+        try:
+            recurrence_max_occurrences_int = int(recurrence_max_occurrences)
+            if recurrence_max_occurrences_int <= 0:
+                raise ValueError
+        except ValueError:
+            return JsonResponse({"error": _("Recurrence max occurrences must be a positive integer.")}, status=400)
+
+    recurrence_interval_int = 1
+    if recurrence_interval:
+        try:
+            recurrence_interval_int = int(recurrence_interval)
+            if recurrence_interval_int <= 0:
+                raise ValueError
+        except ValueError:
+            return JsonResponse({"error": _("Recurrence interval must be a positive integer.")}, status=400)
+
     # Handle idea card
     idea_card = None
     if idea_card_id:
@@ -305,7 +341,7 @@ def tasks_create(request):
             return JsonResponse({"error": _("Die ausgewählte Ideen-Karte wurde nicht gefunden.")}, status=400)
 
     # Create task
-    logger.info(f"Creating task with data: project={project.id}, title='{title}', assigned_to={assigned_to.id}, due_date={due_date}, idea_card={idea_card.id if idea_card else None}")
+    logger.info(f"Creating task with data: project={project.id}, title='{title}', assigned_to={assigned_to.id}, due_date={due_date}, idea_card={idea_card.id if idea_card else None}, is_recurring={is_recurring}")
     try:
         task = Task.objects.create(
             project=project,
@@ -315,6 +351,16 @@ def tasks_create(request):
             due_date=due_date,
             idea_card=idea_card,
         )
+        if is_recurring:
+            RecurringTask.objects.create(
+                task=task,
+                is_recurring=True,
+                recurrence_frequency=recurrence_frequency,
+                recurrence_interval=recurrence_interval_int,
+                recurrence_end_date=recurrence_end_date,
+                recurrence_max_occurrences=recurrence_max_occurrences_int,
+                recurrence_parent=task,
+            )
         logger.info(f"Task created successfully: id={task.id}")
     except Exception as e:
         logger.error(f"Task creation failed: {e}", exc_info=True)
@@ -367,7 +413,7 @@ def tasks_detail(request, task_id):
 
     try:
         task = (
-            Task.objects.select_related("project", "assigned_to", "idea_card")
+            Task.objects.select_related("project", "assigned_to", "idea_card", "recurring")
             .prefetch_related("links")
             .get(id=task_id, project__organization=org)
         )

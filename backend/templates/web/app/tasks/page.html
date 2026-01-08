@@ -197,6 +197,39 @@
           <input name="due_date" type="date"
                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
+
+        <div class="space-y-3">
+          <div class="flex items-center">
+            <input type="checkbox" id="is_recurring" name="is_recurring" class="rounded border-zinc-800 bg-zinc-950 text-indigo-600 focus:ring-indigo-500" />
+            <label for="is_recurring" class="ml-2 text-sm text-zinc-300">{% trans "Recurring task" %}</label>
+          </div>
+
+          <div id="recurring-options" class="hidden space-y-3">
+            <div>
+              <label class="block text-xs text-zinc-400 mb-2">{% trans "Frequency" %}</label>
+              <select name="recurrence_frequency" class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="WEEKLY">{% trans "Weekly" %}</option>
+                <option value="MONTHLY">{% trans "Monthly" %}</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-2">{% trans "Interval" %}</label>
+              <input name="recurrence_interval" type="number" min="1" value="1"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-2">{% trans "End date" %}</label>
+              <input name="recurrence_end_date" type="date"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-zinc-400 mb-2">{% trans "Max occurrences" %}</label>
+              <input name="recurrence_max_occurrences" type="number" min="1"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
           {% trans "Add task" %}
         </button>
@@ -507,6 +540,16 @@
     if (window.__pm_task_created_reload_done) return;
     window.__pm_task_created_reload_done = true;
     window.location.reload();
+  });
+
+  // Recurring task options toggle
+  document.getElementById('is_recurring').addEventListener('change', (evt) => {
+    const options = document.getElementById('recurring-options');
+    if (evt.target.checked) {
+      options.classList.remove('hidden');
+    } else {
+      options.classList.add('hidden');
+    }
   });
 
   document.body.addEventListener('taskStatusChanged', async (evt) => {

@@ -7,7 +7,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from apps.projects.models import (
-    Project, Task, TaskTimeEntry, TaskLink, TaskLabel, 
+    Project, Task, RecurringTask, RecurrenceFrequency, TaskTimeEntry, TaskLink, TaskLabel,
     TaskLabelAssignment, TaskAutomationRule, TaskAutomationAction,
     TaskAutomationLog, TaskButton, TaskButtonAction, Event
 )
@@ -177,6 +177,440 @@ class TestTask:
         """Test string representation of task."""
         task = task_factory(title="Fix Bug #123")
         assert str(task) == "Fix Bug #123"
+
+
+class TestRecurringTask:
+    """Test cases for RecurringTask model."""
+
+    def test_create_recurring_task(self, task_factory):
+        """Test creating a recurring task."""
+        task = task_factory()
+        recurring = RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.WEEKLY,
+            recurrence_interval=2,
+            recurrence_max_occurrences=10,
+        )
+
+        assert recurring.task == task
+        assert recurring.is_recurring is True
+        assert recurring.recurrence_frequency == RecurrenceFrequency.WEEKLY
+        assert recurring.recurrence_interval == 2
+        assert recurring.recurrence_max_occurrences == 10
+        assert str(recurring) == f"Recurring settings for {task.title}"
+
+    def test_recurrence_frequency_choices(self, task_factory):
+        """Test different recurrence frequencies."""
+        for freq in RecurrenceFrequency:
+            task = task_factory()
+            recurring = RecurringTask.objects.create(
+                task=task,
+                is_recurring=True,
+                recurrence_frequency=freq,
+            )
+            assert recurring.recurrence_frequency == freq
+
+    def test_recurring_task_creation_signal(self, task_factory):
+        """Test that completing a recurring task creates a new one."""
+        from django.utils import timezone
+        from dateutil.relativedelta import relativedelta
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        recurring = RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_interval=1,
+        )
+
+        # Mark task as done
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should create a new task
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).first()
+
+        assert new_task is not None
+        assert new_task.due_date == task.due_date + relativedelta(days=1)
+        # Check that RecurringTask was created for new task
+        new_recurring = RecurringTask.objects.filter(task=new_task).first()
+        assert new_recurring is not None
+        assert new_recurring.is_recurring is True
+
+    def test_recurring_task_with_all_fields(self, task_factory):
+        """Test creating recurring task with all fields populated."""
+        from django.utils import timezone
+
+        task = task_factory()
+        end_date = timezone.now() + timedelta(days=30)
+        parent_task = task_factory()
+
+        recurring = RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.WEEKLY,
+            recurrence_interval=2,
+            recurrence_end_date=end_date,
+            recurrence_max_occurrences=5,
+            recurrence_parent=parent_task,
+        )
+
+        assert recurring.task == task
+        assert recurring.is_recurring is True
+        assert recurring.recurrence_frequency == RecurrenceFrequency.WEEKLY
+        assert recurring.recurrence_interval == 2
+        assert recurring.recurrence_end_date == end_date
+        assert recurring.recurrence_max_occurrences == 5
+        assert recurring.recurrence_parent == parent_task
+
+    def test_recurring_task_relationships(self, task_factory):
+        """Test RecurringTask relationships with Task model."""
+        task = task_factory()
+        recurring = RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.MONTHLY,
+        )
+
+        # Test reverse relationship
+        assert task.recurring == recurring
+        assert recurring.task == task
+
+    def test_recurring_task_validation(self, task_factory):
+        """Test RecurringTask field validation."""
+        task = task_factory()
+
+        # Test that RecurringTask can be created with valid data
+        recurring = RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_interval=1,
+        )
+        assert recurring.recurrence_frequency == RecurrenceFrequency.DAILY
+
+    def test_recurring_task_signal_weekly_frequency(self, task_factory):
+        """Test recurring task creation with weekly frequency."""
+        from django.utils import timezone
+        from dateutil.relativedelta import relativedelta
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=7)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.WEEKLY,
+            recurrence_interval=1,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).first()
+
+        assert new_task is not None
+        assert new_task.due_date == task.due_date + relativedelta(weeks=1)
+
+    def test_recurring_task_signal_monthly_frequency(self, task_factory):
+        """Test recurring task creation with monthly frequency."""
+        from django.utils import timezone
+        from dateutil.relativedelta import relativedelta
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=30)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.MONTHLY,
+            recurrence_interval=1,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).first()
+
+        assert new_task is not None
+        assert new_task.due_date == task.due_date + relativedelta(months=1)
+
+    def test_recurring_task_signal_with_scheduled_start(self, task_factory):
+        """Test recurring task creation using scheduled_start instead of due_date."""
+        from django.utils import timezone
+        from dateutil.relativedelta import relativedelta
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            scheduled_start=timezone.now() + timedelta(days=1)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_interval=1,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).first()
+
+        assert new_task is not None
+        assert new_task.scheduled_start == task.scheduled_start + relativedelta(days=1)
+        assert new_task.due_date is None  # Should not set due_date if original had scheduled_start
+
+    def test_recurring_task_signal_no_date_fails(self, task_factory):
+        """Test that recurring task without due_date or scheduled_start doesn't create new task."""
+        task = task_factory(status=Task.Status.TODO)
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should not create new task
+        new_tasks = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id)
+
+        assert new_tasks.count() == 0
+
+    def test_recurring_task_termination_end_date_reached(self, task_factory):
+        """Test that recurring task stops when end_date is reached."""
+        from django.utils import timezone
+
+        past_end_date = timezone.now() - timedelta(days=1)
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_end_date=past_end_date,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should not create new task because end_date is in the past
+        new_tasks = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id)
+
+        assert new_tasks.count() == 0
+
+    def test_recurring_task_termination_max_occurrences_reached(self, task_factory):
+        """Test that recurring task stops when max_occurrences is reached."""
+        from django.utils import timezone
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        parent_task = task_factory(title="Parent Task")
+
+        # Create first recurring task
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_max_occurrences=1,
+            recurrence_parent=parent_task,
+        )
+
+        # Create some existing children to reach the limit
+        existing_tasks_before = Task.objects.filter(
+            recurrence_parent=parent_task
+        ).count()
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should not create new task because max_occurrences reached
+        existing_tasks_after = Task.objects.filter(
+            recurrence_parent=parent_task
+        ).count()
+
+        # Count should remain the same
+        assert existing_tasks_after == existing_tasks_before
+
+    def test_recurring_task_with_recurrence_parent_chain(self, task_factory):
+        """Test recurring task with proper parent-child relationships."""
+        from django.utils import timezone
+
+        parent_task = task_factory()
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        task.recurrence_parent = parent_task
+        task.save()
+
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+            recurrence_parent=parent_task,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).exclude(id=parent_task.id).first()
+
+        assert new_task is not None
+        new_recurring = RecurringTask.objects.get(task=new_task)
+        assert new_recurring.recurrence_parent == parent_task
+
+    def test_recurring_task_signal_preserves_task_attributes(self, task_factory):
+        """Test that new recurring tasks preserve original task attributes."""
+        from django.utils import timezone
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1),
+            priority=Task.Priority.HIGH,
+            subtitle="Important task",
+            description="Detailed description",
+            duration_minutes=60,
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        new_task = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id).first()
+
+        assert new_task is not None
+        assert new_task.priority == task.priority
+        assert new_task.subtitle == task.subtitle
+        assert new_task.description == task.description
+        assert new_task.duration_minutes == task.duration_minutes
+        assert new_task.assigned_to == task.assigned_to
+        assert new_task.progress == 0  # Should reset progress
+
+    def test_recurring_task_invalid_frequency_no_creation(self, task_factory):
+        """Test that invalid recurrence frequency doesn't create new task."""
+        from django.utils import timezone
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency="INVALID",
+            recurrence_interval=1,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should not create new task due to invalid frequency
+        new_tasks = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id)
+
+        assert new_tasks.count() == 0
+
+    def test_recurring_task_non_recurring_no_signal(self, task_factory):
+        """Test that non-recurring tasks don't trigger signal."""
+        from django.utils import timezone
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=False,  # Not recurring
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+        )
+
+        task.status = Task.Status.DONE
+        task.save()
+
+        # Should not create new task
+        new_tasks = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id)
+
+        assert new_tasks.count() == 0
+
+    def test_recurring_task_status_change_not_done_no_signal(self, task_factory):
+        """Test that changing status to non-DONE doesn't trigger signal."""
+        from django.utils import timezone
+
+        task = task_factory(
+            status=Task.Status.TODO,
+            due_date=timezone.now() + timedelta(days=1)
+        )
+        RecurringTask.objects.create(
+            task=task,
+            is_recurring=True,
+            recurrence_frequency=RecurrenceFrequency.DAILY,
+        )
+
+        task.status = Task.Status.IN_PROGRESS  # Not DONE
+        task.save()
+
+        # Should not create new task
+        new_tasks = Task.objects.filter(
+            project=task.project,
+            title=task.title,
+            status=Task.Status.TODO
+        ).exclude(id=task.id)
+
+        assert new_tasks.count() == 0
 
 
 class TestTaskTimeEntry:

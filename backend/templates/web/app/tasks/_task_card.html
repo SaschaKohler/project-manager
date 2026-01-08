@@ -16,6 +16,11 @@
       <div class="flex items-center gap-2 mb-2">
         <span class="priority-dot w-2 h-2 rounded-full {% if task.priority == 'HIGH' %}bg-red-500{% elif task.priority == 'MEDIUM' %}bg-yellow-500{% else %}bg-gray-500{% endif %}"></span>
         <h3 class="font-medium text-zinc-100 truncate flex-1">{% include "web/app/tasks/_task_title.html" with task=task %}</h3>
+        {% if task.recurring.is_recurring %}
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        {% endif %}
         <button class="expand-btn text-zinc-400 hover:text-zinc-200 transition" data-expanded="false">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>

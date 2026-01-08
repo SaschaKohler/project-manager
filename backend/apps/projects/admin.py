@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Event,
     Project,
+    RecurringTask,
     Task,
     TaskAutomationAction,
     TaskAutomationLog,
@@ -18,16 +19,49 @@ from .models import (
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("id", "organization", "title", "status", "category", "priority", "color", "created_at")
+    list_display = (
+        "id",
+        "organization",
+        "title",
+        "status",
+        "category",
+        "priority",
+        "color",
+        "created_at",
+    )
     list_filter = ("status", "category", "priority", "color")
     search_fields = ("title", "organization__name")
 
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ("id", "project", "title", "status", "priority", "due_date", "assigned_to", "idea_card", "tracked_seconds")
+    list_display = (
+        "id",
+        "project",
+        "title",
+        "status",
+        "priority",
+        "due_date",
+        "assigned_to",
+        "idea_card",
+        "tracked_seconds",
+    )
     list_filter = ("status", "priority")
     search_fields = ("title", "project__title")
+
+
+@admin.register(RecurringTask)
+class RecurringTaskAdmin(admin.ModelAdmin):
+    list_display = (
+        "task",
+        "is_recurring",
+        "recurrence_frequency",
+        "recurrence_interval",
+        "recurrence_end_date",
+        "recurrence_max_occurrences",
+    )
+    list_filter = ("is_recurring", "recurrence_frequency")
+    search_fields = ("task__title", "task__project__title")
 
 
 @admin.register(TaskLink)
@@ -38,7 +72,14 @@ class TaskLinkAdmin(admin.ModelAdmin):
 
 @admin.register(TaskTimeEntry)
 class TaskTimeEntryAdmin(admin.ModelAdmin):
-    list_display = ("id", "task", "user", "started_at", "stopped_at", "duration_seconds")
+    list_display = (
+        "id",
+        "task",
+        "user",
+        "started_at",
+        "stopped_at",
+        "duration_seconds",
+    )
     list_filter = ("user",)
     search_fields = ("task__title", "user__email")
 
@@ -70,7 +111,15 @@ class TaskAutomationActionInline(admin.TabularInline):
 
 @admin.register(TaskAutomationRule)
 class TaskAutomationRuleAdmin(admin.ModelAdmin):
-    list_display = ("name", "organization", "project", "trigger_type", "is_active", "created_by", "created_at")
+    list_display = (
+        "name",
+        "organization",
+        "project",
+        "trigger_type",
+        "is_active",
+        "created_by",
+        "created_at",
+    )
     search_fields = ("name", "organization__name", "project__title")
     list_filter = ("trigger_type", "is_active")
     inlines = [TaskAutomationActionInline]
@@ -98,7 +147,15 @@ class TaskButtonActionInline(admin.TabularInline):
 
 @admin.register(TaskButton)
 class TaskButtonAdmin(admin.ModelAdmin):
-    list_display = ("name", "organization", "project", "icon", "color", "is_active", "created_by")
+    list_display = (
+        "name",
+        "organization",
+        "project",
+        "icon",
+        "color",
+        "is_active",
+        "created_by",
+    )
     search_fields = ("name", "organization__name", "project__title")
     list_filter = ("is_active", "color")
     inlines = [TaskButtonActionInline]

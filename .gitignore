@@ -59,3 +59,45 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# operating system
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.temp
+
+# ide and editor
+.vscode/
+.idea/
+*.sublime-*
+*.log
+
+# additional python
+.python-version
+*.egg-info/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# additional javascript
+.cache/
+*.log
+
+# additional django
+backend/media/
+
+# additional misc
+*.bak
+*.backup
+*.orig
+*.log
+.cache/
+.tmp/
+
+# additional infrastructure
+.terraform/
+*.tfstate
+*.tfvars

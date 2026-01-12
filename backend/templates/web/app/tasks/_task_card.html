@@ -46,6 +46,17 @@
         </span>
       </div>
 
+      <!-- Labels -->
+      {% if task.label_assignments.all %}
+        <div class="flex flex-wrap gap-1 mb-2">
+          {% for assignment in task.label_assignments.all %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-{{ assignment.label.color }}-900/30 text-{{ assignment.label.color }}-400 border border-{{ assignment.label.color }}-900/50">
+              {{ assignment.label.name }}
+            </span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <!-- Expanded content (hidden by default) -->
       <div class="expanded-content hidden">
         {% if task.subtitle %}

@@ -97,64 +97,32 @@ def task_automation_rule_create(request):
 
     name = (request.POST.get("name") or "").strip()
     trigger_type = (request.POST.get("trigger_type") or "").strip()
-    action_type = (request.POST.get("action_type") or "").strip()
     project_id = (request.POST.get("project_id") or "").strip()
 
-    if not name or not trigger_type or not action_type:
-        messages.error(request, _("Please fill all required fields"))
+    # Check if at least one action is present
+    if not name or not trigger_type or "action_type_0" not in request.POST:
+        messages.error(request, _("Please fill all required fields and add at least one action"))
         return redirect("web:task_automations")
 
-    trigger_config = {}
-    if trigger_type == TaskAutomationRule.TriggerType.STATUS_CHANGED:
-        to_status = request.POST.get("to_status")
-        if to_status:
-            trigger_config["to_status"] = to_status
-    elif trigger_type == TaskAutomationRule.TriggerType.PRIORITY_CHANGED:
-        to_priority = request.POST.get("to_priority")
-        if to_priority:
-            trigger_config["to_priority"] = to_priority
-    elif trigger_type in [
-        TaskAutomationRule.TriggerType.LABEL_ADDED,
-        TaskAutomationRule.TriggerType.LABEL_REMOVED,
-    ]:
-        trigger_label_id = request.POST.get("trigger_label_id")
-        if trigger_label_id:
-            trigger_config["label_id"] = trigger_label_id
+    # Refactored: Use dictionaries to map trigger/action types to config builders
+    TRIGGER_CONFIG_BUILDERS = {
+        "status_changed": lambda req: {"to_status": req.POST.get("to_status")} if req.POST.get("to_status") else {},
+        "priority_changed": lambda req: {"to_priority": req.POST.get("to_priority")} if req.POST.get("to_priority") else {},
+        "label_added": lambda req: {"label_id": req.POST.get("trigger_label_id")} if req.POST.get("trigger_label_id") else {},
+        "label_removed": lambda req: {"label_id": req.POST.get("trigger_label_id")} if req.POST.get("trigger_label_id") else {},
+    }
 
-    action_config = {}
-    if action_type == TaskAutomationAction.ActionType.CHANGE_STATUS:
-        status = request.POST.get("action_status")
-        if status:
-            action_config["status"] = status
-    elif action_type == TaskAutomationAction.ActionType.SET_PRIORITY:
-        priority = request.POST.get("action_priority")
-        if priority:
-            action_config["priority"] = priority
-    elif action_type == TaskAutomationAction.ActionType.ASSIGN_USER:
-        assign_triggered_by = request.POST.get("assign_triggered_by") == "on"
-        action_config["assign_triggered_by"] = assign_triggered_by
-        if not assign_triggered_by:
-            user_id = request.POST.get("user_id")
-            if user_id:
-                action_config["user_id"] = user_id
-    elif action_type == TaskAutomationAction.ActionType.ADD_LABEL:
-        label_id = request.POST.get("action_label_id")
-        if label_id:
-            action_config["label_id"] = label_id
-    elif action_type == TaskAutomationAction.ActionType.REMOVE_LABEL:
-        label_id = request.POST.get("action_label_id")
-        if label_id:
-            action_config["label_id"] = label_id
-    elif action_type == TaskAutomationAction.ActionType.SET_DUE_DATE:
-        days_offset = request.POST.get("days_offset", "3")
-        try:
-            action_config["days_offset"] = int(days_offset)
-        except ValueError:
-            action_config["days_offset"] = 3
-    elif action_type == TaskAutomationAction.ActionType.MOVE_TO_PROJECT:
-        target_project_id = request.POST.get("target_project_id")
-        if target_project_id:
-            action_config["project_id"] = target_project_id
+    ACTION_CONFIG_BUILDERS = {
+        "change_status": lambda req, idx: {"status": req.POST.get(f"action_status_{idx}")} if req.POST.get(f"action_status_{idx}") else {},
+        "set_priority": lambda req, idx: {"priority": req.POST.get(f"action_priority_{idx}")} if req.POST.get(f"action_priority_{idx}") else {},
+        "assign_user": lambda req, idx: _build_assign_user_config_indexed(req, idx),
+        "add_label": lambda req, idx: {"label_id": req.POST.get(f"action_label_id_{idx}")} if req.POST.get(f"action_label_id_{idx}") else {},
+        "remove_label": lambda req, idx: {"label_id": req.POST.get(f"action_label_id_{idx}")} if req.POST.get(f"action_label_id_{idx}") else {},
+        "set_due_date": lambda req, idx: {"days_offset": _parse_days_offset(req.POST.get(f"days_offset_{idx}", "3"))},
+        "move_to_project": lambda req, idx: {"project_id": req.POST.get(f"target_project_id_{idx}")} if req.POST.get(f"target_project_id_{idx}") else {},
+    }
+
+    trigger_config = TRIGGER_CONFIG_BUILDERS.get(trigger_type, lambda req: {})(request)
 
     project = None
     if project_id:
@@ -169,15 +137,52 @@ def task_automation_rule_create(request):
         created_by=request.user,
     )
 
-    TaskAutomationAction.objects.create(
-        rule=rule,
-        action_type=action_type,
-        action_config=action_config,
-        sort_order=0,
-    )
+    # Process multiple actions
+    action_index = 0
+    while f"action_type_{action_index}" in request.POST:
+        action_type = request.POST.get(f"action_type_{action_index}")
+        if action_type:
+            action_config = ACTION_CONFIG_BUILDERS.get(action_type, lambda req, idx: {})(request, action_index)
+            TaskAutomationAction.objects.create(
+                rule=rule,
+                action_type=action_type,
+                action_config=action_config,
+                sort_order=action_index,
+            )
+        action_index += 1
 
     messages.success(request, _("Automation rule created"))
     return redirect("web:task_automations")
+
+
+def _build_assign_user_config(request):
+    """Helper to build config for ASSIGN_USER action."""
+    assign_triggered_by = request.POST.get("assign_triggered_by") == "on"
+    config = {"assign_triggered_by": assign_triggered_by}
+    if not assign_triggered_by:
+        user_id = request.POST.get("user_id")
+        if user_id:
+            config["user_id"] = user_id
+    return config
+
+
+def _build_assign_user_config_indexed(request, idx):
+    """Helper to build config for ASSIGN_USER action with index."""
+    assign_triggered_by = request.POST.get(f"assign_triggered_by_{idx}") == "on"
+    config = {"assign_triggered_by": assign_triggered_by}
+    if not assign_triggered_by:
+        user_id = request.POST.get(f"user_id_{idx}")
+        if user_id:
+            config["user_id"] = user_id
+    return config
+
+
+def _parse_days_offset(days_offset_str):
+    """Helper to parse days offset with default."""
+    try:
+        return int(days_offset_str)
+    except ValueError:
+        return 3
 
 
 @login_required

@@ -311,17 +311,17 @@ class TaskAutomationRule(models.Model):
     """Automation rules for tasks (like Trello Butler)."""
 
     class TriggerType(models.TextChoices):
-        TASK_CREATED = "task_created", "Task Created"
-        STATUS_CHANGED = "status_changed", "Status Changed"
-        TASK_UPDATED = "task_updated", "Task Updated"
-        DUE_DATE_APPROACHING = "due_date_approaching", "Due Date Approaching"
-        DUE_DATE_REACHED = "due_date_reached", "Due Date Reached"
-        DUE_DATE_OVERDUE = "due_date_overdue", "Due Date Overdue"
-        LABEL_ADDED = "label_added", "Label Added"
-        LABEL_REMOVED = "label_removed", "Label Removed"
-        ASSIGNED_TO_USER = "assigned_to_user", "Assigned to User"
-        PRIORITY_CHANGED = "priority_changed", "Priority Changed"
-        TASK_COMPLETED = "task_completed", "Task Completed"
+        TASK_CREATED = "task_created", _("Task Created")
+        STATUS_CHANGED = "status_changed", _("Status Changed")
+        TASK_UPDATED = "task_updated", _("Task Updated")
+        DUE_DATE_APPROACHING = "due_date_approaching", _("Due Date Approaching")
+        DUE_DATE_REACHED = "due_date_reached", _("Due Date Reached")
+        DUE_DATE_OVERDUE = "due_date_overdue", _("Due Date Overdue")
+        LABEL_ADDED = "label_added", _("Label Added")
+        LABEL_REMOVED = "label_removed", _("Label Removed")
+        ASSIGNED_TO_USER = "assigned_to_user", _("Assigned to User")
+        PRIORITY_CHANGED = "priority_changed", _("Priority Changed")
+        TASK_COMPLETED = "task_completed", _("Task Completed")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="task_automation_rules")
@@ -361,19 +361,19 @@ class TaskAutomationAction(models.Model):
     """Actions to execute when a task automation rule triggers."""
 
     class ActionType(models.TextChoices):
-        CHANGE_STATUS = "change_status", "Change Status"
-        SET_PRIORITY = "set_priority", "Set Priority"
-        ASSIGN_USER = "assign_user", "Assign User"
-        UNASSIGN_USER = "unassign_user", "Unassign User"
-        ADD_LABEL = "add_label", "Add Label"
-        REMOVE_LABEL = "remove_label", "Remove Label"
-        SET_DUE_DATE = "set_due_date", "Set Due Date"
-        CLEAR_DUE_DATE = "clear_due_date", "Clear Due Date"
-        MOVE_TO_PROJECT = "move_to_project", "Move to Project"
-        SEND_NOTIFICATION = "send_notification", "Send Notification"
-        POST_COMMENT = "post_comment", "Post Comment"
-        ADD_TO_CALENDAR = "add_to_calendar", "Add to Calendar"
-        ARCHIVE_TASK = "archive_task", "Archive Task"
+        CHANGE_STATUS = "change_status", _("Change Status")
+        SET_PRIORITY = "set_priority", _("Set Priority")
+        ASSIGN_USER = "assign_user", _("Assign User")
+        UNASSIGN_USER = "unassign_user", _("Unassign User")
+        ADD_LABEL = "add_label", _("Add Label")
+        REMOVE_LABEL = "remove_label", _("Remove Label")
+        SET_DUE_DATE = "set_due_date", _("Set Due Date")
+        CLEAR_DUE_DATE = "clear_due_date", _("Clear Due Date")
+        MOVE_TO_PROJECT = "move_to_project", _("Move to Project")
+        SEND_NOTIFICATION = "send_notification", _("Send Notification")
+        POST_COMMENT = "post_comment", _("Post Comment")
+        ADD_TO_CALENDAR = "add_to_calendar", _("Add to Calendar")
+        ARCHIVE_TASK = "archive_task", _("Archive Task")
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     rule = models.ForeignKey(TaskAutomationRule, on_delete=models.CASCADE, related_name="actions")

@@ -150,82 +150,107 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: Action -->
+                    <!-- Right Column: Actions -->
                     <div class="space-y-4">
                         <h3 class="text-lg font-semibold flex items-center">
                             <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
-                            {% trans "Then (Action)" %}
+                            {% trans "Then (Actions)" %}
                         </h3>
 
-                        <div>
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Action" %}</label>
-                            <select name="action_type" id="action_type" required class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">{% trans "Select action..." %}</option>
-                                {% for value, label in action_choices %}
-                                    <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
+                        <div id="actions-container" class="space-y-4">
+                            <!-- Action 0 -->
+                            <div class="action-block border border-zinc-800 rounded-lg p-4 bg-zinc-950/40">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-sm font-medium text-zinc-300">{% trans "Action" %} 1</h4>
+                                    <button type="button" class="remove-action text-red-400 hover:text-red-300 text-sm" style="display: none;">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Action Type" %}</label>
+                                        <select name="action_type_0" class="action-type-select w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                            <option value="">{% trans "Select action..." %}</option>
+                                            {% for value, label in action_choices %}
+                                                <option value="{{ value }}">{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <!-- Action-specific fields for action 0 -->
+                                    <div class="action-fields-0">
+                                        <div class="action_status_field_0 hidden">
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Change status to" %}</label>
+                                            <select name="action_status_0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                {% for value, label in status_choices %}
+                                                    <option value="{{ value }}">{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="action_priority_field_0 hidden">
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Set priority to" %}</label>
+                                            <select name="action_priority_0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                {% for value, label in priority_choices %}
+                                                    <option value="{{ value }}">{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="action_label_field_0 hidden">
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Label" %}</label>
+                                            <select name="action_label_id_0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                <option value="">{% trans "Select label..." %}</option>
+                                                {% for label in labels %}
+                                                    <option value="{{ label.id }}">{{ label.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="action_user_field_0 hidden">
+                                            <label class="flex items-center mb-2">
+                                                <input type="checkbox" name="assign_triggered_by_0" class="rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 mr-2">
+                                                <span class="text-sm font-medium text-zinc-300">{% trans "Assign to user who triggered the action" %}</span>
+                                            </label>
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Or assign to specific user" %}</label>
+                                            <select name="user_id_0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                <option value="">{% trans "Select user..." %}</option>
+                                                {% for member in members %}
+                                                    <option value="{{ member.user.id }}">{{ member.user.email }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="action_due_date_field_0 hidden">
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Days from now" %}</label>
+                                            <input type="number" name="days_offset_0" value="3" min="0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                        </div>
+
+                                        <div class="action_project_field_0 hidden">
+                                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Move to project" %}</label>
+                                            <select name="target_project_id_0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                                <option value="">{% trans "Select project..." %}</option>
+                                                {% for project in projects %}
+                                                    <option value="{{ project.id }}">{{ project.title }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Action-specific fields -->
-                        <div id="action_status_field" class="hidden">
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Change status to" %}</label>
-                            <select name="action_status" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                {% for value, label in status_choices %}
-                                    <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div id="action_priority_field" class="hidden">
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Set priority to" %}</label>
-                            <select name="action_priority" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                {% for value, label in priority_choices %}
-                                    <option value="{{ value }}">{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div id="action_label_field" class="hidden">
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Label" %}</label>
-                            <select name="action_label_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">{% trans "Select label..." %}</option>
-                                {% for label in labels %}
-                                    <option value="{{ label.id }}">{{ label.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div id="action_user_field" class="hidden">
-                            <label class="flex items-center mb-2">
-                                <input type="checkbox" name="assign_triggered_by" class="rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 mr-2">
-                                <span class="text-sm font-medium text-zinc-300">{% trans "Assign to user who triggered the action" %}</span>
-                            </label>
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Or assign to specific user" %}</label>
-                            <select name="user_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">{% trans "Select user..." %}</option>
-                                {% for member in members %}
-                                    <option value="{{ member.user.id }}">{{ member.user.email }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div id="action_due_date_field" class="hidden">
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Days from now" %}</label>
-                            <input type="number" name="days_offset" value="3" min="0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        </div>
-
-                        <div id="action_project_field" class="hidden">
-                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Move to project" %}</label>
-                            <select name="target_project_id" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="">{% trans "Select project..." %}</option>
-                                {% for project in projects %}
-                                    <option value="{{ project.id }}">{{ project.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        <button type="button" id="add-action" class="inline-flex items-center px-3 py-2 border border-indigo-600 rounded-lg text-sm font-medium text-indigo-400 bg-indigo-900/20 hover:bg-indigo-900/30">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            {% trans "Add Another Action" %}
+                        </button>
                     </div>
                 </div>
 
@@ -451,20 +476,23 @@
 <script>
 // Dynamic form field visibility based on selections
 document.addEventListener('DOMContentLoaded', function() {
+    let actionIndex = 1; // Start at 1 since action 0 exists
+
     const triggerSelect = document.getElementById('trigger_type');
-    const actionSelect = document.getElementById('action_type');
-    
+    const addActionBtn = document.getElementById('add-action');
+    const actionsContainer = document.getElementById('actions-container');
+
     if (triggerSelect) {
         triggerSelect.addEventListener('change', function() {
             const statusFilter = document.getElementById('status_filter');
             const priorityFilter = document.getElementById('priority_filter');
             const labelFilter = document.getElementById('label_filter');
-            
+
             // Hide all filters first
             statusFilter.classList.add('hidden');
             priorityFilter.classList.add('hidden');
             labelFilter.classList.add('hidden');
-            
+
             // Show relevant filter
             if (this.value === 'status_changed') {
                 statusFilter.classList.remove('hidden');
@@ -475,28 +503,158 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    if (actionSelect) {
+
+    // Function to update action field visibility
+    function updateActionFields(index) {
+        const actionSelect = document.querySelector(`select[name="action_type_${index}"]`);
+        if (!actionSelect) return;
+
         actionSelect.addEventListener('change', function() {
-            // Hide all action-specific fields
-            document.querySelectorAll('[id^="action_"]').forEach(el => el.classList.add('hidden'));
-            
+            const fieldsContainer = document.querySelector(`.action-fields-${index}`);
+            if (!fieldsContainer) return;
+
+            // Hide all action-specific fields for this action
+            fieldsContainer.querySelectorAll('[class*="action_"]').forEach(el => el.classList.add('hidden'));
+
             // Show relevant field based on action type
-            if (this.value === 'change_status') {
-                document.getElementById('action_status_field').classList.remove('hidden');
-            } else if (this.value === 'set_priority') {
-                document.getElementById('action_priority_field').classList.remove('hidden');
-            } else if (this.value === 'add_label' || this.value === 'remove_label') {
-                document.getElementById('action_label_field').classList.remove('hidden');
-            } else if (this.value === 'assign_user') {
-                document.getElementById('action_user_field').classList.remove('hidden');
-            } else if (this.value === 'set_due_date') {
-                document.getElementById('action_due_date_field').classList.remove('hidden');
-            } else if (this.value === 'move_to_project') {
-                document.getElementById('action_project_field').classList.remove('hidden');
+            const value = this.value;
+            if (value === 'change_status') {
+                fieldsContainer.querySelector(`.action_status_field_${index}`).classList.remove('hidden');
+            } else if (value === 'set_priority') {
+                fieldsContainer.querySelector(`.action_priority_field_${index}`).classList.remove('hidden');
+            } else if (value === 'add_label' || value === 'remove_label') {
+                fieldsContainer.querySelector(`.action_label_field_${index}`).classList.remove('hidden');
+            } else if (value === 'assign_user') {
+                fieldsContainer.querySelector(`.action_user_field_${index}`).classList.remove('hidden');
+            } else if (value === 'set_due_date') {
+                fieldsContainer.querySelector(`.action_due_date_field_${index}`).classList.remove('hidden');
+            } else if (value === 'move_to_project') {
+                fieldsContainer.querySelector(`.action_project_field_${index}`).classList.remove('hidden');
             }
         });
     }
+
+    // Initialize field visibility for action 0
+    updateActionFields(0);
+
+    // Add new action
+    if (addActionBtn) {
+        addActionBtn.addEventListener('click', function() {
+            const newActionHtml = `
+                <div class="action-block border border-zinc-800 rounded-lg p-4 bg-zinc-950/40">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-medium text-zinc-300">{% trans "Action" %} ${actionIndex + 1}</h4>
+                        <button type="button" class="remove-action text-red-400 hover:text-red-300 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Action Type" %}</label>
+                            <select name="action_type_${actionIndex}" class="action-type-select w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">{% trans "Select action..." %}</option>
+                                {% for value, label in action_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="action-fields-${actionIndex}">
+                            <div class="action_status_field_${actionIndex} hidden">
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Change status to" %}</label>
+                                <select name="action_status_${actionIndex}" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    {% for value, label in status_choices %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="action_priority_field_${actionIndex} hidden">
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Set priority to" %}</label>
+                                <select name="action_priority_${actionIndex}" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    {% for value, label in priority_choices %}
+                                        <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="action_label_field_${actionIndex} hidden">
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Label" %}</label>
+                                <select name="action_label_id_${actionIndex}" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">{% trans "Select label..." %}</option>
+                                    {% for label in labels %}
+                                        <option value="{{ label.id }}">{{ label.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="action_user_field_${actionIndex} hidden">
+                                <label class="flex items-center mb-2">
+                                    <input type="checkbox" name="assign_triggered_by_${actionIndex}" class="rounded border-zinc-700 bg-zinc-950 text-indigo-600 focus:ring-indigo-500 mr-2">
+                                    <span class="text-sm font-medium text-zinc-300">{% trans "Assign to user who triggered the action" %}</span>
+                                </label>
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Or assign to specific user" %}</label>
+                                <select name="user_id_${actionIndex}" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">{% trans "Select user..." %}</option>
+                                    {% for member in members %}
+                                        <option value="{{ member.user.id }}">{{ member.user.email }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="action_due_date_field_${actionIndex} hidden">
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Days from now" %}</label>
+                                <input type="number" name="days_offset_${actionIndex}" value="3" min="0" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            </div>
+
+                            <div class="action_project_field_${actionIndex} hidden">
+                                <label class="block text-sm font-medium text-zinc-300 mb-1">{% trans "Move to project" %}</label>
+                                <select name="target_project_id_${actionIndex}" class="w-full px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">{% trans "Select project..." %}</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            actionsContainer.insertAdjacentHTML('beforeend', newActionHtml);
+            updateActionFields(actionIndex);
+            updateRemoveButtons();
+            actionIndex++;
+        });
+    }
+
+    // Function to update remove buttons visibility
+    function updateRemoveButtons() {
+        const actionBlocks = actionsContainer.querySelectorAll('.action-block');
+        actionBlocks.forEach((block, index) => {
+            const removeBtn = block.querySelector('.remove-action');
+            if (actionBlocks.length > 1) {
+                removeBtn.style.display = 'block';
+            } else {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // Handle remove action
+    actionsContainer.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-action')) {
+            e.target.closest('.action-block').remove();
+            updateRemoveButtons();
+            // Renumber actions if needed, but for simplicity, keep indices
+        }
+    });
+
+    // Initial update
+    updateRemoveButtons();
 });
 </script>
 {% endblock %}

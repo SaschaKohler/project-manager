@@ -63,11 +63,22 @@ jobs:
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
 
+      - name: Check kubeconfig
+        run: |
+          kubectl config current-context
+          kubectl config get-clusters
+
+      - name: Test kubectl connection
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+          kubectl get namespaces
+
       - name: Deploy (kustomize)
         run: |
           cd k8s/overlays/staging
           kustomize edit set image project-manager=${{ needs.build_and_push.outputs.image_repo }}:${{ needs.build_and_push.outputs.image_tag }}
-          kubectl apply -k . --validate=false
+          kubectl apply -k . --validate=false --namespace=project-manager-staging
 
       - name: Show rollout status
         run: kubectl -n project-manager-staging rollout status deploy/app --timeout=180s

@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../base
+  - ci-serviceaccount.yaml
   - ghcr/sealedsecret-ghcr-pull.yaml
   - admin/sealedsecret-admin.yaml
   - postgres/sealedsecret.yaml

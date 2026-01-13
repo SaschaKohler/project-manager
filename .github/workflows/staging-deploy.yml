@@ -57,9 +57,17 @@ jobs:
           version: v1.30.0
 
       - name: Configure kubeconfig
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p ~/.kube
-          echo "${KUBECONFIG_B64}" | base64 -d > ~/.kube/config
+          if [ -z "${KUBECONFIG_B64:-}" ]; then
+            echo "KUBECONFIG_B64 secret is empty" >&2
+            exit 1
+          fi
+          printf '%s' "$KUBECONFIG_B64" | base64 --decode > ~/.kube/config
+          chmod 600 ~/.kube/config
+          test -s ~/.kube/config
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
 
@@ -67,6 +75,7 @@ jobs:
         run: |
           kubectl config current-context
           kubectl config get-clusters
+          kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}{"\n"}{.contexts[0].context.namespace}{"\n"}{.users[0].name}{"\n"}'
 
       - name: Test kubectl connection
         run: |

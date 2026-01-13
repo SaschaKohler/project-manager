@@ -7,8 +7,8 @@ set -e
 
 NAMESPACE="project-manager-staging"
 SERVICE_ACCOUNT="github-actions-deployer"
-CLUSTER_NAME="your-cluster-name"  # Replace with your actual cluster name
-CLUSTER_SERVER="https://your-cluster-endpoint"  # Replace with your cluster endpoint
+CLUSTER_NAME="default"                     # Replace with your actual cluster name
+CLUSTER_SERVER="https://87.106.81.52:6443" # Replace with your cluster endpoint
 
 echo "Generating kubeconfig for GitHub Actions CI/CD..."
 
@@ -20,7 +20,7 @@ TOKEN=$(kubectl get secret $SECRET_NAME -n $NAMESPACE -o jsonpath='{.data.token}
 CA_CERT=$(kubectl config view --minify --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
 
 # Create the kubeconfig
-cat > ci-kubeconfig.yaml << EOF
+cat >ci-kubeconfig.yaml <<EOF
 apiVersion: v1
 kind: Config
 clusters:
@@ -46,3 +46,4 @@ echo "To encode for GitHub secret:"
 echo "cat ci-kubeconfig.yaml | base64 -w 0"
 echo ""
 echo "Update the KUBECONFIG_B64 secret in GitHub with the encoded content."
+

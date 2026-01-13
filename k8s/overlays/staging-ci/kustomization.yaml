@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - ../staging/ghcr/sealedsecret-ghcr-pull.yaml
+  - ../staging/admin/sealedsecret-admin.yaml
+  - ../staging/postgres/sealedsecret.yaml
+  - ../staging/postgres/service.yaml
+  - ../staging/postgres/statefulset.yaml
+
+namespace: project-manager-staging
+
+images:
+  - name: project-manager
+    newName: ghcr.io/saschakohler/project-manager
+    newTag: staging
+
+patches:
+  - target:
+      kind: Namespace
+      name: project-manager
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: project-manager
+
+  - path: ../staging/patches/deployment-imagepullsecret.yaml
+
+  - target:
+      kind: Ingress
+      name: app
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: pj-staging.ja-zum-leben.at
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: pj-staging.ja-zum-leben.at

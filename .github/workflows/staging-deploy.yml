@@ -89,7 +89,7 @@ jobs:
 
       - name: Deploy (kustomize)
         run: |
-          cd k8s/overlays/staging
+          cd k8s/overlays/staging-ci
           kustomize edit set image project-manager=${{ needs.build_and_push.outputs.image_repo }}:${{ needs.build_and_push.outputs.image_tag }}
           kubectl apply -k . --validate=false --namespace=project-manager-staging
 

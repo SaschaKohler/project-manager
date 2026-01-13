@@ -91,7 +91,7 @@ jobs:
         run: |
           cd k8s/overlays/staging-ci
           kustomize edit set image project-manager=${{ needs.build_and_push.outputs.image_repo }}:${{ needs.build_and_push.outputs.image_tag }}
-          kubectl apply -k . --validate=false --namespace=project-manager-staging
+          kustomize build . --load-restrictor LoadRestrictionsNone | kubectl apply -f - --validate=false --namespace=project-manager-staging
 
       - name: Show rollout status
         run: kubectl -n project-manager-staging rollout status deploy/app --timeout=180s

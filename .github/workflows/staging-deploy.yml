@@ -83,9 +83,9 @@ jobs:
 
       - name: Test kubectl connection
         run: |
-          kubectl cluster-info
-          kubectl get nodes
-          kubectl get namespaces
+          kubectl -n project-manager-staging auth can-i get deployments
+          kubectl -n project-manager-staging get deploy
+          kubectl -n project-manager-staging get pods
 
       - name: Deploy (kustomize)
         run: |

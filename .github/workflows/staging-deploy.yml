@@ -68,6 +68,10 @@ jobs:
           printf '%s' "$KUBECONFIG_B64" | base64 --decode > ~/.kube/config
           chmod 600 ~/.kube/config
           test -s ~/.kube/config
+          if grep -qE '^\s*token:\s*$' ~/.kube/config; then
+            echo "Kubeconfig contains an empty token. Update the KUBECONFIG_B64 secret with a kubeconfig that includes a valid service account token." >&2
+            exit 1
+          fi
         env:
           KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
 

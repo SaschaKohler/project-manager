@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: a4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+        }
+        .center {
+            text-align: center;
+        }
+        .vspace-0-2 { margin-bottom: 0.2cm; }
+        .vspace-0-5 { margin-bottom: 0.5cm; }
+        .vspace-1 { margin-bottom: 1cm; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 4px 6px;
+            text-align: left;
+        }
+        th {
+            border-bottom: 1px solid #000;
+        }
+        .text-right { text-align: right; }
+        .border-t { border-top: 1px solid #000; }
+        .pt-2 { padding-top: 0.5cm; }
+        .large { font-size: 14pt; }
+        .bold { font-weight: bold; }
+        .small { font-size: 8pt; }
+    </style>
+</head>
+<body>
+    <div class="center">
+        <div class="large bold">Gerda Ahorner & Sascha Kohler</div>
+        <div class="vspace-0-2">Phyto-Energetik | Mentaltraining</div>
+        <div>www.ja-zum-leben.at</div>
+        <div>Tel: 0699-10715848</div>
+        <div>E-Mail: office@ja-zum-leben.at</div>
+    </div>
+
+    <div class="vspace-0-5"></div>
+
+    <hr class="vspace-0-5">
+
+    <div class="vspace-0-5"></div>
+
+    <div class="bold">Rechnungsempfänger:</div>
+
+    <div>{{ invoice.recipient_name }}</div>
+    <div>{{ invoice.recipient_address }}</div>
+    <div>{{ invoice.recipient_zip_city }}</div>
+
+    <div class="vspace-0-5"></div>
+
+    <div>
+        <strong>Rechnungsnummer:</strong> {{ invoice.invoice_number }} |
+        <strong>Rechnungsdatum:</strong> {{ invoice.invoice_date|date:"d.m.Y" }} |
+        <strong>Leistungsdatum:</strong> {{ invoice.service_date|date:"d.m.Y" }}
+    </div>
+
+    <div class="vspace-0-5"></div>
+
+    <hr class="vspace-0-5">
+
+    <div class="vspace-0-5"></div>
+
+    <div class="bold">Leistungsbeschreibung</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Pos.</th>
+                <th>Beschreibung</th>
+                <th>Menge</th>
+                <th>Einzelpreis</th>
+                <th>Gesamt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in invoice.items.all %}
+            <tr>
+                <td>{{ item.position }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td class="text-right">€ {{ item.unit_price|floatformat:2 }}</td>
+                <td class="text-right">€ {{ item.total|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="vspace-0-5"></div>
+
+    <table>
+        <tr>
+            <td colspan="4"><strong>Nettobetrag:</strong></td>
+            <td class="text-right"><strong>€ {{ invoice.subtotal|floatformat:2 }}</strong></td>
+        </tr>
+        <tr>
+            <td colspan="4"><strong>USt. {{ invoice.vat_rate }}% (Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG):</strong></td>
+            <td class="text-right"><strong>€ {{ invoice.vat_amount|floatformat:2 }}</strong></td>
+        </tr>
+        <tr class="border-t pt-2">
+            <td colspan="4"><strong>Rechnungsbetrag:</strong></td>
+            <td class="text-right"><strong>€ {{ invoice.total|floatformat:2 }}</strong></td>
+        </tr>
+    </table>
+
+    <div class="vspace-0-5"></div>
+
+    <div class="bold">Zahlungsinformationen</div>
+
+    <div>Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung.</div>
+
+    <div class="vspace-0-5"></div>
+
+    <div><strong>Bankverbindung:</strong></div>
+    <div>Kontoinhaber: Sascha Werner Kohler</div>
+    <div>IBAN: AT57 1912 0500 8094 8311</div>
+    <div>BIC: SPBAATWW</div>
+    <div>Kreditinstitut: bank 99 AG</div>
+
+    <div class="vspace-0-5"></div>
+
+    <div>Verwendungszweck: Rechnung {{ invoice.invoice_number }}</div>
+
+    <div class="vspace-0-5"></div>
+
+    <div>Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet.</div>
+
+    <div class="vspace-0-5"></div>
+
+    <div class="center">
+        Vielen Dank für Ihr Vertrauen!
+    </div>
+
+    <div class="vspace-0-5"></div>
+
+    <hr class="vspace-0-5">
+
+    <div class="center small">
+        Gerichtsstand und anzuwendendes Recht: Österreich
+    </div>
+</body>
+</html>

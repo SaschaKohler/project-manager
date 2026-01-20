@@ -1,0 +1,84 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="text-center border-b border-gray-200 pb-4">
+    <h1 class="text-2xl font-bold text-gray-900">Gerda Ahorner & Sascha Kohler</h1>
+    <div class="text-sm text-gray-600 mt-1">Phyto-Energetik | Mentaltraining</div>
+    <div class="text-sm text-gray-600">www.ja-zum-leben.at</div>
+    <div class="text-sm text-gray-600">Tel: 0699-10715848</div>
+    <div class="text-sm text-gray-600">E-Mail: office@ja-zum-leben.at</div>
+  </div>
+
+  <!-- Recipient -->
+  <div>
+    <h2 class="text-lg font-semibold text-gray-900 mb-2">Rechnungsempfänger:</h2>
+    <div class="text-gray-700">{{ invoice.recipient_name }}</div>
+    <div class="text-gray-700">{{ invoice.recipient_address }}</div>
+    <div class="text-gray-700">{{ invoice.recipient_zip_city }}</div>
+  </div>
+
+  <!-- Invoice Details -->
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <div class="text-sm"><strong class="text-gray-900">Rechnungsnummer:</strong> <span class="text-gray-700">{{ invoice.invoice_number }}</span></div>
+    </div>
+    <div>
+      <div class="text-sm"><strong class="text-gray-900">Rechnungsdatum:</strong> <span class="text-gray-700">{{ invoice.invoice_date|date:"d.m.Y" }}</span></div>
+      <div class="text-sm"><strong class="text-gray-900">Leistungsdatum:</strong> <span class="text-gray-700">{{ invoice.service_date|date:"d.m.Y" }}</span></div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div>
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">Leistungsbeschreibung</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse border border-gray-300 text-sm">
+        <thead>
+          <tr class="bg-gray-50">
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Pos.</th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Beschreibung</th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Menge</th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Einzelpreis</th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Gesamt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr class="hover:bg-gray-50">
+            <td class="border border-gray-300 px-3 py-2 text-gray-700">{{ item.position }}</td>
+            <td class="border border-gray-300 px-3 py-2 text-gray-700">{{ item.description }}</td>
+            <td class="border border-gray-300 px-3 py-2 text-gray-700">{{ item.quantity }}</td>
+            <td class="border border-gray-300 px-3 py-2 text-gray-700">€ {{ item.unit_price|floatformat:2 }}</td>
+            <td class="border border-gray-300 px-3 py-2 text-gray-700">€ {{ item.total|floatformat:2 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Totals -->
+  <div class="flex justify-end">
+    <div class="w-64">
+      <table class="w-full text-sm">
+        <tr>
+          <td class="text-right pr-4 py-1 text-gray-900"><strong>Nettobetrag:</strong></td>
+          <td class="text-right py-1 text-gray-700">€ {{ invoice.subtotal|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td class="text-right pr-4 py-1 text-gray-900"><strong>USt. {{ invoice.vat_rate }}%:</strong></td>
+          <td class="text-right py-1 text-gray-700">€ {{ invoice.vat_amount|floatformat:2 }}</td>
+        </tr>
+        <tr class="border-t border-gray-300">
+          <td class="text-right pr-4 pt-2 text-gray-900"><strong>Rechnungsbetrag:</strong></td>
+          <td class="text-right pt-2 text-gray-900"><strong>€ {{ invoice.total|floatformat:2 }}</strong></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center text-sm text-gray-600 border-t border-gray-200 pt-4">
+    <p>Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung.</p>
+    <p class="mt-2">Vielen Dank für Ihr Vertrauen!</p>
+  </div>
+</div>

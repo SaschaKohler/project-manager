@@ -1,0 +1,46 @@
+<div data-invoice-id="{{ invoice.id }}" class="p-5 hover:bg-zinc-900/40 transition">
+  <div class="flex items-center justify-between">
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0">
+          <svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium text-zinc-200 truncate">
+            {{ invoice.invoice_number }}
+          </div>
+          <div class="text-xs text-zinc-400 truncate">
+            {{ invoice.recipient_name }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="text-right">
+        <div class="text-sm font-medium text-zinc-200">
+          €{{ invoice.total|floatformat:2 }}
+        </div>
+        <div class="text-xs text-zinc-400">
+          {{ invoice.invoice_date|date:"d.m.Y" }}
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="{% url 'web:invoices_detail' invoice.id %}"
+           class="text-zinc-400 hover:text-zinc-200 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+        </a>
+        <a href="{% url 'web:invoices_pdf' invoice.id %}"
+           class="text-zinc-400 hover:text-zinc-200 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

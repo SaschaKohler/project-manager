@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.projects",
     "apps.marketing",
     "apps.boards",
+    "apps.invoices",
     "apps.web",
 ]
 

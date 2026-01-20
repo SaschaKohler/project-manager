@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from .views import invoices
 
 app_name = "web"
 
@@ -176,5 +177,17 @@ urlpatterns = [
         "tasks/automations/labels/create/",
         views.task_label_create,
         name="task_label_create",
+    ),
+    path("invoices/", invoices.invoices_page, name="invoices"),
+    path("invoices/create/", invoices.invoices_create, name="invoices_create"),
+    path(
+        "invoices/<uuid:invoice_id>/",
+        invoices.invoices_detail,
+        name="invoices_detail",
+    ),
+    path(
+        "invoices/<uuid:invoice_id>/pdf/",
+        invoices.invoices_pdf,
+        name="invoices_pdf",
     ),
 ]

@@ -8,6 +8,7 @@ from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from apps.accounts.views import RegisterView
+from apps.invoices.views import InvoiceViewSet, InvoiceItemViewSet
 from apps.marketing.views import MarketingCampaignViewSet, MarketingTaskViewSet
 from apps.projects.views import EventViewSet, ProjectViewSet, TaskViewSet
 from apps.tenants.views import OrganizationViewSet
@@ -18,6 +19,8 @@ router.register(r"orgs", OrganizationViewSet, basename="org")
 router.register(r"projects", ProjectViewSet, basename="project")
 router.register(r"tasks", TaskViewSet, basename="task")
 router.register(r"events", EventViewSet, basename="event")
+router.register(r"invoices", InvoiceViewSet, basename="invoice")
+router.register(r"invoice-items", InvoiceItemViewSet, basename="invoice-item")
 router.register(r"marketing-campaigns", MarketingCampaignViewSet, basename="marketing-campaign")
 router.register(r"marketing-tasks", MarketingTaskViewSet, basename="marketing-task")
 

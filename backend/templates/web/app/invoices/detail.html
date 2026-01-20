@@ -1,0 +1,104 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Invoice" %} {{ invoice.invoice_number }} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Invoice" %} {{ invoice.invoice_number }}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{{ invoice.recipient_name }}</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <a href="{% url 'web:invoices_pdf' invoice.id %}"
+       class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+      {% trans "Download PDF" %}
+    </a>
+    <a href="{% url 'web:invoices' %}"
+       class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+      {% trans "Back to Invoices" %}
+    </a>
+  </div>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Invoice Details -->
+  <div class="rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-6 backdrop-blur">
+    <h2 class="text-lg font-medium text-zinc-200 mb-4">{% trans "Invoice Details" %}</h2>
+    <div class="space-y-3">
+      <div>
+        <div class="text-xs text-zinc-400">{% trans "Invoice Number" %}</div>
+        <div class="text-sm text-zinc-200">{{ invoice.invoice_number }}</div>
+      </div>
+      <div>
+        <div class="text-xs text-zinc-400">{% trans "Invoice Date" %}</div>
+        <div class="text-sm text-zinc-200">{{ invoice.invoice_date|date:"d.m.Y" }}</div>
+      </div>
+      <div>
+        <div class="text-xs text-zinc-400">{% trans "Service Date" %}</div>
+        <div class="text-sm text-zinc-200">{{ invoice.service_date|date:"d.m.Y" }}</div>
+      </div>
+      <div>
+        <div class="text-xs text-zinc-400">{% trans "Recipient" %}</div>
+        <div class="text-sm text-zinc-200">
+          {{ invoice.recipient_name }}<br>
+          {{ invoice.recipient_address }}<br>
+          {{ invoice.recipient_zip_city }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Summary -->
+  <div class="rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-6 backdrop-blur">
+    <h2 class="text-lg font-medium text-zinc-200 mb-4">{% trans "Financial Summary" %}</h2>
+    <div class="space-y-3">
+      <div class="flex justify-between">
+        <span class="text-sm text-zinc-400">{% trans "Subtotal" %}</span>
+        <span class="text-sm text-zinc-200">€{{ invoice.subtotal|floatformat:2 }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-sm text-zinc-400">{% trans "VAT ({{ invoice.vat_rate }}%)" %}</span>
+        <span class="text-sm text-zinc-200">€{{ invoice.vat_amount|floatformat:2 }}</span>
+      </div>
+      <div class="border-t border-zinc-800 pt-2">
+        <div class="flex justify-between">
+          <span class="text-sm font-medium text-zinc-200">{% trans "Total" %}</span>
+          <span class="text-sm font-medium text-zinc-200">€{{ invoice.total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Items -->
+<div class="mt-6 rounded-2xl border border-zinc-800/70 bg-zinc-900/25 backdrop-blur">
+  <div class="px-6 py-4 border-b border-zinc-800/70">
+    <h2 class="text-lg font-medium text-zinc-200">{% trans "Items" %}</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="border-b border-zinc-800/70">
+        <tr class="text-left">
+          <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">{% trans "Position" %}</th>
+          <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">{% trans "Description" %}</th>
+          <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">{% trans "Quantity" %}</th>
+          <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">{% trans "Unit Price" %}</th>
+          <th class="px-6 py-3 text-xs font-medium text-zinc-400 uppercase tracking-wider">{% trans "Total" %}</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-zinc-800/70">
+        {% for item in invoice.items.all %}
+        <tr>
+          <td class="px-6 py-4 text-sm text-zinc-200">{{ item.position }}</td>
+          <td class="px-6 py-4 text-sm text-zinc-200">{{ item.description }}</td>
+          <td class="px-6 py-4 text-sm text-zinc-200">{{ item.quantity }}</td>
+          <td class="px-6 py-4 text-sm text-zinc-200">€{{ item.unit_price|floatformat:2 }}</td>
+          <td class="px-6 py-4 text-sm text-zinc-200">€{{ item.total|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Invoices" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Invoices" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Create and manage invoices." %}</p>
+  </div>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-1 rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-5 backdrop-blur">
+    <div class="text-sm text-zinc-400">{% trans "New invoice" %}</div>
+    <form class="mt-4 space-y-3"
+          id="invoice-form"
+          hx-post="{% url 'web:invoices_create' %}"
+          hx-target="#invoice-list"
+          hx-swap="afterbegin"
+          hx-on::after-request="handleInvoiceCreated()">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Recipient Name" %}</label>
+        <input name="recipient_name" required placeholder="{% trans 'Full name' %}"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Address" %}</label>
+        <textarea name="recipient_address" rows="2" placeholder="{% trans 'Street address' %}"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "ZIP City" %}</label>
+        <input name="recipient_zip_city" required placeholder="{% trans 'ZIP Code City' %}"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Invoice Date" %}</label>
+          <input type="date" name="invoice_date"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Service Date" %}</label>
+          <input type="date" name="service_date"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+
+      <!-- Invoice Items -->
+      <div class="border-t border-zinc-800 pt-3">
+        <div class="text-xs text-zinc-400 mb-2">{% trans "Items" %}</div>
+        <div id="invoice-items">
+          <div class="invoice-item space-y-2" data-index="0">
+            <div class="grid grid-cols-12 gap-2">
+              <div class="col-span-6">
+                <input name="item_description_0" placeholder="{% trans 'Description' %}"
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div class="col-span-2">
+                <input name="item_quantity_0" type="number" step="0.01" placeholder="1.00"
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div class="col-span-3">
+                <input name="item_unit_price_0" type="number" step="0.01" placeholder="0.00"
+                       class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div class="col-span-1 flex items-center">
+                <button type="button" onclick="removeInvoiceItem(this)"
+                        class="text-zinc-500 hover:text-zinc-300">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" onclick="addInvoiceItem()"
+                class="mt-2 text-xs text-indigo-400 hover:text-indigo-300">
+          + {% trans "Add item" %}
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="button" onclick="previewInvoice()"
+                class="flex-1 rounded-lg bg-zinc-700 hover:bg-zinc-600 transition px-3 py-2 font-medium">
+          {% trans "Preview" %}
+        </button>
+        <button type="submit" class="flex-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+          {% trans "Create Invoice" %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 rounded-2xl border border-zinc-800/70 bg-zinc-900/20">
+    <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+      <div class="text-sm text-zinc-400">{% trans "All invoices" %}</div>
+      <div id="invoice-count" class="text-xs text-zinc-500">{{ invoices|length }} {% trans "total" %}</div>
+    </div>
+    <div id="invoice-list" class="divide-y divide-zinc-800/70">
+      {% for invoice in invoices %}
+        {% include "web/app/invoices/_invoice_row.html" with invoice=invoice %}
+      {% empty %}
+        <div id="invoice-empty" class="p-6 text-sm text-zinc-400">{% trans "No invoices yet. Create the first one on the left." %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+  function addInvoiceItem() {
+    const container = document.getElementById('invoice-items');
+    const existingItems = container.querySelectorAll('.invoice-item');
+    const nextIndex = existingItems.length;
+
+    const itemHtml = `
+      <div class="invoice-item space-y-2" data-index="${nextIndex}">
+        <div class="grid grid-cols-12 gap-2">
+          <div class="col-span-6">
+            <input name="item_description_${nextIndex}" placeholder="{% trans 'Description' %}"
+                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="col-span-2">
+            <input name="item_quantity_${nextIndex}" type="number" step="0.01" placeholder="1.00"
+                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="col-span-3">
+            <input name="item_unit_price_${nextIndex}" type="number" step="0.01" placeholder="0.00"
+                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div class="col-span-1 flex items-center">
+            <button type="button" onclick="removeInvoiceItem(this)"
+                    class="text-zinc-500 hover:text-zinc-300">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    container.insertAdjacentHTML('beforeend', itemHtml);
+  }
+
+  function removeInvoiceItem(button) {
+    const item = button.closest('.invoice-item');
+    if (item) {
+      item.remove();
+      // Re-index remaining items
+      const container = document.getElementById('invoice-items');
+      const items = container.querySelectorAll('.invoice-item');
+      items.forEach((item, index) => {
+        item.setAttribute('data-index', index);
+        const inputs = item.querySelectorAll('input');
+        inputs.forEach(input => {
+          const name = input.name;
+          if (name.includes('_')) {
+            const baseName = name.split('_')[0] + '_' + name.split('_')[1];
+            input.name = baseName + '_' + index;
+          }
+        });
+      });
+    }
+  }
+
+  function resetInvoiceForm() {
+    // Reset to single item row
+    const container = document.getElementById('invoice-items');
+    if (container) {
+      container.innerHTML = `
+        <div class="invoice-item space-y-2" data-index="0">
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-6">
+              <input name="item_description_0" placeholder="{% trans 'Description' %}"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div class="col-span-2">
+              <input name="item_quantity_0" type="number" step="0.01" placeholder="1.00"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div class="col-span-3">
+              <input name="item_unit_price_0" type="number" step="0.01" placeholder="0.00"
+                     class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div class="col-span-1 flex items-center">
+              <button type="button" onclick="removeInvoiceItem(this)"
+                      class="text-zinc-500 hover:text-zinc-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function handleInvoiceCreated() {
+    // Reset the form
+    document.getElementById('invoice-form').reset();
+    resetInvoiceForm();
+
+    // Update the count by fetching the current page and extracting the count
+    // This is simpler than trying to parse the response
+    fetch(window.location.href)
+      .then(response => response.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newCount = doc.getElementById('invoice-count');
+        if (newCount) {
+          document.getElementById('invoice-count').outerHTML = newCount.outerHTML;
+        }
+      })
+      .catch(error => {
+        console.error('Count update failed:', error);
+      });
+  }
+
+  function addInvoiceRow() {
+    const list = document.getElementById('invoice-list');
+    if (!list) return;
+    const hasRows = list.querySelector('[data-invoice-id]');
+    if (!hasRows) return;
+    const empty = document.getElementById('invoice-empty');
+    if (empty) empty.remove();
+  }
+
+  function previewInvoice() {
+    const form = document.getElementById('invoice-form');
+    const formData = new FormData(form);
+
+    // Add preview flag
+    formData.append('preview', '1');
+
+    // Send preview request
+    fetch('{% url "web:invoices_create" %}', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => response.text())
+    .then(html => {
+      // Open preview modal
+      showPreviewModal(html);
+    })
+    .catch(error => {
+      console.error('Preview error:', error);
+      alert('Preview failed: ' + error.message);
+    });
+  }
+
+  function showPreviewModal(html) {
+    // Create modal with preview
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-zinc-900 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-semibold">Invoice Preview</h2>
+          <button onclick="this.closest('.fixed').remove()" class="text-zinc-400 hover:text-zinc-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="mb-4">
+          ${html}
+        </div>
+        <div class="flex gap-3">
+          <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded">
+            Edit
+          </button>
+          <button onclick="createInvoiceFromPreview()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded">
+            Create Invoice
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  function createInvoiceFromPreview() {
+    // Submit the form normally
+    document.getElementById('invoice-form').submit();
+  }
+
+  document.addEventListener('DOMContentLoaded', addInvoiceRow);
+  document.body.addEventListener('htmx:afterSwap', addInvoiceRow);
+</script>
+{% endblock %}

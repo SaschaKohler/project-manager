@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: a4;
+            margin: 1.2cm;
+        }
+        :root {
+            --jzl-cream: #faf8f5;
+            --jzl-sand: #f5f1ed;
+            --jzl-light-gray: #e8e4df;
+            --jzl-purple: #7e56c2;
+            --jzl-sage: #6b9080;
+            --jzl-gold: #c9a227;
+            --jzl-text-dark: #2d2a32;
+            --jzl-text-medium: #5a5662;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: Figtree, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: var(--jzl-text-dark);
+            background: #fff;
+        }
+        .frame {
+            border: 1px solid var(--jzl-light-gray);
+            border-radius: 18px;
+            padding: 16px;
+        }
+        .hero {
+            background: var(--jzl-cream);
+            border: 1px solid var(--jzl-light-gray);
+            border-radius: 16px;
+            padding: 14px 14px 12px 14px;
+            margin-bottom: 14px;
+        }
+        .hero .row {
+            display: table;
+            width: 100%;
+        }
+        .hero .col {
+            display: table-cell;
+            vertical-align: top;
+        }
+        .hero .col.left { width: 64%; padding-right: 10px; }
+        .hero .col.right { width: 36%; }
+        .brand {
+            font-size: 15pt;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .sub {
+            color: var(--jzl-text-medium);
+            margin-bottom: 8px;
+        }
+        .contact {
+            font-size: 9pt;
+            color: var(--jzl-text-medium);
+        }
+        .badge {
+            text-align: right;
+            padding-top: 2px;
+        }
+        .badge .no {
+            font-size: 16pt;
+            font-weight: 900;
+            color: var(--jzl-purple);
+            line-height: 1.1;
+        }
+        .badge .label {
+            font-size: 9pt;
+            color: var(--jzl-text-medium);
+        }
+        .meta {
+            margin-top: 8px;
+            border-top: 1px solid var(--jzl-light-gray);
+            padding-top: 10px;
+            display: table;
+            width: 100%;
+        }
+        .meta .cell {
+            display: table-cell;
+            vertical-align: top;
+            width: 33.333%;
+        }
+        .meta .k {
+            font-size: 9pt;
+            color: var(--jzl-text-medium);
+        }
+        .meta .v {
+            font-weight: 700;
+        }
+        .section {
+            margin-top: 14px;
+        }
+        .recipient {
+            background: #fff;
+            border: 1px solid var(--jzl-light-gray);
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+        .recipient .title {
+            font-weight: 900;
+            color: var(--jzl-sage);
+            margin-bottom: 6px;
+        }
+        .items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .items thead th {
+            font-size: 9pt;
+            color: var(--jzl-text-medium);
+            text-align: left;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--jzl-light-gray);
+        }
+        .items tbody td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f0ece8;
+            vertical-align: top;
+        }
+        .text-right { text-align: right; }
+        .totals {
+            margin-top: 12px;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .totals td {
+            padding: 6px 10px;
+        }
+        .totals .label {
+            color: var(--jzl-text-medium);
+        }
+        .totals .grand {
+            border: 1px solid var(--jzl-light-gray);
+            background: var(--jzl-sand);
+            border-radius: 14px;
+            font-weight: 900;
+        }
+        .totals .grand td { padding: 10px; }
+        .note {
+            margin-top: 14px;
+            background: #fff;
+            border: 1px dashed rgba(201, 162, 39, 0.55);
+            border-radius: 16px;
+            padding: 12px 14px;
+        }
+        .note .title {
+            font-weight: 900;
+            color: var(--jzl-gold);
+            margin-bottom: 6px;
+        }
+        .note .muted { color: var(--jzl-text-medium); }
+        .footer {
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid var(--jzl-light-gray);
+            display: table;
+            width: 100%;
+            font-size: 8.5pt;
+            color: var(--jzl-text-medium);
+        }
+        .footer .left,
+        .footer .right {
+            display: table-cell;
+            vertical-align: top;
+        }
+        .footer .right {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="frame">
+        <div class="hero">
+            <div class="row">
+                <div class="col left">
+                    <div class="brand">Gerda Ahorner &amp; Sascha Kohler</div>
+                    <div class="sub">Phyto-Energetik | Mentaltraining</div>
+                    <div class="contact">www.ja-zum-leben.at | Tel: 0699-10715848 | office@ja-zum-leben.at</div>
+                </div>
+                <div class="col right">
+                    <div class="badge">
+                        <div class="label">Rechnung</div>
+                        <div class="no">{{ invoice.invoice_number }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="meta">
+                <div class="cell">
+                    <div class="k">Rechnungsdatum</div>
+                    <div class="v">{{ invoice.invoice_date|date:"d.m.Y" }}</div>
+                </div>
+                <div class="cell">
+                    <div class="k">Leistungsdatum</div>
+                    <div class="v">{{ invoice.service_date|date:"d.m.Y" }}</div>
+                </div>
+                <div class="cell">
+                    <div class="k">Fällig</div>
+                    <div class="v">14 Tage</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section recipient">
+            <div class="title">Rechnungsempfänger</div>
+            <div>{{ invoice.recipient_name }}</div>
+            <div>{{ invoice.recipient_address }}</div>
+            <div>{{ invoice.recipient_zip }} {{ invoice.recipient_city }}</div>
+        </div>
+
+        <div class="section">
+            <table class="items">
+                <thead>
+                    <tr>
+                        <th style="width: 8%">Pos.</th>
+                        <th style="width: 52%">Beschreibung</th>
+                        <th style="width: 10%">Menge</th>
+                        <th style="width: 15%" class="text-right">Einzelpreis</th>
+                        <th style="width: 15%" class="text-right">Gesamt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items.all %}
+                    <tr>
+                        <td>{{ item.position }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="text-right">€ {{ item.unit_price|floatformat:2 }}</td>
+                        <td class="text-right">€ {{ item.total|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <table class="totals">
+                <tr>
+                    <td class="label" style="width: 70%">Nettobetrag</td>
+                    <td class="text-right" style="width: 30%"><strong>€ {{ invoice.subtotal|floatformat:2 }}</strong></td>
+                </tr>
+                <tr>
+                    <td class="label">USt. {{ invoice.vat_rate }}% (Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG)</td>
+                    <td class="text-right"><strong>€ {{ invoice.vat_amount|floatformat:2 }}</strong></td>
+                </tr>
+                <tr class="grand">
+                    <td>Rechnungsbetrag</td>
+                    <td class="text-right">€ {{ invoice.total|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="note">
+            <div class="title">Zahlungsinformationen</div>
+            <div class="muted">Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung.</div>
+
+            <div style="margin-top: 8px;">
+                <div><strong>Kontoinhaber:</strong> Sascha Werner Kohler</div>
+                <div><strong>IBAN:</strong> AT57 1912 0500 8094 8311</div>
+                <div><strong>BIC:</strong> SPBAATWW</div>
+                <div><strong>Kreditinstitut:</strong> bank 99 AG</div>
+                <div><strong>Verwendungszweck:</strong> Rechnung {{ invoice.invoice_number }}</div>
+            </div>
+
+            <div class="muted" style="margin-top: 8px;">
+                Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet.
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="left">Vielen Dank für Ihr Vertrauen!</div>
+            <div class="right">Gerichtsstand und anzuwendendes Recht: Österreich</div>
+        </div>
+    </div>
+</body>
+</html>

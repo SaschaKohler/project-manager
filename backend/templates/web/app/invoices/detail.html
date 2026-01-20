@@ -10,10 +10,26 @@
     <p class="mt-2 text-sm text-zinc-300">{{ invoice.recipient_name }}</p>
   </div>
   <div class="flex items-center gap-3">
-    <a href="{% url 'web:invoices_pdf' invoice.id %}"
-       class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
-      {% trans "Download PDF" %}
-    </a>
+    <form method="get" action="{% url 'web:invoices_pdf' invoice.id %}" class="flex items-center gap-3">
+      <select name="template"
+              id="invoice-template-select"
+              class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="classic" {% if invoice.pdf_template == 'classic' %}selected{% endif %}>{% trans "Classic" %}</option>
+        <option value="modern" {% if invoice.pdf_template == 'modern' %}selected{% endif %}>{% trans "Modern" %}</option>
+        <option value="elegant" {% if invoice.pdf_template == 'elegant' %}selected{% endif %}>{% trans "Elegant" %}</option>
+        <option value="minimal" {% if invoice.pdf_template == 'minimal' %}selected{% endif %}>{% trans "Minimal" %}</option>
+      </select>
+      <button type="button"
+              id="invoice-preview-button"
+              class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+        {% trans "Preview" %}
+      </button>
+      <button type="submit"
+              name="save" value="1"
+              class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
+        {% trans "Download PDF" %}
+      </button>
+    </form>
     <a href="{% url 'web:invoices' %}"
        class="rounded-lg px-4 py-2 text-sm border border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900">
       {% trans "Back to Invoices" %}
@@ -37,6 +53,10 @@
       <div>
         <div class="text-xs text-zinc-400">{% trans "Service Date" %}</div>
         <div class="text-sm text-zinc-200">{{ invoice.service_date|date:"d.m.Y" }}</div>
+      </div>
+      <div>
+        <div class="text-xs text-zinc-400">{% trans "PDF Template" %}</div>
+        <div class="text-sm text-zinc-200">{{ invoice.get_pdf_template_display }}</div>
       </div>
       <div>
         <div class="text-xs text-zinc-400">{% trans "Recipient" %}</div>
@@ -101,4 +121,57 @@
     </table>
   </div>
 </div>
+
+<div id="invoice-preview-modal" class="fixed inset-0 hidden">
+  <div class="absolute inset-0 bg-black/60" id="invoice-preview-backdrop"></div>
+  <div class="absolute inset-0 p-4 lg:p-10 flex items-center justify-center">
+    <div class="w-full max-w-5xl rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+        <div class="text-sm text-zinc-200">{% trans "Preview" %}</div>
+        <button type="button" id="invoice-preview-close" class="text-zinc-400 hover:text-zinc-200">×</button>
+      </div>
+      <div class="bg-white" style="height: 75vh;">
+        <iframe id="invoice-preview-iframe" title="Invoice Preview" style="width: 100%; height: 100%; border: 0;"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const select = document.getElementById('invoice-template-select');
+    const btn = document.getElementById('invoice-preview-button');
+    const modal = document.getElementById('invoice-preview-modal');
+    const iframe = document.getElementById('invoice-preview-iframe');
+    const closeBtn = document.getElementById('invoice-preview-close');
+    const backdrop = document.getElementById('invoice-preview-backdrop');
+
+    function buildPreviewUrl() {
+      const base = "{% url 'web:invoices_pdf' invoice.id %}";
+      const params = new URLSearchParams();
+      params.set('preview', '1');
+      params.set('template', select.value);
+      return base + '?' + params.toString();
+    }
+
+    function openPreview() {
+      iframe.src = buildPreviewUrl();
+      modal.classList.remove('hidden');
+    }
+
+    function closePreview() {
+      modal.classList.add('hidden');
+      iframe.src = '';
+    }
+
+    btn.addEventListener('click', openPreview);
+    closeBtn.addEventListener('click', closePreview);
+    backdrop.addEventListener('click', closePreview);
+    select.addEventListener('change', function () {
+      if (!modal.classList.contains('hidden')) {
+        iframe.src = buildPreviewUrl();
+      }
+    });
+  })();
+</script>
 {% endblock %}

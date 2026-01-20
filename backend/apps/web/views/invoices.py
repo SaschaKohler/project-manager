@@ -51,6 +51,7 @@ def invoices_create(request):
     recipient_city = (request.POST.get("recipient_city") or "").strip()
     invoice_date_str = (request.POST.get("invoice_date") or "").strip()
     service_date_str = (request.POST.get("service_date") or "").strip()
+    pdf_template = (request.POST.get("pdf_template") or "").strip()
 
     if not recipient_name:
         return JsonResponse({'error': 'Recipient name is required'}, status=400)
@@ -86,6 +87,9 @@ def invoices_create(request):
         service_date=service_date,
         created_by=request.user,
     )
+
+    if pdf_template in {choice for choice, _label in Invoice.PdfTemplate.choices}:
+        invoice.pdf_template = pdf_template
 
     # Generate invoice number for preview
     if is_preview:
@@ -243,13 +247,29 @@ def invoices_pdf(request, invoice_id):
         raise Http404() from exc
 
     try:
-        # Use weasyprint to generate PDF from HTML template
-        from weasyprint import HTML
         from django.template.loader import render_to_string
 
-        html_content = render_to_string('web/invoices/pdf.html', {
-            'invoice': invoice
-        }, request)
+        template_override = (request.GET.get("template") or "").strip()
+        if template_override in {choice for choice, _label in Invoice.PdfTemplate.choices}:
+            invoice.pdf_template = template_override
+            if (request.GET.get("save") or "").strip() == "1":
+                invoice.save(update_fields=["pdf_template"])
+
+        html_content = render_to_string(
+            invoice.get_pdf_template_name(),
+            {
+                "invoice": invoice,
+            },
+            request,
+        )
+
+        if (request.GET.get("preview") or "").strip() == "1":
+            response = HttpResponse(html_content, content_type="text/html")
+            response["X-Frame-Options"] = "SAMEORIGIN"
+            return response
+
+        # Use weasyprint to generate PDF from HTML template
+        from weasyprint import HTML
 
         # Generate PDF
         html_doc = HTML(string=html_content, base_url=request.build_absolute_uri())

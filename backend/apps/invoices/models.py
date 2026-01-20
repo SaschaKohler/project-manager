@@ -29,6 +29,18 @@ class Invoice(models.Model):
     vat_amount = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
 
+    class PdfTemplate(models.TextChoices):
+        CLASSIC = "classic", _("Classic")
+        MODERN = "modern", _("Modern")
+        ELEGANT = "elegant", _("Elegant")
+        MINIMAL = "minimal", _("Minimal")
+
+    pdf_template = models.CharField(
+        max_length=32,
+        choices=PdfTemplate.choices,
+        default=PdfTemplate.CLASSIC,
+    )
+
     created_by = models.ForeignKey(
         'accounts.User',
         on_delete=models.PROTECT,
@@ -88,6 +100,16 @@ class Invoice(models.Model):
         self.vat_amount = (self.subtotal * self.vat_rate / 100).quantize(Decimal('0.01'))
         self.total = self.subtotal + self.vat_amount
         super().save(update_fields=['subtotal', 'vat_amount', 'total'])
+
+    def get_pdf_template_name(self) -> str:
+        template = self.pdf_template
+        if template == self.PdfTemplate.MODERN:
+            return "web/invoices/pdf_modern.html"
+        if template == self.PdfTemplate.ELEGANT:
+            return "web/invoices/pdf_elegant.html"
+        if template == self.PdfTemplate.MINIMAL:
+            return "web/invoices/pdf_minimal.html"
+        return "web/invoices/pdf.html"
 
 
 class InvoiceItem(models.Model):

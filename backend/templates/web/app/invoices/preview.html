@@ -14,7 +14,7 @@
       <h2 class="text-lg font-semibold text-gray-900 mb-2">Rechnungsempfänger:</h2>
       <div class="text-gray-700">{{ invoice.recipient_name }}</div>
       <div class="text-gray-700">{{ invoice.recipient_address }}</div>
-      <div class="text-gray-700">{{ invoice.recipient_zip_city }}</div>
+      <div class="text-gray-700">{{ invoice.recipient_zip }} {{ invoice.recipient_city }}</div>
     </div>
     <div class="space-y-2">
       <div class="text-sm"><strong class="text-gray-900">Rechnungsnummer:</strong> <span class="text-gray-700">{{ invoice.invoice_number }}</span></div>

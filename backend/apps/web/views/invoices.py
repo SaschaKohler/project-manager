@@ -24,7 +24,10 @@ def invoices_page(request):
     org = request.active_org
     invoices = Invoice.objects.filter(organization=org).order_by("-created_at")
 
-    context = {**web_shell_context(request), "invoices": invoices}
+    from django.utils import timezone
+    today = timezone.now().date()
+
+    context = {**web_shell_context(request), "invoices": invoices, "today": today}
     return render(request, "web/app/invoices/page.html", context)
 
 
@@ -44,7 +47,8 @@ def invoices_create(request):
     # Parse form data
     recipient_name = (request.POST.get("recipient_name") or "").strip()
     recipient_address = (request.POST.get("recipient_address") or "").strip()
-    recipient_zip_city = (request.POST.get("recipient_zip_city") or "").strip()
+    recipient_zip = (request.POST.get("recipient_zip") or "").strip()
+    recipient_city = (request.POST.get("recipient_city") or "").strip()
     invoice_date_str = (request.POST.get("invoice_date") or "").strip()
     service_date_str = (request.POST.get("service_date") or "").strip()
 
@@ -76,7 +80,8 @@ def invoices_create(request):
         organization=org,
         recipient_name=recipient_name,
         recipient_address=recipient_address,
-        recipient_zip_city=recipient_zip_city,
+        recipient_zip=recipient_zip,
+        recipient_city=recipient_city,
         invoice_date=invoice_date,
         service_date=service_date,
         created_by=request.user,

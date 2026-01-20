@@ -31,20 +31,27 @@
         <textarea name="recipient_address" rows="2" placeholder="{% trans 'Street address' %}"
                   class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
       </div>
-      <div>
-        <label class="block text-xs text-zinc-400 mb-2">{% trans "ZIP City" %}</label>
-        <input name="recipient_zip_city" required placeholder="{% trans 'ZIP Code City' %}"
-               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "ZIP Code" %}</label>
+          <input name="recipient_zip" placeholder="{% trans 'ZIP Code' %}"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "City" %}</label>
+          <input name="recipient_city" required placeholder="{% trans 'City' %}"
+                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Invoice Date" %}</label>
-          <input type="date" name="invoice_date"
+          <input type="date" name="invoice_date" value="{{ today|date:'Y-m-d' }}"
                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label class="block text-xs text-zinc-400 mb-2">{% trans "Service Date" %}</label>
-          <input type="date" name="service_date"
+          <input type="date" name="service_date" value="{{ today|date:'Y-m-d' }}"
                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
@@ -60,11 +67,11 @@
                        class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div class="col-span-2">
-                <input name="item_quantity_0" type="number" step="0.01" placeholder="1.00"
+                <input name="item_quantity_0" type="number" step="1.00" placeholder="1.00"
                        class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div class="col-span-3">
-                <input name="item_unit_price_0" type="number" step="0.01" placeholder="0.00"
+                <input name="item_unit_price_0" type="number" step="0.10" placeholder="0.00"
                        class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div class="col-span-1 flex items-center">
@@ -348,6 +355,36 @@
       console.error('Create error:', error);
       alert('Rechnungserstellung fehlgeschlagen: ' + error.message);
     });
+  }
+
+  // ZIP code autocomplete
+  document.addEventListener('blur', function(e) {
+    if (e.target.name === 'recipient_zip') {
+      const zip = e.target.value.trim();
+      console.log('ZIP blur:', zip);
+      if (zip.length >= 4) {
+        // Try AT first, then DE
+        fetchZipData('AT', zip).then(data => {
+          console.log('AT data:', data);
+          if (data && data.places && data.places.length > 0) {
+            document.querySelector('[name="recipient_city"]').value = data.places[0]['place name'];
+          } else {
+            fetchZipData('DE', zip).then(data => {
+              console.log('DE data:', data);
+              if (data && data.places && data.places.length > 0) {
+                document.querySelector('[name="recipient_city"]').value = data.places[0]['place name'];
+              }
+            });
+          }
+        });
+      }
+    }
+  });
+
+  function fetchZipData(country, zip) {
+    return fetch(`https://api.zippopotam.us/${country}/${zip}`)
+      .then(response => response.json())
+      .catch(() => null);
   }
 
   document.addEventListener('DOMContentLoaded', addInvoiceRow);

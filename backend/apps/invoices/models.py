@@ -20,7 +20,8 @@ class Invoice(models.Model):
     # Recipient information
     recipient_name = models.CharField(max_length=255)
     recipient_address = models.TextField()
-    recipient_zip_city = models.CharField(max_length=255)
+    recipient_zip = models.CharField(max_length=10, default='')
+    recipient_city = models.CharField(max_length=255, default='')
 
     # Financial information
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))

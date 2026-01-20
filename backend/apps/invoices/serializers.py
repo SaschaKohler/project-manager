@@ -20,7 +20,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'invoice_number', 'invoice_date', 'service_date',
-            'recipient_name', 'recipient_address', 'recipient_zip_city',
+            'recipient_name', 'recipient_address', 'recipient_zip', 'recipient_city',
             'subtotal', 'vat_rate', 'vat_amount', 'total',
             'items', 'created_at', 'updated_at'
         ]

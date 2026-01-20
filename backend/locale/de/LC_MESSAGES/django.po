@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-12 17:43+0100\n"
+"POT-Creation-Date: 2026-01-20 14:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -282,7 +282,8 @@ msgstr "Button-Aktion fehlgeschlagen"
 msgid "Please provide a workspace name"
 msgstr "Bitte geben Sie einen Workspace-Namen an"
 
-#: apps/web/views/projects.py:117 templates/web/app/projects/page.html:177
+#: apps/web/views/projects.py:117 templates/web/app/invoices/page.html:109
+#: templates/web/app/projects/page.html:177
 msgid "total"
 msgstr "gesamt"
 
@@ -671,6 +672,10 @@ msgid "Title"
 msgstr "Titel"
 
 #: templates/web/app/boards/card_detail.html:31
+#: templates/web/app/invoices/detail.html:84
+#: templates/web/app/invoices/page.html:66
+#: templates/web/app/invoices/page.html:131
+#: templates/web/app/invoices/page.html:185
 #: templates/web/app/projects/page.html:32
 #: templates/web/app/tasks/detail.html:66
 msgid "Description"
@@ -722,7 +727,7 @@ msgstr "Hochladen"
 
 #: templates/web/app/boards/detail.html:4 templates/web/app/boards/page.html:4
 #: templates/web/app/boards/page.html:9 templates/web/app/layout.html:70
-#: templates/web/app/layout.html:210
+#: templates/web/app/layout.html:216
 msgid "Boards"
 msgstr "Boards"
 
@@ -777,7 +782,7 @@ msgid "No boards yet."
 msgstr "Noch keine Boards."
 
 #: templates/web/app/calendar.html:5 templates/web/app/calendar.html:10
-#: templates/web/app/layout.html:76 templates/web/app/layout.html:216
+#: templates/web/app/layout.html:76 templates/web/app/layout.html:222
 #: templates/web/app/projects/_project_row.html:39
 #: templates/web/app/projects/calendar.html:5
 #: templates/web/app/projects/calendar.html:11
@@ -890,7 +895,7 @@ msgid "Could not refresh calendar."
 msgstr "Kalender konnte nicht aktualisiert werden."
 
 #: templates/web/app/dashboard.html:4 templates/web/app/dashboard.html:9
-#: templates/web/app/layout.html:52 templates/web/app/layout.html:192
+#: templates/web/app/layout.html:52 templates/web/app/layout.html:198
 msgid "Dashboard"
 msgstr "Dashboard"
 
@@ -899,14 +904,14 @@ msgid "A clean overview — fast actions, no noise."
 msgstr "Eine klare Übersicht — schnelle Aktionen, kein Lärm."
 
 #: templates/web/app/dashboard.html:13 templates/web/app/dashboard.html:21
-#: templates/web/app/layout.html:58 templates/web/app/layout.html:198
+#: templates/web/app/layout.html:58 templates/web/app/layout.html:204
 #: templates/web/app/projects/page.html:4
 #: templates/web/app/projects/page.html:9
 msgid "Projects"
 msgstr "Projekte"
 
 #: templates/web/app/dashboard.html:14 templates/web/app/dashboard.html:27
-#: templates/web/app/layout.html:64 templates/web/app/layout.html:204
+#: templates/web/app/layout.html:64 templates/web/app/layout.html:210
 #: templates/web/app/tasks/detail.html:4 templates/web/app/tasks/page.html:4
 #: templates/web/app/tasks/page.html:9
 msgid "Tasks"
@@ -962,36 +967,193 @@ msgstr "Akzeptieren Sie eine Einladung, um einem Workspace beizutreten."
 msgid "View team"
 msgstr "Team anzeigen"
 
-#: templates/web/app/layout.html:13 templates/web/app/layout.html:157
+#: templates/web/app/invoices/detail.html:4
+#: templates/web/app/invoices/detail.html:9
+msgid "Invoice"
+msgstr "Rechnung"
+
+#: templates/web/app/invoices/detail.html:15
+msgid "Download PDF"
+msgstr "PDF herunterladen"
+
+#: templates/web/app/invoices/detail.html:19
+#, fuzzy
+#| msgid "Back to Projects"
+msgid "Back to Invoices"
+msgstr "Zurück zu Projekten"
+
+#: templates/web/app/invoices/detail.html:27
+#, fuzzy
+#| msgid "Details"
+msgid "Invoice Details"
+msgstr "Details"
+
+#: templates/web/app/invoices/detail.html:30
+#, fuzzy
+#| msgid "Invite member"
+msgid "Invoice Number"
+msgstr "Mitglied einladen"
+
+#: templates/web/app/invoices/detail.html:34
+#: templates/web/app/invoices/page.html:48
+#, fuzzy
+#| msgid "Due Date"
+msgid "Invoice Date"
+msgstr "Fälligkeitsdatum"
+
+#: templates/web/app/invoices/detail.html:38
+#: templates/web/app/invoices/page.html:53
+#, fuzzy
+#| msgid "Set Due Date"
+msgid "Service Date"
+msgstr "Fälligkeitsdatum setzen"
+
+#: templates/web/app/invoices/detail.html:42
+msgid "Recipient"
+msgstr "Empfänger"
+
+#: templates/web/app/invoices/detail.html:54
+msgid "Financial Summary"
+msgstr "Finanzübersicht"
+
+#: templates/web/app/invoices/detail.html:57
+#, fuzzy
+#| msgid "total"
+msgid "Subtotal"
+msgstr "gesamt"
+
+#: templates/web/app/invoices/detail.html:61
+#, python-format
+msgid "VAT ({{ invoice.vat_rate }}%%)"
+msgstr "USt. ({{ invoice.vat_rate }}%%)"
+
+#: templates/web/app/invoices/detail.html:66
+#: templates/web/app/invoices/detail.html:87
+#, fuzzy
+#| msgid "total"
+msgid "Total"
+msgstr "gesamt"
+
+#: templates/web/app/invoices/detail.html:77
+#: templates/web/app/invoices/page.html:61
+msgid "Items"
+msgstr "Artikel"
+
+#: templates/web/app/invoices/detail.html:83
+#, fuzzy
+#| msgid "Description"
+msgid "Position"
+msgstr "Beschreibung"
+
+#: templates/web/app/invoices/detail.html:85
+msgid "Quantity"
+msgstr "Menge"
+
+#: templates/web/app/invoices/detail.html:86
+msgid "Unit Price"
+msgstr "Einzelpreis"
+
+#: templates/web/app/invoices/page.html:4
+#: templates/web/app/invoices/page.html:9 templates/web/app/layout.html:88
+msgid "Invoices"
+msgstr "Rechnungen"
+
+#: templates/web/app/invoices/page.html:10
+msgid "Create and manage invoices."
+msgstr "Rechnungen erstellen und verwalten."
+
+#: templates/web/app/invoices/page.html:16
+msgid "New invoice"
+msgstr "Neue Rechnung"
+
+#: templates/web/app/invoices/page.html:25
+#, fuzzy
+#| msgid "Rule Name"
+msgid "Recipient Name"
+msgstr "Regelname"
+
+#: templates/web/app/invoices/page.html:26
+#, fuzzy
+#| msgid "Label name"
+msgid "Full name"
+msgstr "Label-Name"
+
+#: templates/web/app/invoices/page.html:30
+msgid "Address"
+msgstr "Adresse"
+
+#: templates/web/app/invoices/page.html:31
+msgid "Street address"
+msgstr "Straßenadresse"
+
+#: templates/web/app/invoices/page.html:36
+#: templates/web/app/invoices/page.html:37
+msgid "ZIP Code"
+msgstr "Postleitzahl"
+
+#: templates/web/app/invoices/page.html:41
+#: templates/web/app/invoices/page.html:42
+msgid "City"
+msgstr "Stadt"
+
+#: templates/web/app/invoices/page.html:90
+#, fuzzy
+#| msgid "Add idea…"
+msgid "Add item"
+msgstr "Idee hinzufügen…"
+
+#: templates/web/app/invoices/page.html:97
+#, fuzzy
+#| msgid "In review"
+msgid "Preview"
+msgstr "In Prüfung"
+
+#: templates/web/app/invoices/page.html:100
+#, fuzzy
+#| msgid "Create invite link"
+msgid "Create Invoice"
+msgstr "Einladungslink erstellen"
+
+#: templates/web/app/invoices/page.html:108
+msgid "All invoices"
+msgstr "Alle Rechnungen"
+
+#: templates/web/app/invoices/page.html:115
+#, fuzzy
+#| msgid "No projects yet. Create the first one on the left."
+msgid "No invoices yet. Create the first one on the left."
+msgstr "Noch keine Rechnungen. Erstellen Sie die erste auf der linken Seite."
+
+#: templates/web/app/layout.html:13 templates/web/app/layout.html:163
 msgid "Workspace"
 msgstr "Workspace"
 
-#: templates/web/app/layout.html:28 templates/web/app/layout.html:170
+#: templates/web/app/layout.html:28 templates/web/app/layout.html:176
 msgid "Workspaces"
 msgstr "Workspaces"
 
-#: templates/web/app/layout.html:37 templates/web/app/layout.html:179
+#: templates/web/app/layout.html:37 templates/web/app/layout.html:185
 #: templates/web/app/workspaces/new.html:4
 #: templates/web/app/workspaces/new.html:8
 msgid "New workspace"
 msgstr "Neuer Workspace"
 
-#: templates/web/app/layout.html:38 templates/web/app/layout.html:180
+#: templates/web/app/layout.html:38 templates/web/app/layout.html:186
 #: templates/web/app/onboarding.html:30
 #: templates/web/app/workspaces/new.html:19
 msgid "Create workspace"
 msgstr "Workspace erstellen"
 
-#: templates/web/app/layout.html:82 templates/web/app/layout.html:222
+#: templates/web/app/layout.html:82 templates/web/app/layout.html:228
 #: templates/web/app/team/page.html:4 templates/web/app/team/page.html:9
 msgid "Team"
 msgstr "Team"
 
-#: templates/web/app/layout.html:95 templates/web/app/layout.html:233
+#: templates/web/app/layout.html:101 templates/web/app/layout.html:239
 msgid "Logout"
 msgstr "Abmelden"
 
-#: templates/web/app/layout.html:122
+#: templates/web/app/layout.html:128
 msgid "Toggle theme"
 msgstr "Design umschalten"
 

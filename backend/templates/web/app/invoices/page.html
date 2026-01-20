@@ -231,12 +231,26 @@
     if (empty) empty.remove();
   }
 
+  let currentFormData = null;
+
   function previewInvoice() {
     const form = document.getElementById('invoice-form');
     const formData = new FormData(form);
 
-    // Add preview flag
+    // Store form data for later use (create a copy)
+    currentFormData = new FormData();
+    for (let [key, value] of formData.entries()) {
+      currentFormData.append(key, value);
+    }
+
+    // Add preview flag to the request data
     formData.append('preview', '1');
+
+    // Show loading state
+    const previewBtn = document.querySelector('button[onclick="previewInvoice()"]');
+    const originalText = previewBtn.textContent;
+    previewBtn.textContent = 'Lade...';
+    previewBtn.disabled = true;
 
     // Send preview request
     fetch('{% url "web:invoices_create" %}', {
@@ -249,38 +263,46 @@
     })
     .then(response => response.text())
     .then(html => {
+      // Reset button
+      previewBtn.textContent = originalText;
+      previewBtn.disabled = false;
+
       // Open preview modal
       showPreviewModal(html);
     })
     .catch(error => {
+      // Reset button
+      previewBtn.textContent = originalText;
+      previewBtn.disabled = false;
+
       console.error('Preview error:', error);
-      alert('Preview failed: ' + error.message);
+      alert('Vorschau fehlgeschlagen: ' + error.message);
     });
   }
 
   function showPreviewModal(html) {
     // Create modal with preview
     const modal = document.createElement('div');
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
     modal.innerHTML = `
-      <div class="bg-zinc-900 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold">Invoice Preview</h2>
-          <button onclick="this.closest('.fixed').remove()" class="text-zinc-400 hover:text-zinc-200">
+      <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="flex justify-between items-center p-6 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">Rechnungsvorschau</h2>
+          <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
         </div>
-        <div class="mb-4">
+        <div class="flex-1 overflow-y-auto p-6">
           ${html}
         </div>
-        <div class="flex gap-3">
-          <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 px-4 py-2 rounded">
-            Edit
+        <div class="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
+          <button onclick="this.closest('.fixed').remove()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded font-medium">
+            Bearbeiten
           </button>
-          <button onclick="createInvoiceFromPreview()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded">
-            Create Invoice
+          <button onclick="createInvoiceFromPreview()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-medium">
+            Rechnung erstellen
           </button>
         </div>
       </div>
@@ -289,8 +311,43 @@
   }
 
   function createInvoiceFromPreview() {
-    // Submit the form normally
-    document.getElementById('invoice-form').submit();
+    if (!currentFormData) {
+      alert('Formulardaten nicht verfügbar');
+      return;
+    }
+
+    // Show loading state
+    const createBtn = document.querySelector('.fixed button:last-child');
+    const originalText = createBtn.textContent;
+    createBtn.textContent = 'Erstelle...';
+    createBtn.disabled = true;
+
+    // Send create request with stored form data
+    fetch('{% url "web:invoices_create" %}', {
+      method: 'POST',
+      body: currentFormData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      }
+    })
+    .then(response => {
+      if (response.ok) {
+        // Close modal and reload page
+        document.querySelector('.fixed').remove();
+        window.location.reload();
+      } else {
+        throw new Error('Erstellung fehlgeschlagen');
+      }
+    })
+    .catch(error => {
+      // Reset button
+      createBtn.textContent = originalText;
+      createBtn.disabled = false;
+
+      console.error('Create error:', error);
+      alert('Rechnungserstellung fehlgeschlagen: ' + error.message);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', addInvoiceRow);

@@ -8,27 +8,23 @@
     <div class="text-sm text-gray-600">E-Mail: office@ja-zum-leben.at</div>
   </div>
 
-  <!-- Recipient -->
-  <div>
-    <h2 class="text-lg font-semibold text-gray-900 mb-2">Rechnungsempfänger:</h2>
-    <div class="text-gray-700">{{ invoice.recipient_name }}</div>
-    <div class="text-gray-700">{{ invoice.recipient_address }}</div>
-    <div class="text-gray-700">{{ invoice.recipient_zip_city }}</div>
-  </div>
-
   <!-- Invoice Details -->
-  <div class="grid grid-cols-2 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
     <div>
-      <div class="text-sm"><strong class="text-gray-900">Rechnungsnummer:</strong> <span class="text-gray-700">{{ invoice.invoice_number }}</span></div>
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">Rechnungsempfänger:</h2>
+      <div class="text-gray-700">{{ invoice.recipient_name }}</div>
+      <div class="text-gray-700">{{ invoice.recipient_address }}</div>
+      <div class="text-gray-700">{{ invoice.recipient_zip_city }}</div>
     </div>
-    <div>
+    <div class="space-y-2">
+      <div class="text-sm"><strong class="text-gray-900">Rechnungsnummer:</strong> <span class="text-gray-700">{{ invoice.invoice_number }}</span></div>
       <div class="text-sm"><strong class="text-gray-900">Rechnungsdatum:</strong> <span class="text-gray-700">{{ invoice.invoice_date|date:"d.m.Y" }}</span></div>
       <div class="text-sm"><strong class="text-gray-900">Leistungsdatum:</strong> <span class="text-gray-700">{{ invoice.service_date|date:"d.m.Y" }}</span></div>
     </div>
   </div>
 
   <!-- Items Table -->
-  <div>
+  <div class="mb-6">
     <h2 class="text-lg font-semibold text-gray-900 mb-3">Leistungsbeschreibung</h2>
     <div class="overflow-x-auto">
       <table class="w-full border-collapse border border-gray-300 text-sm">
@@ -57,20 +53,20 @@
   </div>
 
   <!-- Totals -->
-  <div class="flex justify-end">
-    <div class="w-64">
+  <div class="flex justify-end mb-6">
+    <div class="w-80">
       <table class="w-full text-sm">
         <tr>
-          <td class="text-right pr-4 py-1 text-gray-900"><strong>Nettobetrag:</strong></td>
-          <td class="text-right py-1 text-gray-700">€ {{ invoice.subtotal|floatformat:2 }}</td>
+          <td class="text-right pr-4 py-2 text-gray-900"><strong>Nettobetrag:</strong></td>
+          <td class="text-right py-2 text-gray-700">€ {{ invoice.subtotal|floatformat:2 }}</td>
         </tr>
         <tr>
-          <td class="text-right pr-4 py-1 text-gray-900"><strong>USt. {{ invoice.vat_rate }}%:</strong></td>
-          <td class="text-right py-1 text-gray-700">€ {{ invoice.vat_amount|floatformat:2 }}</td>
+          <td class="text-right pr-4 py-2 text-gray-900"><strong>USt. {{ invoice.vat_rate }}% (Kleinunternehmer):</strong></td>
+          <td class="text-right py-2 text-gray-700">€ {{ invoice.vat_amount|floatformat:2 }}</td>
         </tr>
-        <tr class="border-t border-gray-300">
-          <td class="text-right pr-4 pt-2 text-gray-900"><strong>Rechnungsbetrag:</strong></td>
-          <td class="text-right pt-2 text-gray-900"><strong>€ {{ invoice.total|floatformat:2 }}</strong></td>
+        <tr class="border-t-2 border-gray-400">
+          <td class="text-right pr-4 pt-3 text-gray-900"><strong>Rechnungsbetrag:</strong></td>
+          <td class="text-right pt-3 text-gray-900"><strong>€ {{ invoice.total|floatformat:2 }}</strong></td>
         </tr>
       </table>
     </div>

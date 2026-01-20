@@ -48,12 +48,16 @@ class Invoice(models.Model):
         super().save(*args, **kwargs)
 
     def _generate_invoice_number(self):
-        """Generate invoice number in format R-YYYY-NNN"""
-        year = timezone.now().year
-        # Find the highest number for this year
+        """Generate invoice number in format NNN-DD-MM-YYYY"""
+        today = timezone.now().date()
+        day = today.day
+        month = today.month
+        year = today.year
+
+        # Find the highest number for today
         existing = Invoice.objects.filter(
             organization=self.organization,
-            invoice_number__startswith=f"R-{year}-"
+            invoice_number__endswith=f"-{day:02d}-{month:02d}-{year}"
         ).order_by('-invoice_number')
 
         if existing.exists():
@@ -62,7 +66,7 @@ class Invoice(models.Model):
                 last_number = last_invoice.invoice_number
                 # Extract the NNN part
                 try:
-                    number_part = int(last_number.split('-')[-1])
+                    number_part = int(last_number.split('-')[0])
                     next_number = number_part + 1
                 except (ValueError, IndexError):
                     next_number = 1
@@ -71,7 +75,7 @@ class Invoice(models.Model):
         else:
             next_number = 1
 
-        return f"R-{year}-{next_number:03d}"
+        return f"{next_number:03d}-{day:02d}-{month:02d}-{year}"
 
     def update_totals(self):
         """Update subtotal, VAT, and total based on invoice items"""

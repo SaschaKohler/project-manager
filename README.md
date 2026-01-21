@@ -2,6 +2,19 @@
 
 Django-based project/task manager.
 
+## Context / Proof of Concept
+
+This is a **full-stack proof of concept** that has been set up with the help of **AI/LLMs** and includes the required **Kubernetes (Kustomize) configs** to run the full application.
+
+The goal is to effectively manage and operate business activities and services for:
+
+- **ja-zum-leben.at**
+- **gerda-ahorner.at**
+- **vision.sascha-kohler.at**
+- **and additional services/projects**
+
+I also use this project personally to work effectively with **LLMs** and to deepen my understanding of the **Django** framework.
+
 ## Staging on Kubernetes (Kustomize)
 
 This repo ships Kubernetes manifests via **kustomize**.
@@ -123,9 +136,21 @@ You need to configure the repository secret:
 ## Local development
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r backend/requirements.txt
-python backend/manage.py migrate
-python backend/manage.py runserver
-```
+# This project uses `uv` for dependency management and running Python commands.
+
+cd backend
+
+# Install/sync dependencies
+uv sync
+
+# Database setup
+uv run python manage.py migrate
+
+# Run the dev server
+uv run python manage.py runserver
+
+# Run tests
+uv run pytest
+
+# Compile translations
+uv run python manage.py compilemessages

@@ -6,17 +6,26 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends build-essential gettext \
+  && apt-get install -y --no-install-recommends \
+    build-essential \
+    gettext \
+    libglib2.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    shared-mime-info \
   && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt /app/backend/requirements.txt
-RUN pip install --no-cache-dir -r /app/backend/requirements.txt
+RUN pip install --no-cache-dir uv
+RUN uv pip install --system --no-cache-dir -r /app/backend/requirements.txt
 
 COPY backend /app/backend
 
 ENV DJANGO_SETTINGS_MODULE=config.settings
 
-RUN python /app/backend/manage.py compilemessages
+RUN uv run python /app/backend/manage.py compilemessages
 
 EXPOSE 8000
 

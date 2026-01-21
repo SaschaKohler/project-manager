@@ -7,11 +7,26 @@
         @page {
             size: a4;
             margin: 1cm;
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+        :root {
+            --pm-primary: {{ invoice.company.theme_color_primary }};
+            --pm-secondary: {{ invoice.company.theme_color_secondary }};
+            --pm-accent: {{ invoice.company.theme_color_accent }};
         }
         body {
             font-family: Arial, sans-serif;
             font-size: 10pt;
             line-height: 1.4;
+        }
+        .pdf-footer {
+            position: running(footer);
+            font-size: 8pt;
+            color: #333;
+            border-top: 1px solid #ddd;
+            padding-top: 4px;
         }
         .center {
             text-align: center;
@@ -40,11 +55,16 @@
 </head>
 <body>
     <div class="center">
-        <div class="large bold">Gerda Ahorner & Sascha Kohler</div>
-        <div class="vspace-0-2">Phyto-Energetik | Mentaltraining</div>
-        <div>www.ja-zum-leben.at</div>
-        <div>Tel: 0699-10715848</div>
-        <div>E-Mail: office@ja-zum-leben.at</div>
+        {% if invoice.company.logo %}
+            <div class="vspace-0-5">
+                <img src="{{ invoice.company.logo.url }}" style="max-height: 70px; max-width: 260px;" />
+            </div>
+        {% endif %}
+        <div class="large bold">{{ invoice.company.name }}</div>
+        {% if invoice.company.tagline %}<div class="vspace-0-2">{{ invoice.company.tagline }}</div>{% endif %}
+        {% if invoice.company.website %}<div>{{ invoice.company.website }}</div>{% endif %}
+        {% if invoice.company.phone %}<div>{{ invoice.company.phone }}</div>{% endif %}
+        {% if invoice.company.email %}<div>{{ invoice.company.email }}</div>{% endif %}
     </div>
 
     <div class="vspace-0-5"></div>
@@ -124,10 +144,10 @@
     <div class="vspace-0-5"></div>
 
     <div><strong>Bankverbindung:</strong></div>
-    <div>Kontoinhaber: Sascha Werner Kohler</div>
-    <div>IBAN: AT57 1912 0500 8094 8311</div>
-    <div>BIC: SPBAATWW</div>
-    <div>Kreditinstitut: bank 99 AG</div>
+    {% if invoice.company.account_holder %}<div>Kontoinhaber: {{ invoice.company.account_holder }}</div>{% endif %}
+    {% if invoice.company.iban %}<div>IBAN: {{ invoice.company.iban }}</div>{% endif %}
+    {% if invoice.company.bic %}<div>BIC: {{ invoice.company.bic }}</div>{% endif %}
+    {% if invoice.company.bank_name %}<div>Kreditinstitut: {{ invoice.company.bank_name }}</div>{% endif %}
 
     <div class="vspace-0-5"></div>
 
@@ -149,6 +169,10 @@
 
     <div class="center small">
         Gerichtsstand und anzuwendendes Recht: Österreich
+    </div>
+
+    <div class="pdf-footer">
+        {{ invoice.company.name }}{% if invoice.company.website %} · {{ invoice.company.website }}{% endif %}{% if invoice.company.email %} · {{ invoice.company.email }}{% endif %}{% if invoice.company.phone %} · {{ invoice.company.phone }}{% endif %}{% if invoice.company.iban %} · IBAN: {{ invoice.company.iban }}{% endif %}
     </div>
 </body>
 </html>

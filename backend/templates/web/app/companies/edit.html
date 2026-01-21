@@ -1,0 +1,127 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Edit company" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Edit company" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{{ company.name }}</p>
+  </div>
+  <a href="{% url 'web:companies' %}" class="text-sm text-indigo-400 hover:text-indigo-300">{% trans "Back" %}</a>
+</div>
+
+<div class="mt-8 max-w-2xl rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-5 backdrop-blur">
+  <form class="space-y-3" method="post" enctype="multipart/form-data" action="{% url 'web:companies_update' company.id %}">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-xs text-zinc-400 mb-2">{% trans "Name" %}</label>
+      <input name="name" required value="{{ company.name }}"
+          class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div>
+      <label class="block text-xs text-zinc-400 mb-2">{% trans "Logo" %}</label>
+      <input name="logo" type="file" accept="image/*"
+             class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs" />
+      {% if company.logo %}
+        <div class="mt-2 text-xs text-zinc-400">{{ company.logo.name }}</div>
+      {% endif %}
+    </div>
+
+    <div>
+      <label class="block text-xs text-zinc-400 mb-2">{% trans "Tagline" %}</label>
+      <input name="tagline" value="{{ company.tagline }}"
+          class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div>
+      <label class="block text-xs text-zinc-400 mb-2">{% trans "Website" %}</label>
+      <input name="website" value="{{ company.website }}"
+          class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Phone" %}</label>
+        <input name="phone" value="{{ company.phone }}"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Email" %}</label>
+        <input name="email" type="email" value="{{ company.email }}"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+    </div>
+
+    <div class="border-t border-zinc-800 pt-3">
+      <div class="text-xs text-zinc-400 mb-2">{% trans "Template" %}</div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Default PDF Template" %}</label>
+        <select name="default_pdf_template"
+                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="classic" {% if company.default_pdf_template == "classic" %}selected{% endif %}>{% trans "Classic" %}</option>
+          <option value="modern" {% if company.default_pdf_template == "modern" %}selected{% endif %}>{% trans "Modern" %}</option>
+          <option value="elegant" {% if company.default_pdf_template == "elegant" %}selected{% endif %}>{% trans "Elegant" %}</option>
+          <option value="minimal" {% if company.default_pdf_template == "minimal" %}selected{% endif %}>{% trans "Minimal" %}</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3 mt-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Primary" %}</label>
+          <input name="theme_color_primary" type="color" value="{{ company.theme_color_primary }}"
+                 class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Secondary" %}</label>
+          <input name="theme_color_secondary" type="color" value="{{ company.theme_color_secondary }}"
+                 class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Accent" %}</label>
+          <input name="theme_color_accent" type="color" value="{{ company.theme_color_accent }}"
+                 class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-zinc-800 pt-3">
+      <div class="text-xs text-zinc-400 mb-2">{% trans "Bank details" %}</div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Account holder" %}</label>
+        <input name="account_holder" value="{{ company.account_holder }}"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "IBAN" %}</label>
+        <input name="iban" value="{{ company.iban }}"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "BIC" %}</label>
+          <input name="bic" value="{{ company.bic }}"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Bank" %}</label>
+          <input name="bank_name" value="{{ company.bank_name }}"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+    </div>
+
+    <button type="submit"
+            class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+      {% trans "Save changes" %}
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "web/app/layout.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Companies" %} · Project Manager{% endblock %}
+
+{% block content %}
+<div class="flex items-end justify-between gap-6">
+  <div>
+    <h1 class="text-3xl font-semibold tracking-tight">{% trans "Companies" %}</h1>
+    <p class="mt-2 text-sm text-zinc-300">{% trans "Create and manage your companies." %}</p>
+  </div>
+</div>
+
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+  <div class="lg:col-span-1 rounded-2xl border border-zinc-800/70 bg-zinc-900/25 p-5 backdrop-blur">
+    <div class="text-sm text-zinc-400">{% trans "New company" %}</div>
+
+    <form class="mt-4 space-y-3"
+          method="post"
+          enctype="multipart/form-data"
+          hx-encoding="multipart/form-data"
+          hx-post="{% url 'web:companies_create' %}"
+          hx-target="#company-list"
+          hx-swap="afterbegin">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Name" %}</label>
+        <input name="name" required
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Tagline" %}</label>
+        <input name="tagline"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Website" %}</label>
+        <input name="website"
+            class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Phone" %}</label>
+          <input name="phone"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Email" %}</label>
+          <input name="email" type="email"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Logo" %}</label>
+        <input name="logo" type="file" accept="image/*"
+               class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs" />
+      </div>
+
+      <div class="border-t border-zinc-800 pt-3">
+        <div class="text-xs text-zinc-400 mb-2">{% trans "Template" %}</div>
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Default PDF Template" %}</label>
+          <select name="default_pdf_template"
+                  class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="classic" selected>{% trans "Classic" %}</option>
+            <option value="modern">{% trans "Modern" %}</option>
+            <option value="elegant">{% trans "Elegant" %}</option>
+            <option value="minimal">{% trans "Minimal" %}</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mt-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Primary" %}</label>
+            <input name="theme_color_primary" type="color" value="#7e56c2"
+                   class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Secondary" %}</label>
+            <input name="theme_color_secondary" type="color" value="#6b9080"
+                   class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Accent" %}</label>
+            <input name="theme_color_accent" type="color" value="#c9a227"
+                   class="w-full h-10 rounded-lg bg-zinc-950 border border-zinc-800 px-2 py-1" />
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-zinc-800 pt-3">
+        <div class="text-xs text-zinc-400 mb-2">{% trans "Bank details" %}</div>
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "Account holder" %}</label>
+          <input name="account_holder"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div>
+          <label class="block text-xs text-zinc-400 mb-2">{% trans "IBAN" %}</label>
+          <input name="iban"
+              class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "BIC" %}</label>
+            <input name="bic"
+                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-2">{% trans "Bank" %}</label>
+            <input name="bank_name"
+                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+        </div>
+      </div>
+
+      <button type="submit"
+              class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 font-medium">
+        {% trans "Create company" %}
+      </button>
+    </form>
+  </div>
+
+  <div class="lg:col-span-2 rounded-2xl border border-zinc-800/70 bg-zinc-900/20">
+    <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+      <div class="text-sm text-zinc-400">{% trans "All companies" %}</div>
+      <div id="company-count" class="text-xs text-zinc-500">{{ companies|length }} {% trans "total" %}</div>
+    </div>
+
+    <div id="company-list" class="divide-y divide-zinc-800/70">
+      {% for company in companies %}
+        {% include "web/app/companies/_company_row.html" with company=company %}
+      {% empty %}
+        <div class="p-6 text-sm text-zinc-400">{% trans "No companies yet." %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -5,12 +5,18 @@ from apps.invoices.models import Invoice
 
 
 @pytest.mark.django_db
-def test_invoice_get_pdf_template_name_defaults_to_classic(user_factory, organization_factory):
+def test_invoice_get_pdf_template_name_defaults_to_classic(
+    user_factory,
+    organization_factory,
+    company_factory,
+):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     invoice = Invoice(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",
@@ -34,14 +40,17 @@ def test_invoice_get_pdf_template_name_defaults_to_classic(user_factory, organiz
 def test_invoice_get_pdf_template_name_maps_choices(
     user_factory,
     organization_factory,
+    company_factory,
     template_key,
     expected,
 ):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     invoice = Invoice(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",
@@ -54,9 +63,16 @@ def test_invoice_get_pdf_template_name_maps_choices(
 
 
 @pytest.mark.django_db
-def test_invoices_pdf_uses_invoice_template(mocker, client, user_factory, organization_factory):
+def test_invoices_pdf_uses_invoice_template(
+    mocker,
+    client,
+    user_factory,
+    organization_factory,
+    company_factory,
+):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     client.force_login(user)
     session = client.session
@@ -65,6 +81,7 @@ def test_invoices_pdf_uses_invoice_template(mocker, client, user_factory, organi
 
     invoice = Invoice.objects.create(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",
@@ -96,9 +113,16 @@ def test_invoices_pdf_uses_invoice_template(mocker, client, user_factory, organi
 
 
 @pytest.mark.django_db
-def test_invoices_pdf_allows_template_override(mocker, client, user_factory, organization_factory):
+def test_invoices_pdf_allows_template_override(
+    mocker,
+    client,
+    user_factory,
+    organization_factory,
+    company_factory,
+):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     client.force_login(user)
     session = client.session
@@ -107,6 +131,7 @@ def test_invoices_pdf_allows_template_override(mocker, client, user_factory, org
 
     invoice = Invoice.objects.create(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",
@@ -136,9 +161,16 @@ def test_invoices_pdf_allows_template_override(mocker, client, user_factory, org
 
 
 @pytest.mark.django_db
-def test_invoices_pdf_preview_returns_html(mocker, client, user_factory, organization_factory):
+def test_invoices_pdf_preview_returns_html(
+    mocker,
+    client,
+    user_factory,
+    organization_factory,
+    company_factory,
+):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     client.force_login(user)
     session = client.session
@@ -147,6 +179,7 @@ def test_invoices_pdf_preview_returns_html(mocker, client, user_factory, organiz
 
     invoice = Invoice.objects.create(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",
@@ -167,9 +200,16 @@ def test_invoices_pdf_preview_returns_html(mocker, client, user_factory, organiz
 
 
 @pytest.mark.django_db
-def test_invoices_pdf_save_persists_template_choice(mocker, client, user_factory, organization_factory):
+def test_invoices_pdf_save_persists_template_choice(
+    mocker,
+    client,
+    user_factory,
+    organization_factory,
+    company_factory,
+):
     user = user_factory()
     org = organization_factory(user=user)
+    company = company_factory(organization=org, owner=user)
 
     client.force_login(user)
     session = client.session
@@ -178,6 +218,7 @@ def test_invoices_pdf_save_persists_template_choice(mocker, client, user_factory
 
     invoice = Invoice.objects.create(
         organization=org,
+        company=company,
         recipient_name="Test",
         recipient_address="Street 1",
         recipient_zip="1234",

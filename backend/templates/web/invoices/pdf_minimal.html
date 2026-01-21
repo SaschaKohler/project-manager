@@ -7,11 +7,17 @@
         @page {
             size: a4;
             margin: 1cm;
+            @bottom-center {
+                content: element(footer);
+            }
         }
         :root {
+            --pm-primary: {{ invoice.company.theme_color_primary }};
+            --pm-secondary: {{ invoice.company.theme_color_secondary }};
+            --pm-accent: {{ invoice.company.theme_color_accent }};
             --jzl-cream: #faf8f5;
             --jzl-light-gray: #e8e4df;
-            --jzl-purple: #7e56c2;
+            --jzl-purple: var(--pm-primary);
             --jzl-text-dark: #2d2a32;
             --jzl-text-medium: #5a5662;
         }
@@ -132,6 +138,13 @@
             color: var(--jzl-text-medium);
             font-size: 8.5pt;
         }
+        .pdf-footer {
+            position: running(footer);
+            font-size: 8.5pt;
+            color: var(--jzl-text-medium);
+            border-top: 1px solid var(--jzl-light-gray);
+            padding-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -140,9 +153,16 @@
         <div class="content">
             <div class="row">
                 <div class="col left">
-                    <div class="brand">Gerda Ahorner &amp; Sascha Kohler</div>
-                    <div class="contact">Phyto-Energetik | Mentaltraining</div>
-                    <div class="contact">www.ja-zum-leben.at | Tel: 0699-10715848 | office@ja-zum-leben.at</div>
+                    {% if invoice.company.logo %}
+                        <div style="margin-bottom: 8px;">
+                            <img src="{{ invoice.company.logo.url }}" style="max-height: 54px; max-width: 220px;" />
+                        </div>
+                    {% endif %}
+                    <div class="brand">{{ invoice.company.name }}</div>
+                    {% if invoice.company.tagline %}<div class="contact">{{ invoice.company.tagline }}</div>{% endif %}
+                    <div class="contact">
+                        {% if invoice.company.website %}{{ invoice.company.website }}{% endif %}{% if invoice.company.website and invoice.company.phone %} | {% endif %}{% if invoice.company.phone %}{{ invoice.company.phone }}{% endif %}{% if invoice.company.email and invoice.company.website %} | {% elif invoice.company.email and invoice.company.phone %} | {% endif %}{% if invoice.company.email %}{{ invoice.company.email }}{% endif %}
+                    </div>
                 </div>
                 <div class="col right">
                     <div style="font-weight: 900; font-size: 12pt;">Rechnung</div>
@@ -213,10 +233,10 @@
         <div class="muted">Zahlbar innerhalb von 14 Tagen nach Erhalt dieser Rechnung.</div>
 
         <div style="margin-top: 8px;">
-            <div><strong>Kontoinhaber:</strong> Sascha Werner Kohler</div>
-            <div><strong>IBAN:</strong> AT57 1912 0500 8094 8311</div>
-            <div><strong>BIC:</strong> SPBAATWW</div>
-            <div><strong>Kreditinstitut:</strong> bank 99 AG</div>
+            <div><strong>Kontoinhaber:</strong> {{ invoice.company.account_holder }}</div>
+            <div><strong>IBAN:</strong> {{ invoice.company.iban }}</div>
+            <div><strong>BIC:</strong> {{ invoice.company.bic }}</div>
+            <div><strong>Kreditinstitut:</strong> {{ invoice.company.bank_name }}</div>
             <div><strong>Verwendungszweck:</strong> Rechnung {{ invoice.invoice_number }}</div>
         </div>
 
@@ -224,9 +244,12 @@
             Gemäß § 6 Abs. 1 Z 27 UStG wird keine Umsatzsteuer berechnet.
         </div>
 
-        <div style="margin-top: 10px; font-weight: 700; text-align: center;">Vielen Dank für Ihr Vertrauen!</div>
-    </div>
+        <div class="footer">
+            Vielen Dank für Ihr Vertrauen! · Gerichtsstand & Recht: Österreich
+        </div>
 
-    <div class="footer">Gerichtsstand und anzuwendendes Recht: Österreich</div>
-</body>
-</html>
+        <div class="pdf-footer">
+            {{ invoice.company.name }}{% if invoice.company.website %} · {{ invoice.company.website }}{% endif %}{% if invoice.company.email %} · {{ invoice.company.email }}{% endif %}{% if invoice.company.phone %} · {{ invoice.company.phone }}{% endif %}{% if invoice.company.iban %} · IBAN: {{ invoice.company.iban }}{% endif %}
+        </div>
+    </body>
+    </html>

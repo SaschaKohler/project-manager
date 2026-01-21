@@ -79,6 +79,47 @@ def organization_factory(db, user_factory):
 
 
 @pytest.fixture
+def company_factory(db, organization_factory, user_factory):
+    """Factory for creating test companies."""
+    from apps.invoices.models import Company
+    import uuid
+
+    def create_company(organization=None, owner=None, name=None, **kwargs):
+        if owner is None:
+            owner = user_factory()
+        if organization is None:
+            organization = organization_factory(user=owner)
+        if name is None:
+            name = f"Test Company {uuid.uuid4().hex[:8]}"
+
+        defaults = {
+            "tagline": "",
+            "website": "",
+            "phone": "",
+            "email": "",
+            "account_holder": "",
+            "iban": "",
+            "bic": "",
+            "bank_name": "",
+            "default_pdf_template": "classic",
+            "theme_color_primary": "#7e56c2",
+            "theme_color_secondary": "#6b9080",
+            "theme_color_accent": "#c9a227",
+            "logo": None,
+        }
+        defaults.update(kwargs)
+
+        return Company.objects.create(
+            organization=organization,
+            owner=owner,
+            name=name,
+            **defaults,
+        )
+
+    return create_company
+
+
+@pytest.fixture
 def project_factory(db, organization_factory, user_factory):
     """Factory for creating test projects."""
     from apps.projects.models import Project

@@ -1,11 +1,16 @@
 <div class="space-y-6">
   <!-- Header -->
   <div class="text-center border-b border-gray-200 pb-4">
-    <h1 class="text-2xl font-bold text-gray-900">Gerda Ahorner & Sascha Kohler</h1>
-    <div class="text-sm text-gray-600 mt-1">Phyto-Energetik | Mentaltraining</div>
-    <div class="text-sm text-gray-600">www.ja-zum-leben.at</div>
-    <div class="text-sm text-gray-600">Tel: 0699-10715848</div>
-    <div class="text-sm text-gray-600">E-Mail: office@ja-zum-leben.at</div>
+    {% if invoice.company.logo %}
+      <div class="flex justify-center mb-3">
+        <img src="{{ invoice.company.logo.url }}" alt="{{ invoice.company.name }}" style="max-height: 64px; max-width: 240px;" />
+      </div>
+    {% endif %}
+    <h1 class="text-2xl font-bold text-gray-900">{{ invoice.company.name }}</h1>
+    {% if invoice.company.tagline %}<div class="text-sm text-gray-600 mt-1">{{ invoice.company.tagline }}</div>{% endif %}
+    {% if invoice.company.website %}<div class="text-sm text-gray-600">{{ invoice.company.website }}</div>{% endif %}
+    {% if invoice.company.phone %}<div class="text-sm text-gray-600">{{ invoice.company.phone }}</div>{% endif %}
+    {% if invoice.company.email %}<div class="text-sm text-gray-600">{{ invoice.company.email }}</div>{% endif %}
   </div>
 
   <!-- Invoice Details -->

@@ -190,4 +190,8 @@ urlpatterns = [
         invoices.invoices_pdf,
         name="invoices_pdf",
     ),
+    path("companies/", views.companies_page, name="companies"),
+    path("companies/create/", views.companies_create, name="companies_create"),
+    path("companies/<uuid:company_id>/edit/", views.companies_edit, name="companies_edit"),
+    path("companies/<uuid:company_id>/update/", views.companies_update, name="companies_update"),
 ]

@@ -5,7 +5,58 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from django.conf import settings
+
 from apps.tenants.models import Organization
+
+
+class Company(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="companies"
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="companies",
+    )
+
+    name = models.CharField(max_length=255)
+    tagline = models.CharField(max_length=255, blank=True, default="")
+    website = models.CharField(max_length=255, blank=True, default="")
+    phone = models.CharField(max_length=64, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+
+    account_holder = models.CharField(max_length=255, blank=True, default="")
+    iban = models.CharField(max_length=64, blank=True, default="")
+    bic = models.CharField(max_length=32, blank=True, default="")
+    bank_name = models.CharField(max_length=255, blank=True, default="")
+
+    default_pdf_template = models.CharField(
+        max_length=32,
+        choices=[
+            ("classic", _("Classic")),
+            ("modern", _("Modern")),
+            ("elegant", _("Elegant")),
+            ("minimal", _("Minimal")),
+        ],
+        default="classic",
+    )
+    theme_color_primary = models.CharField(max_length=7, default="#7e56c2")
+    theme_color_secondary = models.CharField(max_length=7, default="#6b9080")
+    theme_color_accent = models.CharField(max_length=7, default="#c9a227")
+
+    logo = models.FileField(upload_to="company_logos/", blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("organization", "owner", "name")
+        ordering = ["name"]
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Invoice(models.Model):
@@ -13,7 +64,10 @@ class Invoice(models.Model):
     organization = models.ForeignKey(
         Organization, on_delete=models.CASCADE, related_name="invoices"
     )
-    invoice_number = models.CharField(max_length=20, unique=True, editable=False)
+    company = models.ForeignKey(
+        Company, on_delete=models.PROTECT, related_name="invoices"
+    )
+    invoice_number = models.CharField(max_length=20, editable=False)
     invoice_date = models.DateField(default=timezone.now)
     service_date = models.DateField(default=timezone.now)
 
@@ -51,6 +105,12 @@ class Invoice(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "company", "invoice_number"],
+                name="uniq_invoice_number_per_company",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"Invoice {self.invoice_number}"
@@ -70,6 +130,7 @@ class Invoice(models.Model):
         # Find the highest number for today
         existing = Invoice.objects.filter(
             organization=self.organization,
+            company=self.company,
             invoice_number__endswith=f"-{day:02d}-{month:02d}-{year}"
         ).order_by('-invoice_number')
 

@@ -22,6 +22,15 @@
           hx-on::after-request="handleInvoiceCreated()">
       {% csrf_token %}
       <div>
+        <label class="block text-xs text-zinc-400 mb-2">{% trans "Company" %}</label>
+        <select name="company" required
+                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
+          {% for company in companies %}
+            <option value="{{ company.id }}">{{ company.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
         <label class="block text-xs text-zinc-400 mb-2">{% trans "Recipient Name" %}</label>
         <input name="recipient_name" required placeholder="{% trans 'Full name' %}"
                class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -60,7 +69,8 @@
         <label class="block text-xs text-zinc-400 mb-2">{% trans "PDF Template" %}</label>
         <select name="pdf_template"
                 class="w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="classic" selected>{% trans "Classic" %}</option>
+          <option value="" selected>{% trans "Use company default" %}</option>
+          <option value="classic">{% trans "Classic" %}</option>
           <option value="modern">{% trans "Modern" %}</option>
           <option value="elegant">{% trans "Elegant" %}</option>
           <option value="minimal">{% trans "Minimal" %}</option>
@@ -115,9 +125,24 @@
   </div>
 
   <div class="lg:col-span-2 rounded-2xl border border-zinc-800/70 bg-zinc-900/20">
-    <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between">
+    <div class="px-5 py-4 border-b border-zinc-800/70 flex items-center justify-between gap-4">
       <div class="text-sm text-zinc-400">{% trans "All invoices" %}</div>
-      <div id="invoice-count" class="text-xs text-zinc-500">{{ invoices|length }} {% trans "total" %}</div>
+      <div class="flex items-center gap-3">
+        <form method="get" action="{% url 'web:invoices' %}">
+          <select name="company"
+                  onchange="this.form.submit()"
+                  class="rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">{% trans "All companies" %}</option>
+            {% for company in companies %}
+              <option value="{{ company.id }}" {% if selected_company and selected_company.id == company.id %}selected{% endif %}>{{ company.name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        <a href="{% url 'web:companies' %}" class="text-xs text-indigo-400 hover:text-indigo-300">
+          {% trans "Manage companies" %}
+        </a>
+        <div id="invoice-count" class="text-xs text-zinc-500">{{ invoices|length }} {% trans "total" %}</div>
+      </div>
     </div>
     <div id="invoice-list" class="divide-y divide-zinc-800/70">
       {% for invoice in invoices %}

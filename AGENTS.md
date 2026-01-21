@@ -4,6 +4,10 @@
 
 - When starting the django app use always uv to run python
 - when implementing new functions always add the test in order to check it's functionality
+- use type hints for all functions and methods
+- use django's translation system for all strings
+- use django's form validation for all forms
+- when it's possible and also makes sense use django's built-in partial templates in views and templates
 
 
 ## important always use `uv run`

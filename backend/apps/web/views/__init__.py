@@ -22,6 +22,7 @@ from .auth import healthz, register
 from .dashboard import app_home, calendar_events, calendar_page
 from .onboarding import onboarding, switch_org, workspaces_new
 from .team import invite_accept, team_invite, team_page
+from .companies import companies_create, companies_edit, companies_page, companies_update
 
 # Projects
 from .projects import (
@@ -113,6 +114,11 @@ __all__ = [
     "team_page",
     "team_invite",
     "invite_accept",
+    # Companies
+    "companies_page",
+    "companies_create",
+    "companies_edit",
+    "companies_update",
     # Projects
     "projects_page",
     "projects_create",

@@ -7,15 +7,21 @@
         @page {
             size: a4;
             margin: 1cm;
+            @bottom-center {
+                content: element(footer);
+            }
         }
         :root {
+            --pm-primary: {{ invoice.company.theme_color_primary }};
+            --pm-secondary: {{ invoice.company.theme_color_secondary }};
+            --pm-accent: {{ invoice.company.theme_color_accent }};
             --jzl-cream: #faf8f5;
             --jzl-warm-white: #f7f5f2;
             --jzl-light-gray: #e8e4df;
-            --jzl-purple: #7e56c2;
+            --jzl-purple: var(--pm-primary);
             --jzl-purple-soft: #9b7dd4;
-            --jzl-sage: #6b9080;
-            --jzl-gold: #c9a227;
+            --jzl-sage: var(--pm-secondary);
+            --jzl-gold: var(--pm-accent);
             --jzl-text-dark: #2d2a32;
             --jzl-text-medium: #5a5662;
         }
@@ -200,6 +206,13 @@
             font-weight: 700;
             font-size: 9pt;
         }
+        .pdf-footer {
+            position: running(footer);
+            font-size: 8.5pt;
+            color: var(--jzl-text-medium);
+            border-top: 1px solid var(--jzl-light-gray);
+            padding-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -208,9 +221,16 @@
     <div class="header">
         <div class="left">
             <div class="brand">
-                <div class="name">Gerda Ahorner &amp; Sascha Kohler</div>
-                <div class="tag">Phyto-Energetik | Mentaltraining</div>
-                <div class="meta">www.ja-zum-leben.at | Tel: 0699-10715848 | office@ja-zum-leben.at</div>
+                {% if invoice.company.logo %}
+                    <div style="margin-bottom: 8px;">
+                        <img src="{{ invoice.company.logo.url }}" style="max-height: 54px; max-width: 220px;" />
+                    </div>
+                {% endif %}
+                <div class="name">{{ invoice.company.name }}</div>
+                {% if invoice.company.tagline %}<div class="tag">{{ invoice.company.tagline }}</div>{% endif %}
+                <div class="meta">
+                    {% if invoice.company.website %}{{ invoice.company.website }}{% endif %}{% if invoice.company.website and invoice.company.phone %} | {% endif %}{% if invoice.company.phone %}{{ invoice.company.phone }}{% endif %}{% if invoice.company.email and invoice.company.website %} | {% elif invoice.company.email and invoice.company.phone %} | {% endif %}{% if invoice.company.email %}{{ invoice.company.email }}{% endif %}
+                </div>
             </div>
         </div>
         <div class="right">
@@ -282,19 +302,19 @@
         <table class="bank">
             <tr>
                 <td>Kontoinhaber</td>
-                <td>Sascha Werner Kohler</td>
+                <td>{{ invoice.company.account_holder }}</td>
             </tr>
             <tr>
                 <td>IBAN</td>
-                <td>AT57 1912 0500 8094 8311</td>
+                <td>{{ invoice.company.iban }}</td>
             </tr>
             <tr>
                 <td>BIC</td>
-                <td>SPBAATWW</td>
+                <td>{{ invoice.company.bic }}</td>
             </tr>
             <tr>
                 <td>Kreditinstitut</td>
-                <td>bank 99 AG</td>
+                <td>{{ invoice.company.bank_name }}</td>
             </tr>
             <tr>
                 <td>Verwendungszweck</td>
@@ -307,8 +327,12 @@
         </div>
     </div>
 
-    <div class="thanks">Vielen Dank für Ihr Vertrauen!</div>
+    <div class="footer">
+        <div class="thanks">Vielen Dank für Ihr Vertrauen!</div>
+    </div>
 
-    <div class="footer">Gerichtsstand und anzuwendendes Recht: Österreich</div>
+    <div class="pdf-footer">
+        {{ invoice.company.name }}{% if invoice.company.website %} · {{ invoice.company.website }}{% endif %}{% if invoice.company.email %} · {{ invoice.company.email }}{% endif %}{% if invoice.company.phone %} · {{ invoice.company.phone }}{% endif %}{% if invoice.company.iban %} · IBAN: {{ invoice.company.iban }}{% endif %}
+    </div>
 </body>
 </html>

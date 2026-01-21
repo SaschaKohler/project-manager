@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-20 14:42+0100\n"
+"POT-Creation-Date: 2026-01-21 11:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,6 +21,58 @@ msgstr ""
 #: apps/projects/automation_refactored.py:191
 msgid "Rule executed successfully"
 msgstr "Regel erfolgreich ausgeführt"
+
+#: apps/invoices/models.py:38 apps/invoices/models.py:87
+#: templates/web/app/companies/edit.html:66
+#: templates/web/app/companies/page.html:71
+#: templates/web/app/invoices/detail.html:17
+#: templates/web/app/invoices/page.html:73
+msgid "Classic"
+msgstr "Klassisch"
+
+#: apps/invoices/models.py:39 apps/invoices/models.py:88
+#: templates/web/app/companies/edit.html:67
+#: templates/web/app/companies/page.html:72
+#: templates/web/app/invoices/detail.html:18
+#: templates/web/app/invoices/page.html:74
+msgid "Modern"
+msgstr "Modern"
+
+#: apps/invoices/models.py:40 apps/invoices/models.py:89
+#: templates/web/app/companies/edit.html:68
+#: templates/web/app/companies/page.html:73
+#: templates/web/app/invoices/detail.html:19
+#: templates/web/app/invoices/page.html:75
+msgid "Elegant"
+msgstr "Elegant"
+
+#: apps/invoices/models.py:41 apps/invoices/models.py:90
+#: templates/web/app/companies/edit.html:69
+#: templates/web/app/companies/page.html:74
+#: templates/web/app/invoices/detail.html:20
+#: templates/web/app/invoices/page.html:76
+msgid "Minimal"
+msgstr "Minimal"
+
+#: apps/invoices/serializers.py:40
+msgid "Authentication required"
+msgstr "Authentifizierung erforderlich"
+
+#: apps/invoices/serializers.py:43 apps/web/views/invoices.py:42
+msgid "Company does not belong to the current user"
+msgstr "Das Unternehmen gehört nicht zum aktuellen Benutzer"
+
+#: apps/invoices/serializers.py:47 apps/web/views/invoices.py:44
+msgid "Company does not belong to the current organization"
+msgstr "Das Unternehmen gehört nicht zur aktuellen Organisation"
+
+#: apps/invoices/views.py:65
+msgid "Invoice is not in this organization"
+msgstr "Die Rechnung gehört nicht zu dieser Organisation"
+
+#: apps/invoices/views.py:67
+msgid "Invoice does not belong to the current user"
+msgstr "Die Rechnung gehört nicht zum aktuellen Benutzer"
 
 #: apps/projects/models.py:22
 msgid "Workshop"
@@ -277,19 +328,40 @@ msgstr "Button-Aktion ausgeführt"
 msgid "Button action failed"
 msgstr "Button-Aktion fehlgeschlagen"
 
+#: apps/web/views/companies.py:46
+msgid "Enter a valid hex color (e.g. #7e56c2)."
+msgstr "Geben Sie eine gültige Hex-Farbe ein (z.B. #7e56c2)."
+
+#: apps/web/views/companies.py:51
+msgid "Enter a valid hex color (e.g. #6b9080)."
+msgstr "Geben Sie eine gültige Hex-Farbe ein (z.B. #6b9080)."
+
+#: apps/web/views/companies.py:56
+msgid "Enter a valid hex color (e.g. #c9a227)."
+msgstr "Geben Sie eine gültige Hex-Farbe ein (z.B. #c9a227)."
+
+#: apps/web/views/companies.py:117 apps/web/views/companies.py:169
+#: apps/web/views/invoices.py:99
+msgid "Invalid form"
+msgstr "Ungültiges Formular"
+
+#: apps/web/views/companies.py:130 apps/web/views/projects.py:117
+#: templates/web/app/companies/page.html:136
+#: templates/web/app/invoices/page.html:144
+#: templates/web/app/projects/page.html:177
+msgid "total"
+msgstr "gesamt"
+
 #: apps/web/views/onboarding.py:21 apps/web/views/onboarding.py:56
 #: apps/web/views_backup.py:2332 apps/web/views_backup.py:2365
 msgid "Please provide a workspace name"
 msgstr "Bitte geben Sie einen Workspace-Namen an"
 
-#: apps/web/views/projects.py:117 templates/web/app/invoices/page.html:109
-#: templates/web/app/projects/page.html:177
-msgid "total"
-msgstr "gesamt"
-
 #: apps/web/views/task_automations.py:104
 msgid "Please fill all required fields and add at least one action"
-msgstr "Bitte füllen Sie alle erforderlichen Felder aus"
+msgstr ""
+"Bitte füllen Sie alle erforderlichen Felder aus und fügen Sie mindestens "
+"eine Aktion hinzu"
 
 #: apps/web/views/task_automations.py:274 apps/web/views_backup.py:2490
 #: apps/web/views_backup.py:2665
@@ -314,27 +386,27 @@ msgstr "Label erstellt"
 
 #: apps/web/views/tasks.py:257 apps/web/views_backup.py:1565
 msgid "Bitte geben Sie einen Titel für die Aufgabe ein."
-msgstr ""
+msgstr "Bitte geben Sie einen Titel für die Aufgabe ein."
 
 #: apps/web/views/tasks.py:261 apps/web/views_backup.py:1570
 msgid "Bitte wählen Sie ein Projekt aus."
-msgstr ""
+msgstr "Bitte wählen Sie ein Projekt aus."
 
 #: apps/web/views/tasks.py:268 apps/web/views_backup.py:1577
 msgid "Das ausgewählte Projekt wurde nicht gefunden."
-msgstr ""
+msgstr "Das ausgewählte Projekt wurde nicht gefunden."
 
 #: apps/web/views/tasks.py:273
 msgid "Aufgaben können nicht für archivierte Projekte erstellt werden."
-msgstr ""
+msgstr "Aufgaben können nicht für archivierte Projekte erstellt werden."
 
 #: apps/web/views/tasks.py:279 apps/web/views_backup.py:1588
 msgid "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
-msgstr ""
+msgstr "Der ausgewählte Benutzer ist kein Mitglied dieser Organisation."
 
 #: apps/web/views/tasks.py:287 apps/web/views_backup.py:1602
 msgid "Das Fälligkeitsdatum hat ein ungültiges Format."
-msgstr ""
+msgstr "Das Fälligkeitsdatum hat ein ungültiges Format."
 
 #: apps/web/views/tasks.py:297 apps/web/views_backup.py:1616
 #, python-brace-format
@@ -342,6 +414,8 @@ msgid ""
 "Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - "
 "{end})."
 msgstr ""
+"Das Fälligkeitsdatum muss innerhalb des Projektzeitraums liegen ({start} - "
+"{end})."
 
 #: apps/web/views/tasks.py:305
 msgid "Recurrence frequency is required when task is recurring."
@@ -362,11 +436,11 @@ msgstr "Wiederholungsintervall muss eine positive ganze Zahl sein."
 
 #: apps/web/views/tasks.py:341 apps/web/views_backup.py:1630
 msgid "Die ausgewählte Ideen-Karte wurde nicht gefunden."
-msgstr ""
+msgstr "Die ausgewählte Ideen-Karte wurde nicht gefunden."
 
 #: apps/web/views/tasks.py:367
 msgid "Fehler beim Erstellen der Aufgabe."
-msgstr ""
+msgstr "Fehler beim Erstellen der Aufgabe."
 
 #: apps/web/views/tasks.py:528 apps/web/views_backup.py:1823
 msgid "Task archived"
@@ -455,7 +529,8 @@ msgstr "Regel erstellen"
 
 #: templates/web/app/boards/automations.html:79
 #: templates/web/app/boards/automations.html:197
-#: templates/web/auth/register.html:35
+#: templates/web/app/companies/edit.html:20
+#: templates/web/app/companies/page.html:28 templates/web/auth/register.html:35
 msgid "Name"
 msgstr "Name"
 
@@ -656,6 +731,7 @@ msgstr "Karte"
 
 #: templates/web/app/boards/card_detail.html:15
 #: templates/web/app/boards/detail.html:17
+#: templates/web/app/companies/edit.html:12
 #: templates/web/app/tasks/detail.html:17
 msgid "Back"
 msgstr "Zurück"
@@ -672,10 +748,10 @@ msgid "Title"
 msgstr "Titel"
 
 #: templates/web/app/boards/card_detail.html:31
-#: templates/web/app/invoices/detail.html:84
-#: templates/web/app/invoices/page.html:66
-#: templates/web/app/invoices/page.html:131
-#: templates/web/app/invoices/page.html:185
+#: templates/web/app/invoices/detail.html:104
+#: templates/web/app/invoices/page.html:87
+#: templates/web/app/invoices/page.html:167
+#: templates/web/app/invoices/page.html:221
 #: templates/web/app/projects/page.html:32
 #: templates/web/app/tasks/detail.html:66
 msgid "Description"
@@ -727,7 +803,7 @@ msgstr "Hochladen"
 
 #: templates/web/app/boards/detail.html:4 templates/web/app/boards/page.html:4
 #: templates/web/app/boards/page.html:9 templates/web/app/layout.html:70
-#: templates/web/app/layout.html:216
+#: templates/web/app/layout.html:222
 msgid "Boards"
 msgstr "Boards"
 
@@ -782,7 +858,7 @@ msgid "No boards yet."
 msgstr "Noch keine Boards."
 
 #: templates/web/app/calendar.html:5 templates/web/app/calendar.html:10
-#: templates/web/app/layout.html:76 templates/web/app/layout.html:222
+#: templates/web/app/layout.html:76 templates/web/app/layout.html:228
 #: templates/web/app/projects/_project_row.html:39
 #: templates/web/app/projects/calendar.html:5
 #: templates/web/app/projects/calendar.html:11
@@ -894,8 +970,123 @@ msgstr "Ganztägig"
 msgid "Could not refresh calendar."
 msgstr "Kalender konnte nicht aktualisiert werden."
 
+#: templates/web/app/companies/_company_row.html:14
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: templates/web/app/companies/edit.html:4
+#: templates/web/app/companies/edit.html:9
+msgid "Edit company"
+msgstr "Unternehmen bearbeiten"
+
+#: templates/web/app/companies/edit.html:26
+#: templates/web/app/companies/page.html:59
+msgid "Logo"
+msgstr "Logo"
+
+#: templates/web/app/companies/edit.html:35
+#: templates/web/app/companies/page.html:34
+msgid "Tagline"
+msgstr "Slogan"
+
+#: templates/web/app/companies/edit.html:41
+#: templates/web/app/companies/page.html:40
+msgid "Website"
+msgstr "Website"
+
+#: templates/web/app/companies/edit.html:48
+#: templates/web/app/companies/page.html:47
+msgid "Phone"
+msgstr "Telefon"
+
+#: templates/web/app/companies/edit.html:53
+#: templates/web/app/companies/page.html:52 templates/web/app/team/page.html:20
+#: templates/web/auth/login.html:24 templates/web/auth/register.html:25
+msgid "Email"
+msgstr "E-Mail"
+
+#: templates/web/app/companies/edit.html:60
+#: templates/web/app/companies/page.html:65
+msgid "Template"
+msgstr "Vorlage"
+
+#: templates/web/app/companies/edit.html:63
+#: templates/web/app/companies/page.html:68
+msgid "Default PDF Template"
+msgstr "Standard-PDF-Vorlage"
+
+#: templates/web/app/companies/edit.html:75
+#: templates/web/app/companies/page.html:80
+msgid "Primary"
+msgstr "Primär"
+
+#: templates/web/app/companies/edit.html:80
+#: templates/web/app/companies/page.html:85
+msgid "Secondary"
+msgstr "Sekundär"
+
+#: templates/web/app/companies/edit.html:85
+#: templates/web/app/companies/page.html:90
+msgid "Accent"
+msgstr "Akzent"
+
+#: templates/web/app/companies/edit.html:93
+#: templates/web/app/companies/page.html:98
+msgid "Bank details"
+msgstr "Bankdaten"
+
+#: templates/web/app/companies/edit.html:96
+#: templates/web/app/companies/page.html:101
+msgid "Account holder"
+msgstr "Kontoinhaber"
+
+#: templates/web/app/companies/edit.html:102
+#: templates/web/app/companies/page.html:107
+msgid "IBAN"
+msgstr "IBAN"
+
+#: templates/web/app/companies/edit.html:109
+#: templates/web/app/companies/page.html:114
+msgid "BIC"
+msgstr "BIC"
+
+#: templates/web/app/companies/edit.html:114
+#: templates/web/app/companies/page.html:119
+msgid "Bank"
+msgstr "Bank"
+
+#: templates/web/app/companies/edit.html:123
+msgid "Save changes"
+msgstr "Änderungen speichern"
+
+#: templates/web/app/companies/page.html:4
+#: templates/web/app/companies/page.html:9 templates/web/app/layout.html:94
+msgid "Companies"
+msgstr "Unternehmen"
+
+#: templates/web/app/companies/page.html:10
+msgid "Create and manage your companies."
+msgstr "Unternehmen erstellen und verwalten."
+
+#: templates/web/app/companies/page.html:16
+msgid "New company"
+msgstr "Neues Unternehmen"
+
+#: templates/web/app/companies/page.html:128
+msgid "Create company"
+msgstr "Unternehmen erstellen"
+
+#: templates/web/app/companies/page.html:135
+#: templates/web/app/invoices/page.html:135
+msgid "All companies"
+msgstr "Alle Unternehmen"
+
+#: templates/web/app/companies/page.html:143
+msgid "No companies yet."
+msgstr "Noch keine Unternehmen."
+
 #: templates/web/app/dashboard.html:4 templates/web/app/dashboard.html:9
-#: templates/web/app/layout.html:52 templates/web/app/layout.html:198
+#: templates/web/app/layout.html:52 templates/web/app/layout.html:204
 msgid "Dashboard"
 msgstr "Dashboard"
 
@@ -904,14 +1095,14 @@ msgid "A clean overview — fast actions, no noise."
 msgstr "Eine klare Übersicht — schnelle Aktionen, kein Lärm."
 
 #: templates/web/app/dashboard.html:13 templates/web/app/dashboard.html:21
-#: templates/web/app/layout.html:58 templates/web/app/layout.html:204
+#: templates/web/app/layout.html:58 templates/web/app/layout.html:210
 #: templates/web/app/projects/page.html:4
 #: templates/web/app/projects/page.html:9
 msgid "Projects"
 msgstr "Projekte"
 
 #: templates/web/app/dashboard.html:14 templates/web/app/dashboard.html:27
-#: templates/web/app/layout.html:64 templates/web/app/layout.html:210
+#: templates/web/app/layout.html:64 templates/web/app/layout.html:216
 #: templates/web/app/tasks/detail.html:4 templates/web/app/tasks/page.html:4
 #: templates/web/app/tasks/page.html:9
 msgid "Tasks"
@@ -972,84 +1163,79 @@ msgstr "Team anzeigen"
 msgid "Invoice"
 msgstr "Rechnung"
 
-#: templates/web/app/invoices/detail.html:15
+#: templates/web/app/invoices/detail.html:25
+#: templates/web/app/invoices/detail.html:130
+#: templates/web/app/invoices/page.html:118
+msgid "Preview"
+msgstr "Vorschau"
+
+#: templates/web/app/invoices/detail.html:30
 msgid "Download PDF"
 msgstr "PDF herunterladen"
 
-#: templates/web/app/invoices/detail.html:19
-#, fuzzy
-#| msgid "Back to Projects"
+#: templates/web/app/invoices/detail.html:35
 msgid "Back to Invoices"
-msgstr "Zurück zu Projekten"
+msgstr "Zurück zu Rechnungen"
 
-#: templates/web/app/invoices/detail.html:27
-#, fuzzy
-#| msgid "Details"
+#: templates/web/app/invoices/detail.html:43
 msgid "Invoice Details"
-msgstr "Details"
+msgstr "Rechnungsdetails"
 
-#: templates/web/app/invoices/detail.html:30
-#, fuzzy
-#| msgid "Invite member"
+#: templates/web/app/invoices/detail.html:46
 msgid "Invoice Number"
-msgstr "Mitglied einladen"
+msgstr "Rechnungsnummer"
 
-#: templates/web/app/invoices/detail.html:34
-#: templates/web/app/invoices/page.html:48
-#, fuzzy
-#| msgid "Due Date"
+#: templates/web/app/invoices/detail.html:50
+#: templates/web/app/invoices/page.html:57
 msgid "Invoice Date"
-msgstr "Fälligkeitsdatum"
+msgstr "Rechnungsdatum"
 
-#: templates/web/app/invoices/detail.html:38
-#: templates/web/app/invoices/page.html:53
-#, fuzzy
-#| msgid "Set Due Date"
+#: templates/web/app/invoices/detail.html:54
+#: templates/web/app/invoices/page.html:62
 msgid "Service Date"
-msgstr "Fälligkeitsdatum setzen"
+msgstr "Leistungsdatum"
 
-#: templates/web/app/invoices/detail.html:42
+#: templates/web/app/invoices/detail.html:58
+#: templates/web/app/invoices/page.html:69
+msgid "PDF Template"
+msgstr "PDF-Vorlage"
+
+#: templates/web/app/invoices/detail.html:62
 msgid "Recipient"
 msgstr "Empfänger"
 
-#: templates/web/app/invoices/detail.html:54
+#: templates/web/app/invoices/detail.html:74
 msgid "Financial Summary"
 msgstr "Finanzübersicht"
 
-#: templates/web/app/invoices/detail.html:57
-#, fuzzy
-#| msgid "total"
+#: templates/web/app/invoices/detail.html:77
 msgid "Subtotal"
-msgstr "gesamt"
+msgstr "Zwischensumme"
 
-#: templates/web/app/invoices/detail.html:61
+#: templates/web/app/invoices/detail.html:81
 #, python-format
 msgid "VAT ({{ invoice.vat_rate }}%%)"
 msgstr "USt. ({{ invoice.vat_rate }}%%)"
 
-#: templates/web/app/invoices/detail.html:66
-#: templates/web/app/invoices/detail.html:87
-#, fuzzy
-#| msgid "total"
+#: templates/web/app/invoices/detail.html:86
+#: templates/web/app/invoices/detail.html:107
 msgid "Total"
-msgstr "gesamt"
+msgstr "Gesamt"
 
-#: templates/web/app/invoices/detail.html:77
-#: templates/web/app/invoices/page.html:61
+#: templates/web/app/invoices/detail.html:97
+#: templates/web/app/invoices/page.html:82
 msgid "Items"
 msgstr "Artikel"
 
-#: templates/web/app/invoices/detail.html:83
-#, fuzzy
-#| msgid "Description"
+#: templates/web/app/invoices/detail.html:103
 msgid "Position"
-msgstr "Beschreibung"
+msgstr "Position"
 
-#: templates/web/app/invoices/detail.html:85
+#: templates/web/app/invoices/detail.html:105
 msgid "Quantity"
 msgstr "Menge"
 
-#: templates/web/app/invoices/detail.html:86
+#: templates/web/app/invoices/detail.html:106
 msgid "Unit Price"
 msgstr "Einzelpreis"
 
@@ -1067,93 +1253,89 @@ msgid "New invoice"
 msgstr "Neue Rechnung"
 
 #: templates/web/app/invoices/page.html:25
-#, fuzzy
-#| msgid "Rule Name"
+msgid "Company"
+msgstr "Unternehmen"
+
+#: templates/web/app/invoices/page.html:34
 msgid "Recipient Name"
-msgstr "Regelname"
+msgstr "Name des Empfängers"
 
-#: templates/web/app/invoices/page.html:26
-#, fuzzy
-#| msgid "Label name"
+#: templates/web/app/invoices/page.html:35
 msgid "Full name"
-msgstr "Label-Name"
+msgstr "Vollständiger Name"
 
-#: templates/web/app/invoices/page.html:30
+#: templates/web/app/invoices/page.html:39
 msgid "Address"
 msgstr "Adresse"
 
-#: templates/web/app/invoices/page.html:31
+#: templates/web/app/invoices/page.html:40
 msgid "Street address"
 msgstr "Straßenadresse"
 
-#: templates/web/app/invoices/page.html:36
-#: templates/web/app/invoices/page.html:37
+#: templates/web/app/invoices/page.html:45
+#: templates/web/app/invoices/page.html:46
 msgid "ZIP Code"
 msgstr "Postleitzahl"
 
-#: templates/web/app/invoices/page.html:41
-#: templates/web/app/invoices/page.html:42
+#: templates/web/app/invoices/page.html:50
+#: templates/web/app/invoices/page.html:51
 msgid "City"
 msgstr "Stadt"
 
-#: templates/web/app/invoices/page.html:90
-#, fuzzy
-#| msgid "Add idea…"
+#: templates/web/app/invoices/page.html:72
+msgid "Use company default"
+msgstr "Unternehmensstandard verwenden"
+
+#: templates/web/app/invoices/page.html:111
 msgid "Add item"
-msgstr "Idee hinzufügen…"
+msgstr "Position hinzufügen"
 
-#: templates/web/app/invoices/page.html:97
-#, fuzzy
-#| msgid "In review"
-msgid "Preview"
-msgstr "In Prüfung"
-
-#: templates/web/app/invoices/page.html:100
-#, fuzzy
-#| msgid "Create invite link"
+#: templates/web/app/invoices/page.html:121
 msgid "Create Invoice"
-msgstr "Einladungslink erstellen"
+msgstr "Rechnung erstellen"
 
-#: templates/web/app/invoices/page.html:108
+#: templates/web/app/invoices/page.html:129
 msgid "All invoices"
 msgstr "Alle Rechnungen"
 
-#: templates/web/app/invoices/page.html:115
-#, fuzzy
-#| msgid "No projects yet. Create the first one on the left."
+#: templates/web/app/invoices/page.html:142
+msgid "Manage companies"
+msgstr "Unternehmen verwalten"
+
+#: templates/web/app/invoices/page.html:151
 msgid "No invoices yet. Create the first one on the left."
 msgstr "Noch keine Rechnungen. Erstellen Sie die erste auf der linken Seite."
 
-#: templates/web/app/layout.html:13 templates/web/app/layout.html:163
+#: templates/web/app/layout.html:13 templates/web/app/layout.html:169
 msgid "Workspace"
 msgstr "Workspace"
 
-#: templates/web/app/layout.html:28 templates/web/app/layout.html:176
+#: templates/web/app/layout.html:28 templates/web/app/layout.html:182
 msgid "Workspaces"
 msgstr "Workspaces"
 
-#: templates/web/app/layout.html:37 templates/web/app/layout.html:185
+#: templates/web/app/layout.html:37 templates/web/app/layout.html:191
 #: templates/web/app/workspaces/new.html:4
 #: templates/web/app/workspaces/new.html:8
 msgid "New workspace"
 msgstr "Neuer Workspace"
 
-#: templates/web/app/layout.html:38 templates/web/app/layout.html:186
+#: templates/web/app/layout.html:38 templates/web/app/layout.html:192
 #: templates/web/app/onboarding.html:30
 #: templates/web/app/workspaces/new.html:19
 msgid "Create workspace"
 msgstr "Workspace erstellen"
 
-#: templates/web/app/layout.html:82 templates/web/app/layout.html:228
+#: templates/web/app/layout.html:82 templates/web/app/layout.html:234
 #: templates/web/app/team/page.html:4 templates/web/app/team/page.html:9
 msgid "Team"
 msgstr "Team"
 
-#: templates/web/app/layout.html:101 templates/web/app/layout.html:239
+#: templates/web/app/layout.html:107 templates/web/app/layout.html:245
 msgid "Logout"
 msgstr "Abmelden"
 
-#: templates/web/app/layout.html:128
+#: templates/web/app/layout.html:134
 msgid "Toggle theme"
 msgstr "Design umschalten"
 
@@ -1845,11 +2027,6 @@ msgstr "Verwalten Sie Mitglieder und Einladungen für diesen Workspace."
 #: templates/web/app/team/page.html:16
 msgid "Invite member"
 msgstr "Mitglied einladen"
-
-#: templates/web/app/team/page.html:20 templates/web/auth/login.html:24
-#: templates/web/auth/register.html:25
-msgid "Email"
-msgstr "E-Mail"
 
 #: templates/web/app/team/page.html:32
 msgid "Member"

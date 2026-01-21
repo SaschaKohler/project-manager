@@ -3,6 +3,8 @@ Invoice management views.
 """
 from decimal import Decimal
 
+from django import forms
+
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -10,9 +12,37 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from apps.invoices.models import Invoice, InvoiceItem
+from apps.invoices.models import Company, Invoice, InvoiceItem
 
 from .utils import web_shell_context
+
+
+class InvoiceCreateForm(forms.Form):
+    company = forms.ModelChoiceField(queryset=Company.objects.none(), required=True)
+    recipient_name = forms.CharField(required=True, max_length=255)
+    recipient_address = forms.CharField(required=False)
+    recipient_zip = forms.CharField(required=False, max_length=10)
+    recipient_city = forms.CharField(required=True, max_length=255)
+    invoice_date = forms.DateField(required=False)
+    service_date = forms.DateField(required=False)
+    pdf_template = forms.ChoiceField(required=False, choices=Invoice.PdfTemplate.choices)
+
+    def __init__(self, *args, user, organization, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._user = user
+        self._organization = organization
+        self.fields["company"].queryset = Company.objects.filter(
+            organization=organization,
+            owner=user,
+        )
+
+    def clean_company(self):
+        company = self.cleaned_data["company"]
+        if company.owner_id != self._user.id:
+            raise forms.ValidationError(_("Company does not belong to the current user"))
+        if company.organization_id != self._organization.id:
+            raise forms.ValidationError(_("Company does not belong to the current organization"))
+        return company
 
 
 @login_required
@@ -22,12 +52,31 @@ def invoices_page(request):
         return redirect("web:onboarding")
 
     org = request.active_org
-    invoices = Invoice.objects.filter(organization=org).order_by("-created_at")
+    companies = Company.objects.filter(organization=org, owner=request.user).order_by("name")
+    selected_company = None
+    selected_company_id = (request.GET.get("company") or "").strip()
+    if selected_company_id:
+        selected_company = companies.filter(id=selected_company_id).first()
+
+    invoices_qs = Invoice.objects.filter(
+        organization=org,
+        company__in=companies,
+    )
+    if selected_company is not None:
+        invoices_qs = invoices_qs.filter(company=selected_company)
+
+    invoices = invoices_qs.select_related("company").order_by("-created_at")
 
     from django.utils import timezone
     today = timezone.now().date()
 
-    context = {**web_shell_context(request), "invoices": invoices, "today": today}
+    context = {
+        **web_shell_context(request),
+        "companies": companies,
+        "selected_company": selected_company,
+        "invoices": invoices,
+        "today": today,
+    }
     return render(request, "web/app/invoices/page.html", context)
 
 
@@ -44,41 +93,27 @@ def invoices_create(request):
     # Check if this is a preview request
     is_preview = request.POST.get('preview') == '1' or request.GET.get('preview') == '1'
 
-    # Parse form data
-    recipient_name = (request.POST.get("recipient_name") or "").strip()
-    recipient_address = (request.POST.get("recipient_address") or "").strip()
-    recipient_zip = (request.POST.get("recipient_zip") or "").strip()
-    recipient_city = (request.POST.get("recipient_city") or "").strip()
-    invoice_date_str = (request.POST.get("invoice_date") or "").strip()
-    service_date_str = (request.POST.get("service_date") or "").strip()
-    pdf_template = (request.POST.get("pdf_template") or "").strip()
+    form = InvoiceCreateForm(request.POST, user=request.user, organization=org)
+    if not form.is_valid():
+        first_error = next(iter(form.errors.values()))
+        message = first_error[0] if first_error else _("Invalid form")
+        return JsonResponse({"error": message}, status=400)
 
-    if not recipient_name:
-        return JsonResponse({'error': 'Recipient name is required'}, status=400)
-
-    # Parse dates
-    invoice_date = None
-    if invoice_date_str:
-        try:
-            invoice_date = timezone.datetime.fromisoformat(invoice_date_str).date()
-        except ValueError:
-            invoice_date = timezone.now().date()
-
-    service_date = None
-    if service_date_str:
-        try:
-            service_date = timezone.datetime.fromisoformat(service_date_str).date()
-        except ValueError:
-            service_date = timezone.now().date()
-
-    if invoice_date is None:
-        invoice_date = timezone.now().date()
-    if service_date is None:
-        service_date = timezone.now().date()
+    company = form.cleaned_data["company"]
+    recipient_name = form.cleaned_data["recipient_name"]
+    recipient_address = form.cleaned_data.get("recipient_address") or ""
+    recipient_zip = form.cleaned_data.get("recipient_zip") or ""
+    recipient_city = form.cleaned_data["recipient_city"]
+    invoice_date = form.cleaned_data.get("invoice_date") or timezone.now().date()
+    service_date = form.cleaned_data.get("service_date") or timezone.now().date()
+    pdf_template = (form.cleaned_data.get("pdf_template") or "").strip()
+    if not pdf_template:
+        pdf_template = company.default_pdf_template
 
     # Create invoice (temporary for preview, permanent for creation)
     invoice = Invoice(
         organization=org,
+        company=company,
         recipient_name=recipient_name,
         recipient_address=recipient_address,
         recipient_zip=recipient_zip,
@@ -205,7 +240,9 @@ def invoices_create(request):
             'is_preview': True
         }
         html = render_to_string('web/app/invoices/preview.html', context, request)
-        return HttpResponse(html)
+        response = HttpResponse(html, content_type="text/html")
+        response["X-Frame-Options"] = "SAMEORIGIN"
+        return response
 
     if request.headers.get("HX-Request") == "true":
         row_html = render_to_string(
@@ -226,7 +263,11 @@ def invoices_detail(request, invoice_id):
 
     org = request.active_org
     try:
-        invoice = Invoice.objects.get(id=invoice_id, organization=org)
+        invoice = Invoice.objects.select_related("company").get(
+            id=invoice_id,
+            organization=org,
+            company__owner=request.user,
+        )
     except Invoice.DoesNotExist as exc:
         raise Http404() from exc
 
@@ -242,7 +283,11 @@ def invoices_pdf(request, invoice_id):
 
     org = request.active_org
     try:
-        invoice = Invoice.objects.get(id=invoice_id, organization=org)
+        invoice = Invoice.objects.select_related("company").get(
+            id=invoice_id,
+            organization=org,
+            company__owner=request.user,
+        )
     except Invoice.DoesNotExist as exc:
         raise Http404() from exc
 

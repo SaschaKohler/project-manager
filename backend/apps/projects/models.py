@@ -166,9 +166,19 @@ class Task(models.Model):
     def __str__(self) -> str:
         return self.title
 
+    @property
+    def tracked_human(self) -> str:
+        seconds = int(self.tracked_seconds or 0)
+        minutes = seconds // 60
+        hours = minutes // 60
+        minutes = minutes % 60
+        if hours > 0:
+            return f"{hours}h {minutes:02d}m"
+        return f"{minutes}m"
+
 
 class RecurringTask(models.Model):
-    task = models.OneToOneField(Task, on_delete=models.CASCADE, related_name='recurring')
+    task = models.OneToOneField('Task', on_delete=models.CASCADE, related_name='recurring')
     is_recurring = models.BooleanField(default=False)
     recurrence_frequency = models.CharField(
         max_length=20, choices=RecurrenceFrequency.choices, blank=True, null=True
@@ -235,16 +245,6 @@ def create_recurring_task(sender, instance, **kwargs):
             recurrence_max_occurrences=recurring.recurrence_max_occurrences,
             recurrence_parent=recurring.recurrence_parent or instance,
         )
-
-    @property
-    def tracked_human(self) -> str:
-        seconds = int(self.tracked_seconds or 0)
-        minutes = seconds // 60
-        hours = minutes // 60
-        minutes = minutes % 60
-        if hours > 0:
-            return f"{hours}h {minutes:02d}m"
-        return f"{minutes}m"
 
 
 class TaskTimeEntry(models.Model):
